@@ -27,7 +27,7 @@ async def generate_title_from_messages(messages: list[str]) -> str:
         {
             "role": "user",
             "content": (
-                "Create a short chat title (maximum 6 words).\n"
+                "Create a short chat title (maximum 5 words).\n"
                 "Do NOT use quotes.\n"
                 "Do NOT end with punctuation.\n\n"
                 f"User messages:\n"

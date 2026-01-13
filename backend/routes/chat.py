@@ -17,6 +17,8 @@ from services.chat_service import update_chat_title_if_empty
 from services.topic_service import extract_topics_llm
 from services.title_service import generate_title_from_messages
 from services.chat_service import get_first_user_messages
+from fastapi.responses import StreamingResponse
+from services.llm_service import stream_ai_response
 
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -224,6 +226,68 @@ async def send_message(
 
     return {"reply": ai_response}
 
+@router.post("/{chat_id}/message/stream")
+async def send_message_stream(
+    chat_id: str,
+    payload: ChatMessage,
+    background_tasks: BackgroundTasks,
+    current_user = Depends(get_current_user)
+):
+    # 1️⃣ Fetch history
+    history = get_chat_history(chat_id, current_user.id)
+
+    # 2️⃣ Semantic memory
+    semantic_memory = await search_similar(
+        user_id=current_user.id,
+        query=payload.message,
+        top_k=3
+    )
+
+    # 3️⃣ Build prompt
+    llm_messages = build_llm_messages(
+        history=history,
+        new_message=payload.message,
+        semantic_memory=semantic_memory
+    )
+
+    # 4️⃣ Store USER message immediately
+    user_seq = store_message(
+        chat_id=chat_id,
+        user_id=current_user.id,
+        sender="user",
+        text=payload.message
+    )
+
+    async def event_generator():
+        full_response = ""
+
+        async for token in stream_ai_response(llm_messages):
+            full_response += token
+            yield token
+
+        # 5️⃣ Store AI message after stream ends
+        ai_seq = store_message(
+            chat_id=chat_id,
+            user_id=current_user.id,
+            sender="ai",
+            text=full_response
+        )
+
+        # 6️⃣ Background tasks (unchanged)
+        background_tasks.add_task(
+            process_message_background,
+            chat_id,
+            current_user.id,
+            user_seq,
+            payload.message,
+            ai_seq,
+            full_response
+        )
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/plain"
+    )
 
 
 # # 🔹 STEP 5: Fetch chat history

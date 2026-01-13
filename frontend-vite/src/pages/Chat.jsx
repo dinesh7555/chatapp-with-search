@@ -10,6 +10,7 @@ import {
 import "./Chat.css";
 import ChatSidebar from "./ChatSidebar";
 import ReactMarkdown from "react-markdown";
+import { sendMessageStream } from "../services/api";
 
 
 export default function Chat({ onLogout }) {
@@ -21,6 +22,15 @@ export default function Chat({ onLogout }) {
   const [input, setInput] = useState("");
   const sendingRef = useRef(false);
   const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+
+  function scrollToBottom() {
+  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+}
+useEffect(() => {
+  scrollToBottom();
+}, [messages]);
 
 
   /* ---------------- Load sidebar sessions ---------------- */
@@ -67,40 +77,86 @@ export default function Chat({ onLogout }) {
 
   /* ---------------- Send message ---------------- */
 
+  // async function handleSend(e) {
+  //   e.preventDefault();
+  //   if (!input.trim() || !chatId || sendingRef.current) return;
+
+  //   sendingRef.current = true;
+  //   setLoading(true);
+
+  //   const userText = input;
+  //   setInput("");
+
+  //   setMessages((prev) => [
+  //     ...prev,
+  //     { sender: "user", text: userText }
+  //   ]);
+
+  //   try {
+  //     const res = await sendMessage(chatId, userText, token);
+  //     if (res?.reply) {
+  //       setMessages((prev) => [
+  //         ...prev,
+  //         { sender: "ai", text: res.reply }
+  //       ]);
+  //     }
+
+      
+  //   } catch (err) {
+  //     console.error("Send failed", err);
+  //   } finally {
+  //     sendingRef.current = false;
+  //     setLoading(false);
+  //   }
+  // }
+
   async function handleSend(e) {
-    e.preventDefault();
-    if (!input.trim() || !chatId || sendingRef.current) return;
+  e.preventDefault();
+  if (!input.trim() || !chatId || sendingRef.current) return;
 
-    sendingRef.current = true;
-    setLoading(true);
+  sendingRef.current = true;
+  setLoading(true);
 
-    const userText = input;
-    setInput("");
+  const userText = input;
+  setInput("");
 
-    setMessages((prev) => [
-      ...prev,
-      { sender: "user", text: userText }
-    ]);
+  setMessages((prev) => [
+    ...prev,
+    { sender: "user", text: userText },
+    { sender: "ai", text: "" } // placeholder
+  ]);
 
-    try {
-      const res = await sendMessage(chatId, userText, token);
-      if (res?.reply) {
-        setMessages((prev) => [
-          ...prev,
-          { sender: "ai", text: res.reply }
-        ]);
-      }
+  try {
+    const res = await sendMessageStream(chatId, userText, token);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
 
-      // Refresh sidebar titles
-      // const updated = await getChatSessions(token);
-      // setSessions(updated.sessions || []);
-    } catch (err) {
-      console.error("Send failed", err);
-    } finally {
-      sendingRef.current = false;
-      setLoading(false);
+    let aiText = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      aiText += chunk;
+
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          sender: "ai",
+          text: aiText
+        };
+        return updated;
+      });
     }
+  } catch (err) {
+    console.error("Streaming failed", err);
+  } finally {
+    sendingRef.current = false;
+    setLoading(false);
   }
+}
+
 
   /* ---------------- Logout ---------------- */
 
@@ -150,6 +206,7 @@ export default function Chat({ onLogout }) {
       <span className="dot">.</span>
     </div>
   )}
+              <div ref={messagesEndRef} />
             </div>
 
             <form className="chat-input" onSubmit={handleSend}>

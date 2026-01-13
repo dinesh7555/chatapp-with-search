@@ -21,6 +21,7 @@ from services.chat_service import get_first_user_messages
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
+
 # async def process_message_background(
 #     chat_id: str,
 #     user_id: int,
@@ -136,11 +137,19 @@ def build_llm_messages(
 
     # 🔹 Inject semantic memory (Step 4)
     if semantic_memory:
+        memory_texts = []
+
+        for item in semantic_memory:
+            if isinstance(item, dict):
+                memory_texts.append(item.get("text", ""))
+            else:
+                memory_texts.append(str(item))
+
         messages.append({
             "role": "system",
             "content": (
                 "Relevant past discussions from this user:\n"
-                + "\n".join(semantic_memory)
+                + "\n".join(memory_texts)
             )
         })
 

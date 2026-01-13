@@ -10,6 +10,7 @@ import {
 import "./Chat.css";
 import ChatSidebar from "./ChatSidebar";
 import ReactMarkdown from "react-markdown";
+import { searchChats } from "../services/api";
 
 
 export default function Chat({ onLogout }) {
@@ -21,6 +22,10 @@ export default function Chat({ onLogout }) {
   const [input, setInput] = useState("");
   const sendingRef = useRef(false);
   const [loading, setLoading] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
 
   /* ---------------- Load sidebar sessions ---------------- */
@@ -108,16 +113,29 @@ export default function Chat({ onLogout }) {
     localStorage.removeItem("token");
     onLogout();
   }
+  /* ---------------- Search Chats ---------------- */  
+  async function handleSearch(query) {
+  if (!query.trim()) {
+    setIsSearching(false);
+    setSearchResults([]);
+    return;
+  }
+
+  const res = await searchChats(query, token);
+  setSearchResults(res.results || []);
+  setIsSearching(true);
+}
 
   /* ---------------- UI ---------------- */
 
   return (
     <div className="chat-layout">
       <ChatSidebar
-        sessions={sessions}
+        sessions={isSearching ? searchResults : sessions}
         activeChatId={chatId}
         onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
+        onSearch={handleSearch}
       />
 
       <div className="chat-container">
@@ -144,12 +162,12 @@ export default function Chat({ onLogout }) {
                 </div>
               ))}
               {loading && (
-    <div className="message ai typing">
-      <span className="dot">.</span>
-      <span className="dot">.</span>
-      <span className="dot">.</span>
-    </div>
-  )}
+                  <div className="message ai typing">
+                    <span className="dot">.</span>
+                    <span className="dot">.</span>
+                    <span className="dot">.</span>
+                  </div>
+                )}
             </div>
 
             <form className="chat-input" onSubmit={handleSend}>

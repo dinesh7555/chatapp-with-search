@@ -61,3 +61,15 @@ export async function getChatSessions(token) {
   });
   return res.json();
 }
+
+export async function searchChats(query, token) {
+  const res = await fetch(
+    `${BASE_URL}/search?q=${encodeURIComponent(query)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return res.json();
+}

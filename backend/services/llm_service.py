@@ -72,3 +72,4 @@ async def stream_ai_response(messages: list):
 
                 if "content" in delta:
                     yield delta["content"]
+

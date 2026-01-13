@@ -44,6 +44,20 @@ export async function sendMessage(chatId, message, token) {
   return res.json();
 }
 
+export async function sendMessageStream(chatId, message, token) {
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/message/stream`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ message }),
+  });
+
+  return res;
+}
+
+
 export async function getHistory(chatId, token) {
   const res = await fetch(`${BASE_URL}/chat/${chatId}/history`, {
     headers: {

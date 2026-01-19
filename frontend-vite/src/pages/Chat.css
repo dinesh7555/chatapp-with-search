@@ -8,7 +8,7 @@
 
 /* Sidebar */
 .chat-sidebar {
-  width: 260px;
+  width: 320px;
   background: rgba(32, 33, 35, 0.85);
   padding: 14px;
   border-right: 1px solid #3f3f46;
@@ -451,4 +451,71 @@
   .message {
     max-width: 90%;
   }
+}
+/* Logout Confirmation Modal */
+
+.logout-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.logout-modal {
+  background: #1e1f25;
+  color: #fff;
+  padding: 22px;
+  border-radius: 10px;
+  width: 320px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  border: 1px solid #3f3f46;
+}
+
+.logout-modal h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.logout-modal p {
+  font-size: 14px;
+  color: #a1a1aa;
+  margin-bottom: 20px;
+}
+
+.logout-actions {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: 1px solid #3f3f46;
+  color: #a1a1aa;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+}
+
+.confirm-btn {
+  background: #dc2626;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.confirm-btn:hover {
+  background: #b91c1c;
 }

@@ -37,6 +37,8 @@ useEffect(() => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
 
 
   /* ---------------- Load sidebar sessions ---------------- */
@@ -166,10 +168,15 @@ useEffect(() => {
 
   /* ---------------- Logout ---------------- */
 
-  function handleLogout() {
+  // function handleLogout() {
+  //   localStorage.removeItem("token");
+  //   onLogout();
+  // }
+  function handleLogoutConfirm() {
     localStorage.removeItem("token");
     onLogout();
   }
+
   /* ---------------- Search Chats ---------------- */  
   async function handleSearch(query) {
   if (!query.trim()) {
@@ -198,7 +205,10 @@ useEffect(() => {
       <div className="chat-container">
         <div className="chat-header">
           <span>AI Chat Assistant</span>
-          <button className="logout-btn" onClick={handleLogout}>
+          <button
+            className="logout-btn"
+            onClick={() => setShowLogoutModal(true)}
+          >
             Logout
           </button>
         </div>
@@ -239,6 +249,29 @@ useEffect(() => {
           </>
         )}
       </div>
+        {showLogoutModal && (
+          <div className="logout-modal-overlay">
+            <div className="logout-modal">
+              <h3>Confirm Logout</h3>
+              <p>Are you sure you want to logout?</p>
+              <div className="logout-actions">
+                <button
+                  className="cancel-btn"
+                  onClick={() => setShowLogoutModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="confirm-btn"
+                  onClick={handleLogoutConfirm}
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
     </div>
   );
 }

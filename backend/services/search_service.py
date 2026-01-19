@@ -43,7 +43,6 @@ async def hybrid_chat_search(user_id: int, query: str, limit: int = 10):
         "results": ordered_results
     }
 
-
 def search_chats_by_keyword(user_id: int, keyword: str, limit: int = 10):
     """
     Keyword-based search across all chats for a user

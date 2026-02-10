@@ -21,7 +21,7 @@ from fastapi.responses import StreamingResponse
 from services.llm_service import stream_ai_response
 
 
-router = APIRouter(prefix="/chat", tags=["Chat"])
+router = APIRouter(prefix="/chat", tags=["Chatapi"])
 
 
 # async def process_message_background(

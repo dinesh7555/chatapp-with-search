@@ -1,4 +1,5 @@
 
+
 services:
   mysql:
     image: mysql:8.0
@@ -28,15 +29,6 @@ services:
       - "7687:7687"
     volumes:
       - ai-chat-docker_neo4j_data:/data
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "cypher-shell -a bolt://localhost:7687 -u $NEO4J_USER -p $NEO4J_PASSWORD 'RETURN 1' >/dev/null"
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - ai-chat-network
 
@@ -50,28 +42,11 @@ services:
       - "8000:8000"
     volumes:
       - faiss_data:/app/faiss
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 50s
-      timeout: 5s
-      retries: 5
     depends_on:
       mysql:
-        condition: service_healthy
+        condition: service_started
       neo4j:
-        condition: service_healthy
-    networks:
-      - ai-chat-network
-
-  frontend:
-    build: ./frontend-vite
-    container_name: ai-frontend
-    restart: always
-    ports:
-      - "3000:80"
-    depends_on:
-        backend:
-          condition: service_healthy
+        condition: service_started
     networks:
       - ai-chat-network
 
@@ -83,5 +58,3 @@ volumes:
 networks:
   ai-chat-network:
     driver: bridge
-
-

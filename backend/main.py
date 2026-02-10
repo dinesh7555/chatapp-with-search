@@ -54,9 +54,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
+        # "http://172.168.11.175:3000",
+        # "http://172.168.11.168:3000"
     ],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -75,3 +77,7 @@ def on_startup():
 @app.get("/")
 def root():
     return {"status": "Chat App Backend Running"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}

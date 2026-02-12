@@ -4,6 +4,9 @@ from database import SessionLocal
 from models import User
 from schemas import UserCreate, UserLogin
 from auth import hash_password, verify_password, create_access_token,get_current_user
+from redis_client import redis_client
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -36,7 +39,12 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = create_access_token({"sub": db_user.username})
+    token, expires_in = create_access_token({"sub": db_user.username})
+    redis_client.setex(
+        f"jwt:{token}",
+        expires_in,
+        db_user.username
+    )
     return {"access_token": token, "token_type": "bearer"}
 
 @router.get("/me")
@@ -57,3 +65,14 @@ def chat(
         "user": current_user.username,
         "message": message
     }
+
+
+@router.post("/logout")
+def logout(
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer())
+):
+    token = credentials.credentials
+
+    redis_client.delete(f"jwt:{token}")
+
+    return {"message": "Logged out successfully"}

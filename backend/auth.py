@@ -78,7 +78,7 @@ from sqlalchemy.orm import Session
 
 from database import SessionLocal
 from models import User
-
+from redis_client import redis_client
 
 # ---------------- PASSWORD HASHING ----------------
 
@@ -102,8 +102,8 @@ def create_access_token(data: dict, expires_delta: int = 30):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=expires_delta)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
+    token=jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return token, expires_delta*60
 
 # ---------------- DATABASE DEP ----------------
 
@@ -130,6 +130,8 @@ def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    if not redis_client.exists(f"jwt:{token}"):
+        raise credentials_exception
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

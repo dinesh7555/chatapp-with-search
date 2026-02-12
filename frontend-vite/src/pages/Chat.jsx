@@ -83,40 +83,6 @@ useEffect(() => {
     }
   }
 
-  /* ---------------- Send message ---------------- */
-
-  // async function handleSend(e) {
-  //   e.preventDefault();
-  //   if (!input.trim() || !chatId || sendingRef.current) return;
-
-  //   sendingRef.current = true;
-  //   setLoading(true);
-
-  //   const userText = input;
-  //   setInput("");
-
-  //   setMessages((prev) => [
-  //     ...prev,
-  //     { sender: "user", text: userText }
-  //   ]);
-
-  //   try {
-  //     const res = await sendMessage(chatId, userText, token);
-  //     if (res?.reply) {
-  //       setMessages((prev) => [
-  //         ...prev,
-  //         { sender: "ai", text: res.reply }
-  //       ]);
-  //     }
-
-      
-  //   } catch (err) {
-  //     console.error("Send failed", err);
-  //   } finally {
-  //     sendingRef.current = false;
-  //     setLoading(false);
-  //   }
-  // }
 
   async function handleSend(e) {
   e.preventDefault();

@@ -149,3 +149,21 @@ def get_current_user(
         raise credentials_exception
 
     return user
+    
+##---------------- ADMIN CHECK DEPENDENCY (NEW) ----------------
+def require_admin(current_user: User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
+
+##----------------- STUDENT CHECK DEPENDENCY (NEW) ----------------
+def require_student(current_user: User = Depends(get_current_user)):
+    if current_user.role != "student":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Students only"
+        )
+    return current_user

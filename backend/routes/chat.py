@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter, Depends
 from fastapi import BackgroundTasks
-from auth import get_current_user
+from auth import get_current_user, require_student
 from schemas import ChatMessage
 from services.chat_service import (
     create_chat_session,
@@ -23,45 +23,6 @@ from services.llm_service import stream_ai_response
 
 router = APIRouter(prefix="/chat", tags=["Chatapi"])
 
-
-# async def process_message_background(
-#     chat_id: str,
-#     user_id: int,
-#     user_seq: int,
-#     user_text: str,
-#     ai_seq: int,
-#     ai_text: str
-# ):
-#     # Topics
-#     topics = await extract_topics_llm(user_text)
-
-#     if topics:
-#         link_message_to_topics(
-#             chat_id=chat_id,
-#             user_id=user_id,
-#             message_sequence=user_seq,
-#             topics=topics
-#         )
-
-#         title = generate_chat_title(topics)
-#         update_chat_title_if_empty(
-#             chat_id=chat_id,
-#             user_id=user_id,
-#             title=title
-#         )
-
-#     # Embeddings (API-based)
-#     await store_embedding(
-#         user_id=user_id,
-#         message_id=f"{chat_id}:{user_seq}",
-#         text=user_text
-#     )
-
-#     await store_embedding(
-#         user_id=user_id,
-#         message_id=f"{chat_id}:{ai_seq}",
-#         text=ai_text
-#     )
 
 async def process_message_background(
     chat_id: str,
@@ -114,7 +75,7 @@ async def process_message_background(
 
 # 🔹 STEP 3: Start a new chat session
 @router.post("/start")
-def start_chat(current_user = Depends(get_current_user)):
+def start_chat(current_user = Depends(require_student)):
     chat_id = create_chat_session(current_user.id)
     return {
         "chat_id": chat_id
@@ -172,75 +133,12 @@ def build_llm_messages(
 
 
 
-
-@router.post("/{chat_id}/message")
-async def send_message(
-    chat_id: str,
-    payload: ChatMessage,
-    background_tasks: BackgroundTasks,
-    current_user = Depends(get_current_user)
-):
-    # 1️⃣ Chat history
-    history = get_chat_history(chat_id, current_user.id)
-
-    # 2️⃣ Semantic memory (API-based)
-    semantic_memory = await search_similar(
-        user_id=current_user.id,
-        query=payload.message,
-        top_k=3
-    )
-
-    # 3️⃣ Build LLM prompt
-    llm_messages = build_llm_messages(
-        history=history,
-        new_message=payload.message,
-        semantic_memory=semantic_memory
-    )
-
-    # 4️⃣ Call LLM
-    ai_response = await get_ai_response_with_context(llm_messages)
-
-    # 5️⃣ Store USER message
-    user_seq = store_message(
-        chat_id=chat_id,
-        user_id=current_user.id,
-        sender="user",
-        text=payload.message
-    )
-
-
-    # 8️⃣ Store AI message
-    ai_seq = store_message(
-        chat_id=chat_id,
-        user_id=current_user.id,
-        sender="ai",
-        text=ai_response
-    )
-
-    # 9️⃣ Store AI embedding
-    # await store_embedding(
-    #     user_id=current_user.id,
-    #     message_id=f"{chat_id}:{ai_seq}",
-    #     text=ai_response
-    # )
-    background_tasks.add_task(
-        process_message_background,
-        chat_id,
-        current_user.id,
-        user_seq,
-        payload.message,
-        ai_seq,
-        ai_response
-    )
-
-    return {"reply": ai_response}
-
 @router.post("/{chat_id}/message/stream")
 async def send_message_stream(
     chat_id: str,
     payload: ChatMessage,
     background_tasks: BackgroundTasks,
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_student)
 ):
     # 1️⃣ Fetch history
     history = get_chat_history(chat_id, current_user.id)
@@ -303,7 +201,7 @@ async def send_message_stream(
 @router.get("/{chat_id}/history")
 def chat_history(
     chat_id: str,
-    current_user = Depends(get_current_user)
+    current_user = Depends(require_student)
 ):
     history = get_chat_history(chat_id, current_user.id)
     return {
@@ -312,7 +210,7 @@ def chat_history(
     }
 
 @router.get("/sessions")
-def list_chat_sessions(current_user = Depends(get_current_user)):
+def list_chat_sessions(current_user = Depends(require_student)):
     from services.chat_service import get_user_chat_sessions
 
     sessions = get_user_chat_sessions(current_user.id)

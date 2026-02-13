@@ -32,17 +32,17 @@ export async function startChat(token) {
   return res.json();
 }
 
-export async function sendMessage(chatId, message, token) {
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/message`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({message}),
-  });
-  return res.json();
-}
+// export async function sendMessage(chatId, message, token) {
+//   const res = await fetch(`${BASE_URL}/chat/${chatId}/message`, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${token}`,
+//     },
+//     body: JSON.stringify({message}),
+//   });
+//   return res.json();
+// }
 
 export async function sendMessageStream(chatId, message, token) {
   const res = await fetch(`${BASE_URL}/chat/${chatId}/message/stream`, {
@@ -85,5 +85,63 @@ export async function searchChats(query, token) {
       },
     }
   );
+  return res.json();
+}
+
+
+export async function logout() {
+  const token = localStorage.getItem("token");
+
+  if (!token) return;
+
+  await fetch(`${BASE_URL}/auth/logout`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  localStorage.removeItem("token");
+}
+
+export async function getUsers(token) {
+  const res = await fetch(`${BASE_URL}/auth/users`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.json();
+}
+export async function deleteUser(userId, token) {
+  const res = await fetch(`${BASE_URL}/auth/users/${userId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.json();
+}
+
+export async function createUser(data, token) {
+  const res = await fetch(`${BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  return res.json();
+}
+
+export async function getAdmins(token) {
+  const res = await fetch(`${BASE_URL}/auth/admins`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
   return res.json();
 }

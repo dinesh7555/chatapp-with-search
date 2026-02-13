@@ -5,7 +5,8 @@ import {
   startChat,
   sendMessage,
   getHistory,
-  getChatSessions
+  getChatSessions,
+  logout
 } from "../services/api";
 import "./Chat.css";
 import ChatSidebar from "./ChatSidebar";
@@ -138,9 +139,18 @@ useEffect(() => {
   //   localStorage.removeItem("token");
   //   onLogout();
   // }
+  // function handleLogoutConfirm() {
+  //   localStorage.removeItem("token");
+  //   onLogout();
+  // }
   function handleLogoutConfirm() {
-    localStorage.removeItem("token");
-    onLogout();
+    try {
+      logout();   // 🔥 calls backend & deletes Redis session
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
+      onLogout();       // navigate back to login
+    }
   }
 
   /* ---------------- Search Chats ---------------- */  

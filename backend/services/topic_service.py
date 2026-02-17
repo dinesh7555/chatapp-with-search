@@ -34,3 +34,6 @@ async def extract_topics_llm(text: str) -> list[str]:
         pass
 
     return []
+
+
+    return []

@@ -1,6 +1,6 @@
 from neo4j_db import get_neo4j_session
 
-async def hybrid_chat_search(user_id: int, query: str, limit: int = 10):
+async def hybrid_chat_search(user_id: int, subject_id: str, query: str, limit: int = 10):
     """
     Run ALL strategies and merge results.
 
@@ -13,7 +13,7 @@ async def hybrid_chat_search(user_id: int, query: str, limit: int = 10):
     results_by_chat = {}
 
     # 1️⃣ Topic-based search
-    topic_results = search_chats_by_topic(user_id, query, limit)
+    topic_results = search_chats_by_topic(user_id, subject_id,query, limit)
     for r in topic_results:
         results_by_chat[r["chat_id"]] = {
             **r,
@@ -22,7 +22,7 @@ async def hybrid_chat_search(user_id: int, query: str, limit: int = 10):
         }
 
     # 2️⃣ Keyword-based search
-    keyword_results = search_chats_by_keyword(user_id, query, limit)
+    keyword_results = search_chats_by_keyword(user_id, subject_id, query, limit)
     for r in keyword_results:
         if r["chat_id"] not in results_by_chat:
             results_by_chat[r["chat_id"]] = {
@@ -43,12 +43,13 @@ async def hybrid_chat_search(user_id: int, query: str, limit: int = 10):
         "results": ordered_results
     }
 
-def search_chats_by_keyword(user_id: int, keyword: str, limit: int = 10):
+def search_chats_by_keyword(user_id: int, subject_id: str, keyword: str, limit: int = 10):
     """
     Keyword-based search across all chats for a user
     """
     query = """
     MATCH (u:User {user_id: $user_id})
+          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
           -[:HAS_CHAT]->(c:ChatSession)
           -[:HAS_MESSAGE]->(m:Message {sender: 'user'})
     WHERE toLower(m.text) CONTAINS toLower($keyword)
@@ -65,6 +66,7 @@ def search_chats_by_keyword(user_id: int, keyword: str, limit: int = 10):
         result = session.run(
             query,
             user_id=user_id,
+            subject_id=subject_id,
             keyword=keyword,
             limit=limit
         )
@@ -78,12 +80,13 @@ def search_chats_by_keyword(user_id: int, keyword: str, limit: int = 10):
             for r in result
         ]
 
-def search_chats_by_topic(user_id: int, keyword: str, limit: int = 10):
+def search_chats_by_topic(user_id: int, subject_id: str, keyword: str, limit: int = 10):
     """
     Topic-based search across chats for a user
     """
     query = """
     MATCH (u:User {user_id: $user_id})
+          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
           -[:HAS_CHAT]->(c:ChatSession)
           -[:HAS_MESSAGE]->(m:Message)
           -[:ABOUT_TOPIC]->(t:Topic)
@@ -101,6 +104,7 @@ def search_chats_by_topic(user_id: int, keyword: str, limit: int = 10):
         result = session.run(
             query,
             user_id=user_id,
+            subject_id=subject_id,
             keyword=keyword,
             limit=limit
         )

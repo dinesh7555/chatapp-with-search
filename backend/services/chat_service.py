@@ -3,22 +3,31 @@ import uuid
 from datetime import datetime
 
 
-def create_chat_session(user_id: int):
+
+def create_chat_session(user_id: int, subject_id: str):
     chat_id = str(uuid.uuid4())
 
     query = """
     MERGE (u:User {user_id: $user_id})
+
+    MERGE (s:Subject {subject_id: $subject_id})
+    ON CREATE SET s.name = $subject_id
+
+    MERGE (u)-[:HAS_SUBJECT]->(s)
+
     CREATE (c:ChatSession {
         chat_id: $chat_id,
         created_at: $created_at
     })
-    CREATE (u)-[:HAS_CHAT]->(c)
+
+    CREATE (s)-[:HAS_CHAT]->(c)
     """
 
     with get_neo4j_session() as session:
         session.run(
             query,
             user_id=user_id,
+            subject_id=subject_id,
             chat_id=chat_id,
             created_at=str(datetime.utcnow())
         )
@@ -27,9 +36,11 @@ def create_chat_session(user_id: int):
 
 
 
-def store_message(chat_id: str, user_id: int, sender: str, text: str):
+def store_message(chat_id: str, user_id: int,sender: str, text: str ,subject_id: str):
     query = """
-    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT]->(c:ChatSession {chat_id: $chat_id})
+    MATCH (u:User {user_id: $user_id})
+      -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
+      -[:HAS_CHAT]->(c:ChatSession {chat_id: $chat_id})
 
     OPTIONAL MATCH (c)-[oldRel:LAST_MESSAGE]->(last:Message)
 
@@ -63,20 +74,19 @@ def store_message(chat_id: str, user_id: int, sender: str, text: str):
             chat_id=chat_id,
             sender=sender,
             text=text,
+            subject_id=subject_id,
             timestamp=str(datetime.utcnow())
         )
 
         record = result.single()
         return record["sequence"]
 
-
-
-
-
-def get_chat_history(chat_id: str, user_id: int):
+def get_chat_history(chat_id: str, user_id: int, subject_id: str):
     query = """
-    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT]->(c:ChatSession {chat_id: $chat_id})
-          -[:HAS_MESSAGE]->(m:Message)
+    MATCH (u:User {user_id: $user_id})
+      -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
+      -[:HAS_CHAT]->(c:ChatSession {chat_id: $chat_id})
+      -[:HAS_MESSAGE]->(m:Message)
     RETURN m
     ORDER BY m.sequence ASC
     """
@@ -87,7 +97,8 @@ def get_chat_history(chat_id: str, user_id: int):
         result = session.run(
             query,
             user_id=user_id,
-            chat_id=chat_id
+            chat_id=chat_id,
+            subject_id=subject_id
         )
 
         for record in result:
@@ -105,13 +116,15 @@ def link_message_to_topics(
     chat_id: str,
     user_id: int,
     message_sequence: int,
-    topics: list[str]
+    topics: list[str],
+    subject_id: str
 ):
     if not topics:
         return
 
     query = """
     MATCH (u:User {user_id: $user_id})
+          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
           -[:HAS_CHAT]->(c:ChatSession {chat_id: $chat_id})
           -[:HAS_MESSAGE]->(m:Message {sequence: $sequence})
 
@@ -125,16 +138,18 @@ def link_message_to_topics(
             query,
             user_id=user_id,
             chat_id=chat_id,
+            subject_id=subject_id,
             sequence=message_sequence,
             topics=topics
         )
 
-def get_first_user_messages(chat_id: str, user_id: int, limit: int = 3):
+def get_first_user_messages(chat_id: str, user_id: int, subject_id: str, limit: int = 3):
     """
     Returns the first N user messages in a chat (ordered by sequence).
     """
     query = """
     MATCH (u:User {user_id: $user_id})
+          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
           -[:HAS_CHAT]->(c:ChatSession {chat_id: $chat_id})
           -[:HAS_MESSAGE]->(m:Message {sender: 'user'})
     RETURN m.text AS text
@@ -149,7 +164,8 @@ def get_first_user_messages(chat_id: str, user_id: int, limit: int = 3):
             query,
             user_id=user_id,
             chat_id=chat_id,
-            limit=limit
+            limit=limit,
+            subject_id=subject_id
         )
 
         for record in result:
@@ -161,10 +177,13 @@ def get_first_user_messages(chat_id: str, user_id: int, limit: int = 3):
 def update_chat_title_if_empty(
     chat_id: str,
     user_id: int,
-    title: str
+    title: str,
+    subject_id: str
 ):
     query = """
-    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT]->(c:ChatSession {chat_id: $chat_id})
+    MATCH (u:User {user_id: $user_id})
+          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
+          -[:HAS_CHAT]->(c:ChatSession {chat_id: $chat_id})
     WHERE c.title IS NULL
     SET c.title = $title
     """
@@ -173,12 +192,15 @@ def update_chat_title_if_empty(
             query,
             user_id=user_id,
             chat_id=chat_id,
-            title=title
+            title=title,
+            subject_id=subject_id
         )
 
-def get_user_chat_sessions(user_id: int):
+def get_user_chat_sessions(user_id: int,subject_id: str):
     query = """
-    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT]->(c:ChatSession)
+    MATCH (u:User {user_id: $user_id})
+          -[:HAS_SUBJECT]->(s:Subject {subject_id: $subject_id})
+          -[:HAS_CHAT]->(c:ChatSession)
     OPTIONAL MATCH (c)-[:HAS_MESSAGE]->(m:Message)
     WITH c, count(m) AS messageCount
     RETURN
@@ -192,7 +214,7 @@ def get_user_chat_sessions(user_id: int):
     sessions = []
 
     with get_neo4j_session() as session:
-        result = session.run(query, user_id=user_id)
+        result = session.run(query, user_id=user_id, subject_id=subject_id)
 
         for record in result:
             sessions.append({

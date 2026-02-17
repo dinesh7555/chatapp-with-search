@@ -56,7 +56,7 @@ async def embed_text(text: str) -> List[float]:
 
 # ---------------- STORE EMBEDDING ----------------
 
-async def store_embedding(user_id: int, message_id: str, text: str):
+async def store_embedding(user_id: int, message_id: str, text: str, subject_id: str):
     embedding = await embed_text(text)
 
     # ✅ Convert to NumPy float32, shape (1, dim)
@@ -66,8 +66,10 @@ async def store_embedding(user_id: int, message_id: str, text: str):
 
     METADATA.append({
         "user_id": user_id,
+        "subject_id": subject_id,
         "message_id": message_id,
         "text": text
+          
     })
 
     faiss.write_index(index, FAISS_INDEX_PATH)
@@ -76,7 +78,7 @@ async def store_embedding(user_id: int, message_id: str, text: str):
 
 # ---------------- SEMANTIC SEARCH ----------------
 
-async def search_similar(user_id: int, query: str, top_k: int = 3):
+async def search_similar(user_id: int, query: str, subject_id: str, top_k: int = 3):
     if index.ntotal == 0:
         return []
 
@@ -95,9 +97,12 @@ async def search_similar(user_id: int, query: str, top_k: int = 3):
         meta = METADATA[idx]
         if meta["user_id"] != user_id:
             continue
+        if meta["subject_id"] != subject_id:
+            continue
 
         results.append(meta["text"])
         if len(results) == top_k:
             break
 
     return results
+

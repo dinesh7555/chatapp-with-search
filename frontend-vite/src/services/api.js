@@ -1,5 +1,5 @@
-const BASE_URL = "http://127.0.0.1:8000";
-
+//const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL = import.meta.env.VITE_API_URL;
 /* ---------- AUTH ---------- */
 
 export async function registerUser(data) {
@@ -23,7 +23,8 @@ export async function loginUser(data) {
 /* ---------- CHAT ---------- */
 
 export async function startChat(token) {
-  const res = await fetch(`${BASE_URL}/chat/start`, {
+  const subject = getSubject();
+  const res = await fetch(`${BASE_URL}/chat/start?subject_id=${subject}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -33,7 +34,9 @@ export async function startChat(token) {
 }
 
 export async function sendMessage(chatId, message, token) {
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/message`, {
+  const subject = getSubject();
+  const res = await fetch(
+    `${BASE_URL}/chat/${chatId}/message/stream?subject_id=${subject}`,{
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -45,7 +48,8 @@ export async function sendMessage(chatId, message, token) {
 }
 
 export async function sendMessageStream(chatId, message, token) {
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/message/stream`, {
+  const subject = getSubject();
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/message/stream?subject_id=${subject}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -57,9 +61,10 @@ export async function sendMessageStream(chatId, message, token) {
   return res;
 }
 
-
 export async function getHistory(chatId, token) {
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/history`, {
+  const subject = getSubject();
+  const res = await fetch(
+    `${BASE_URL}/chat/${chatId}/history?subject_id=${subject}`,{
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -68,7 +73,9 @@ export async function getHistory(chatId, token) {
 }
 
 export async function getChatSessions(token) {
-  const res = await fetch(`${BASE_URL}/chat/sessions`, {
+  const subject = getSubject();
+  const res = await fetch(
+    `${BASE_URL}/chat/sessions?subject_id=${subject}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -77,13 +84,76 @@ export async function getChatSessions(token) {
 }
 
 export async function searchChats(query, token) {
+  const subject = getSubject();
   const res = await fetch(
-    `${BASE_URL}/search?q=${encodeURIComponent(query)}`,
+    `${BASE_URL}/search?subject_id=${subject}&q=${encodeURIComponent(query)}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     }
-  );
+  ); 
   return res.json();
+}
+
+
+export async function logout() {
+  const token = localStorage.getItem("token");
+
+  if (!token) return;
+
+  await fetch(`${BASE_URL}/auth/logout`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  localStorage.removeItem("token");
+}
+
+export async function getUsers(token) {
+  const res = await fetch(`${BASE_URL}/auth/users`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.json();
+}
+export async function deleteUser(userId, token) {
+  const res = await fetch(`${BASE_URL}/auth/users/${userId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.json();
+}
+
+export async function createUser(data, token) {
+  const res = await fetch(`${BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  return res.json();
+}
+
+export async function getAdmins(token) {
+  const res = await fetch(`${BASE_URL}/auth/admins`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.json();
+}
+
+function getSubject() {
+  return localStorage.getItem("subject") || "physics";
 }

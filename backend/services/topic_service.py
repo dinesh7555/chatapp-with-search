@@ -1,8 +1,5 @@
-
-
 import json
-from services.llm_service import get_ai_response_with_context
-
+from services.llm_service import stream_ai_response
 
 async def extract_topics_llm(text: str) -> list[str]:
     """
@@ -24,7 +21,7 @@ async def extract_topics_llm(text: str) -> list[str]:
         }
     ]
 
-    response = await get_ai_response_with_context(messages)
+    response = await stream_ai_response(messages)
 
     try:
         topics = json.loads(response)

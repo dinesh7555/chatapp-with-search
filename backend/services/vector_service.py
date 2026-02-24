@@ -116,7 +116,7 @@ from typing import List
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 EMBED_URL = "https://openrouter.ai/api/v1/embeddings"
-EMBED_MODEL = "text-embedding-3-small"
+EMBED_MODEL = "openai/text-embedding-3-small"
 
 EMBED_DIM = 1536
 
@@ -141,10 +141,37 @@ else:
 
 # ---------------- EMBEDDING ----------------
 
+# async def embed_text(text: str) -> List[float]:
+#     headers = {
+#         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+#         "Content-Type": "application/json"
+#     }
+
+#     payload = {
+#         "model": EMBED_MODEL,
+#         "input": text
+#     }
+
+#     async with httpx.AsyncClient(timeout=30) as client:
+#         response = await client.post(EMBED_URL, headers=headers, json=payload)
+#         response.raise_for_status()
+#         data = response.json()
+
+#     return data["data"][0]["embedding"]
+
 async def embed_text(text: str) -> List[float]:
+
+    if not text or not text.strip():
+        return None
+
+    if not OPENROUTER_API_KEY:
+        raise Exception("OPENROUTER_API_KEY missing")
+
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost",   # REQUIRED sometimes
+        "X-Title": "ai-backend"
     }
 
     payload = {
@@ -153,7 +180,17 @@ async def embed_text(text: str) -> List[float]:
     }
 
     async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.post(EMBED_URL, headers=headers, json=payload)
+        response = await client.post(
+            EMBED_URL,
+            headers=headers,
+            json=payload
+        )
+
+        # 🔥 IMPORTANT DEBUG
+        if response.status_code != 200:
+            print("Embedding error:", response.status_code)
+            print(response.text)
+
         response.raise_for_status()
         data = response.json()
 

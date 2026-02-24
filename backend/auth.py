@@ -1,71 +1,3 @@
-# from passlib.context import CryptContext
-# from jose import jwt
-# from datetime import datetime, timedelta
-# import os
-# from fastapi.security import OAuth2PasswordBearer
-# from fastapi import Depends, HTTPException, status
-# from jose import JWTError, jwt
-# from sqlalchemy.orm import Session
-
-# from database import SessionLocal
-# from models import User
-
-
-# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# SECRET_KEY = os.getenv("SECRET_KEY")
-# ALGORITHM = os.getenv("ALGORITHM")
-
-# # def hash_password(password: str):
-# #     return pwd_context.hash(password)
-
-# def hash_password(password: str) -> str:
-#     password = password[:72]  # bcrypt hard limit
-#     return pwd_context.hash(password)
-
-# def verify_password(plain, hashed):
-#     return pwd_context.verify(plain, hashed)
-
-# def create_access_token(data: dict, expires_delta: int = 30):
-#     to_encode = data.copy()
-#     expire = datetime.utcnow() + timedelta(minutes=expires_delta)
-#     to_encode.update({"exp": expire})
-#     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-# def get_db():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
-# def get_current_user(
-#     token: str = Depends(oauth2_scheme),
-#     db: Session = Depends(get_db)
-# ):
-#     credentials_exception = HTTPException(
-#         status_code=status.HTTP_401_UNAUTHORIZED,
-#         detail="Could not validate credentials",
-#         headers={"WWW-Authenticate": "Bearer"},
-#     )
-
-#     try:
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         username: str = payload.get("sub")
-
-#         if username is None:
-#             raise credentials_exception
-
-#     except JWTError:
-#         raise credentials_exception
-
-#     user = db.query(User).filter(User.username == username).first()
-
-#     if user is None:
-#         raise credentials_exception
-
-#     return user
-
 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -78,7 +10,9 @@ from sqlalchemy.orm import Session
 
 from database import SessionLocal
 from models import User
+
 from redis_client import redis_client
+
 
 # ---------------- PASSWORD HASHING ----------------
 
@@ -97,13 +31,14 @@ def verify_password(plain: str, hashed: str) -> bool:
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
-
 def create_access_token(data: dict, expires_delta: int = 30):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=expires_delta)
     to_encode.update({"exp": expire})
-    token=jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return token, expires_delta*60
+
+    token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    return token, expires_delta * 60
 
 # ---------------- DATABASE DEP ----------------
 
@@ -113,7 +48,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 # ---------------- AUTH DEPENDENCY (NEW) ----------------
 
@@ -130,13 +64,13 @@ def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
     if not redis_client.exists(f"jwt:{token}"):
         raise credentials_exception
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-
+        
         if username is None:
             raise credentials_exception
 
@@ -149,7 +83,7 @@ def get_current_user(
         raise credentials_exception
 
     return user
-    
+
 ##---------------- ADMIN CHECK DEPENDENCY (NEW) ----------------
 def require_admin(current_user: User = Depends(get_current_user)):
     if current_user.role != "admin":
@@ -167,3 +101,22 @@ def require_student(current_user: User = Depends(get_current_user)):
             detail="Students only"
         )
     return current_user
+
+##----------------- TEACHER CHECK DEPENDENCY (NEW) ----------------
+def require_teacher(current_user: User = Depends(get_current_user)):
+    if current_user.role != "teacher":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Teacher access required"
+        )
+    return current_user
+
+def require_roles(*roles):
+    def role_checker(current_user: User = Depends(get_current_user)):
+        if current_user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+        return current_user
+    return role_checker

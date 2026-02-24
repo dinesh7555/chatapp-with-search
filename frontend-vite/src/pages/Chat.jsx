@@ -1,259 +1,6 @@
 
-
-// import { useEffect, useRef, useState } from "react";
-// import {
-//   startChat,
-//   sendMessage,
-//   getHistory,
-//   getChatSessions,
-//   logout
-// } from "../services/api";
-// import "./Chat.css";
-// import ChatSidebar from "./ChatSidebar";
-// import ReactMarkdown from "react-markdown";
-// import { searchChats } from "../services/api";
-// import { sendMessageStream } from "../services/api";
-
-
-
-// export default function Chat({ onLogout }) {
-//   const token = localStorage.getItem("token");
-
-//   const [sessions, setSessions] = useState([]);
-//   const [chatId, setChatId] = useState(null);
-//   const [messages, setMessages] = useState([]);
-//   const [input, setInput] = useState("");
-//   const sendingRef = useRef(false);
-//   const [loading, setLoading] = useState(false);
-//   const messagesEndRef = useRef(null);
-
-
-//   function scrollToBottom() {
-//   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-// }
-// useEffect(() => {
-//   scrollToBottom();
-// }, [messages]);
-
-//   const [searchQuery, setSearchQuery] = useState("");
-//   const [searchResults, setSearchResults] = useState([]);
-//   const [isSearching, setIsSearching] = useState(false);
-//   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-
-
-//   /* ---------------- Load sidebar sessions ---------------- */
-
-//   useEffect(() => {
-//     async function loadSessions() {
-//       try {
-//         const res = await getChatSessions(token);
-//         setSessions(res.sessions || []);
-//       } catch (err) {
-//         console.error("Failed to load sessions", err);
-//       }
-//     }
-//     loadSessions();
-//   }, [token]);
-
-//   /* ---------------- Select chat & load history ---------------- */
-
-//   async function handleSelectChat(id) {
-//     try {
-//       setChatId(id);
-//       const history = await getHistory(id, token);
-//       setMessages(Array.isArray(history.messages) ? history.messages : []);
-//     } catch (err) {
-//       console.error("Failed to load chat history", err);
-//     }
-//   }
-
-//   /* ---------------- Start new chat ---------------- */
-
-//   async function handleNewChat() {
-//     try {
-//       const res = await startChat(token);
-//       setChatId(res.chat_id);
-//       setMessages([]);
-//       setInput("");
-
-//       const updated = await getChatSessions(token);
-//       setSessions(updated.sessions || []);
-//     } catch (err) {
-//       console.error("Failed to start new chat", err);
-//     }
-//   }
-
-
-//   async function handleSend(e) {
-//   e.preventDefault();
-//   if (!input.trim() || !chatId || sendingRef.current) return;
-
-//   sendingRef.current = true;
-//   setLoading(true);
-
-//   const userText = input;
-//   setInput("");
-
-//   setMessages((prev) => [
-//     ...prev,
-//     { sender: "user", text: userText },
-//     { sender: "ai", text: "" } // placeholder
-//   ]);
-
-//   try {
-//     const res = await sendMessageStream(chatId, userText, token);
-//     const reader = res.body.getReader();
-//     const decoder = new TextDecoder();
-
-//     let aiText = "";
-
-//     while (true) {
-//       const { value, done } = await reader.read();
-//       if (done) break;
-
-//       const chunk = decoder.decode(value);
-//       aiText += chunk;
-
-//       setMessages((prev) => {
-//         const updated = [...prev];
-//         updated[updated.length - 1] = {
-//           sender: "ai",
-//           text: aiText
-//         };
-//         return updated;
-//       });
-//     }
-//   } catch (err) {
-//     console.error("Streaming failed", err);
-//   } finally {
-//     sendingRef.current = false;
-//     setLoading(false);
-//   }
-// }
-
-
-//   /* ---------------- Logout ---------------- */
-
-//   // function handleLogout() {
-//   //   localStorage.removeItem("token");
-//   //   onLogout();
-//   // }
-//   // function handleLogoutConfirm() {
-//   //   localStorage.removeItem("token");
-//   //   onLogout();
-//   // }
-//   function handleLogoutConfirm() {
-//     try {
-//       logout();   // 🔥 calls backend & deletes Redis session
-//     } catch (err) {
-//       console.error("Logout failed", err);
-//     } finally {
-//       onLogout();       // navigate back to login
-//     }
-//   }
-
-//   /* ---------------- Search Chats ---------------- */  
-//   async function handleSearch(query) {
-//   if (!query.trim()) {
-//     setIsSearching(false);
-//     setSearchResults([]);
-//     return;
-//   }
-
-//   const res = await searchChats(query, token);
-//   setSearchResults(res.results || []);
-//   setIsSearching(true);
-// }
-
-//   /* ---------------- UI ---------------- */
-
-//   return (
-//     <div className="chat-layout">
-//       <ChatSidebar
-//         sessions={isSearching ? searchResults : sessions}
-//         activeChatId={chatId}
-//         onSelectChat={handleSelectChat}
-//         onNewChat={handleNewChat}
-//         onSearch={handleSearch}
-//       />
-
-//       <div className="chat-container">
-//         <div className="chat-header">
-//           <span>AI Chat Assistant</span>
-//           <button
-//             className="logout-btn"
-//             onClick={() => setShowLogoutModal(true)}
-//           >
-//             Logout
-//           </button>
-//         </div>
-
-//         {!chatId ? (
-//           <div className="chat-placeholder">
-//             <button className="start-chat-btn" onClick={handleNewChat}>Start Chat</button>
-//           </div>
-//         ) : (
-//           <>
-//             <div className="chat-messages">
-//               {messages.map((m, i) => (
-//                 <div
-//                   key={i}
-//                   className={`message ${m.sender}`}
-//                 >
-//               <ReactMarkdown>{m.text}</ReactMarkdown>
-//                 </div>
-//               ))}
-//               {loading && (
-//                 <div className="message ai typing">
-//                   <span className="dot">.</span>
-//                   <span className="dot">.</span>
-//                   <span className="dot">.</span>
-//                 </div>
-//               )}
-//               <div ref={messagesEndRef} />
-//             </div>
-
-//             <form className="chat-input" onSubmit={handleSend}>
-//               <input
-//                 value={input}
-//                 onChange={(e) => setInput(e.target.value)}
-//                 placeholder="Type your message..."
-//               />
-//               <button type="submit">Send</button>
-//             </form>
-//           </>
-//         )}
-//       </div>
-//         {showLogoutModal && (
-//           <div className="logout-modal-overlay">
-//             <div className="logout-modal">
-//               <h3>Confirm Logout</h3>
-//               <p>Are you sure you want to logout?</p>
-//               <div className="logout-actions">
-//                 <button
-//                   className="cancel-btn"
-//                   onClick={() => setShowLogoutModal(false)}
-//                 >
-//                   Cancel
-//                 </button>
-//                 <button
-//                   className="confirm-btn"
-//                   onClick={handleLogoutConfirm}
-//                 >
-//                   Logout
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         )}
-
-//     </div>
-//   );
-// }
-
-
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   startChat,
   sendMessage,
@@ -268,6 +15,10 @@ import ChatSidebar from "./ChatSidebar";
 import ReactMarkdown from "react-markdown";
 
 export default function Chat({ onLogout }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const topicParam = searchParams.get("topic");
   const token = localStorage.getItem("token");
   const [sessions, setSessions] = useState([]);
   const [chatId, setChatId] = useState(null);
@@ -285,6 +36,18 @@ export default function Chat({ onLogout }) {
   const [subject, setSubject] = useState(
     localStorage.getItem("subject") || "physics"
   );
+
+  // Handle auto-starting chat for topic from parameter
+  useEffect(() => {
+    const autoStartTopic = async () => {
+      if (topicParam && !chatId && !sendingRef.current) {
+        await handleNewChat(topicParam);
+        // Clear query param to prevent re-triggering
+        navigate("/chat", { replace: true });
+      }
+    };
+    autoStartTopic();
+  }, [topicParam, chatId]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const subjects = ["physics", "chemistry", "english", "social"];
@@ -296,6 +59,15 @@ export default function Chat({ onLogout }) {
     english: "📖",
     social: "🌍",
   };
+
+  const SUBJECT_TOPICS = {
+    physics: ["mechanics", "optics"],
+    chemistry: ["organic", "inorganic"],
+    english: ["grammar", "literature"],
+    social: ["history", "geography"],
+  };
+
+  const [selectedTopic, setSelectedTopic] = useState(null);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -313,6 +85,7 @@ export default function Chat({ onLogout }) {
   function handleSubjectChange(newSubject) {
     localStorage.setItem("subject", newSubject);
     setSubject(newSubject);
+    setSelectedTopic(null); // Reset topic when subject changes
     setChatId(null);
     setMessages([]);
     setDropdownOpen(false);
@@ -352,10 +125,12 @@ export default function Chat({ onLogout }) {
 
   /* ---------------- Start new chat ---------------- */
 
-  async function handleNewChat() {
+  async function handleNewChat(topic) {
+    if (!topic) return;
     try {
-      const res = await startChat(token);
+      const res = await startChat(token, topic);
       setChatId(res.chat_id);
+      setSelectedTopic(topic);
       setMessages([]);
       setInput("");
 
@@ -486,7 +261,18 @@ export default function Chat({ onLogout }) {
 
         {!chatId ? (
           <div className="chat-placeholder">
-            <button className="start-chat-btn" onClick={handleNewChat}>Start Chat</button>
+            <h2>Select a Topic to Start Chatting</h2>
+            <div className="topic-grid">
+              {SUBJECT_TOPICS[subject]?.map((topic) => (
+                <button
+                  key={topic}
+                  className="topic-card"
+                  onClick={() => handleNewChat(topic)}
+                >
+                  {topic.charAt(0).toUpperCase() + topic.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <>

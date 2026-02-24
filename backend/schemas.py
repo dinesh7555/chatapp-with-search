@@ -19,3 +19,20 @@ class UserLogin(BaseModel):
 
 class ChatMessage(BaseModel):
     message: str
+
+class StudentCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    roll_no: str
+    course_id: str
+    status: str = "active"
+
+
+class TeacherCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    subject: str
+    department: str
+    designation: str

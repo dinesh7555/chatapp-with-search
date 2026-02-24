@@ -7,13 +7,17 @@ from services.chat_service import (
     get_chat_history,
     update_chat_title_if_empty , 
     get_first_user_messages , 
-    link_message_to_topics,
     get_user_chat_sessions,
-    
+    get_chat_topic
+)
+from services.metrics_service import (
+    calculate_metrics,
+    update_user_topic_state,
+    get_user_topic_state
 )
 from services.llm_service import get_ai_response_with_context , stream_ai_response
 from services.vector_service import store_embedding, search_similar
-from services.topic_service import extract_topics_llm
+# from services.topic_service import extract_topics_llm
 from services.title_service import generate_title_from_messages
 from fastapi.responses import StreamingResponse
 
@@ -26,18 +30,19 @@ async def process_message_background(
     user_seq: int,
     user_text: str,
     ai_seq: int,
-    ai_text: str
+    ai_text: str,
+    topic: str = None
 ):
     # 🔹 Topics (UNCHANGED)
-    topics = await extract_topics_llm(user_text)
-    if topics:
-        link_message_to_topics(
-            chat_id=chat_id,
-            user_id=user_id,
-            subject_id=subject_id,
-            message_sequence=user_seq,
-            topics=topics
-        )
+    # topics = await extract_topics_llm(user_text)
+    # if topics:
+    #     link_message_to_topics(
+    #         chat_id=chat_id,
+    #         user_id=user_id,
+    #         subject_id=subject_id,
+    #         message_sequence=user_seq,
+    #         topics=topics
+    #     )
 
     # 🔹 Generate title ONLY after 3rd user message
     user_messages = get_first_user_messages(
@@ -71,6 +76,12 @@ async def process_message_background(
         text=ai_text
     )
 
+    # 🔹 Calculate and update metrics
+    if topic:
+        scores = await calculate_metrics(user_text)
+        print(f"Metrics for topic '{topic}': {scores}")
+        update_user_topic_state(user_id, topic,subject_id,scores)
+
 
 ALLOWED_SUBJECTS = {
     "chemistry",
@@ -78,18 +89,71 @@ ALLOWED_SUBJECTS = {
     "english",
     "social"
 }
+# 🔹 Hardcoded topics per subject
+SUBJECT_TOPICS = {
+    "physics": ["mechanics", "optics"],
+    "chemistry": ["organic", "inorganic"],
+    "english": ["grammar", "literature"],
+    "social": ["history", "geography"]
+}
+
+# @router.get("/topics")
+# def get_topics(subject_id: str = Query(...), current_user = Depends(require_student)):
+#     if subject_id not in ALLOWED_SUBJECTS:
+#         raise HTTPException(status_code=400, detail="Invalid subject")
+    
+#     return {
+#         "topics": get_topics_for_subject(subject_id)
+#     }
 
 # 🔹 STEP 3: Start a new chat session
+# @router.post("/start")
+# def start_chat(
+#     subject_id: str = Query(...), 
+#     topic: str = Query(None),
+#     current_user = Depends(require_student)
+# ):
+#     if subject_id not in ALLOWED_SUBJECTS:
+#         raise HTTPException(status_code=400, detail="Invalid subject")
+
+#     # If topic is provided, validate it belongs to the subject
+#     if topic:
+#         valid_topics = get_topics_for_subject(subject_id)
+#         if topic not in valid_topics:
+#             raise HTTPException(status_code=400, detail=f"Invalid topic for {subject_id}")
+
+#     chat_id = create_chat_session(
+#         user_id=current_user.id, 
+#         subject_id=subject_id, 
+#         topic=topic
+#     )
+#     return {
+#         "chat_id": chat_id,
+#         "topic": topic
+#     }
 @router.post("/start")
-def start_chat(subject_id: str = Query(...), 
-        current_user = Depends(require_student)
-    ):
+def start_chat(
+    subject_id: str = Query(...),
+    topic: str = Query(...),
+    current_user = Depends(require_student)
+):
     if subject_id not in ALLOWED_SUBJECTS:
         raise HTTPException(status_code=400, detail="Invalid subject")
 
-    chat_id = create_chat_session(user_id=current_user.id, subject_id=subject_id)
+    allowed_topics = SUBJECT_TOPICS.get(subject_id, [])
+    if topic not in allowed_topics:
+        raise HTTPException(status_code=400, detail="Invalid topic for this subject")
+
+    chat_id = create_chat_session(
+        user_id=current_user.id,
+        subject_id=subject_id,
+        topic=topic
+    )
+
     return {
-        "chat_id": chat_id
+        "chat_id": chat_id,
+        "subject_id": subject_id,
+        "topic": topic
     }
 
 
@@ -151,7 +215,8 @@ def build_llm_messages(
     history: list,
     new_message: str,
     semantic_memory: list,
-    subject_id: str
+    subject_id: str,
+    user_state: dict = None
 ):
     subject_prompt = SUBJECT_PROMPTS.get(subject_id)
 
@@ -161,6 +226,23 @@ def build_llm_messages(
             "content": subject_prompt
         }
     ]
+
+    # 🔹 Inject User State (Confusion/Stress)
+    if user_state and (user_state.get("confusion_score", 0) > 0 or user_state.get("stress_score", 0) > 0):
+        confusion = user_state.get("confusion_score", 0)
+        stress = user_state.get("stress_score", 0)
+        
+        state_prompt = f"User Status: Confusion Level: {confusion}/100, Stress Level: {stress}/100.\n"
+        
+        if confusion > 50:
+            state_prompt += "The user is confused. Be extra clear, patient, and explain step-by-step. "
+        if stress > 50:
+            state_prompt += "The user is stressed. Be encouraging, supportive, and avoid overwhelming them. "
+            
+        messages.append({
+            "role": "system",
+            "content": state_prompt
+        })
 
     # 🔹 Inject semantic memory (Step 4)
     if semantic_memory:
@@ -217,12 +299,17 @@ async def send_message_stream(
         top_k=3
     )
 
-    # 3️⃣ Build prompt
+    # 3️⃣ Get Topic & User State
+    topic = get_chat_topic(chat_id, current_user.id,subject_id)
+    user_state = get_user_topic_state(current_user.id, topic,subject_id) if topic else None
+
+    # 4️⃣ Build prompt
     llm_messages = build_llm_messages(
         history=history,
         new_message=payload.message,
         semantic_memory=semantic_memory,
-        subject_id=subject_id
+        subject_id=subject_id,
+        user_state=user_state
     )
 
     # 4️⃣ Store USER message immediately
@@ -259,8 +346,10 @@ async def send_message_stream(
             user_seq,
             payload.message,
             ai_seq,
-            full_response
+            full_response,
+            topic
         )
+
 
     return StreamingResponse(
         event_generator(),

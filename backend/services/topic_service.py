@@ -4,6 +4,7 @@ import json
 from services.llm_service import get_ai_response_with_context
 
 
+
 async def extract_topics_llm(text: str) -> list[str]:
     """
     Extract 2–4 concise topics from user text.

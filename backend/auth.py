@@ -101,3 +101,22 @@ def require_student(current_user: User = Depends(get_current_user)):
             detail="Students only"
         )
     return current_user
+
+##----------------- TEACHER CHECK DEPENDENCY (NEW) ----------------
+def require_teacher(current_user: User = Depends(get_current_user)):
+    if current_user.role != "teacher":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Teacher access required"
+        )
+    return current_user
+
+def require_roles(*roles):
+    def role_checker(current_user: User = Depends(get_current_user)):
+        if current_user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+        return current_user
+    return role_checker

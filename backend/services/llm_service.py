@@ -11,7 +11,7 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 # MODEL_NAME = "mistralai/mixtral-8x7b-instruct"
 MODEL_NAME = "meta-llama/llama-3-8b-instruct"
-'''
+
 async def get_ai_response_with_context(messages: list):
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
@@ -34,7 +34,7 @@ async def get_ai_response_with_context(messages: list):
 
     data = response.json()
     return data["choices"][0]["message"]["content"]
-'''
+
 async def stream_ai_response(messages: list):
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",

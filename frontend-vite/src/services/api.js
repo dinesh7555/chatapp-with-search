@@ -1,5 +1,5 @@
-//const BASE_URL = "http://127.0.0.1:8000";
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = "http://172.168.11.81:8000";
+
 /* ---------- AUTH ---------- */
 
 export async function registerUser(data) {
@@ -22,9 +22,13 @@ export async function loginUser(data) {
 
 /* ---------- CHAT ---------- */
 
-export async function startChat(token) {
+function getSubject() {
+  return localStorage.getItem("subject") || "physics";
+}
+
+export async function startChat(token, topic) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/start?subject_id=${subject}`, {
+  const res = await fetch(`${BASE_URL}/chat/start?subject_id=${subject}&topic=${encodeURIComponent(topic)}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -36,13 +40,13 @@ export async function startChat(token) {
 export async function sendMessage(chatId, message, token) {
   const subject = getSubject();
   const res = await fetch(
-    `${BASE_URL}/chat/${chatId}/message/stream?subject_id=${subject}`,{
+    `${BASE_URL}/chat/${chatId}/message/stream?subject_id=${subject}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({message}),
+    body: JSON.stringify({ message }),
   });
   return res.json();
 }
@@ -64,7 +68,7 @@ export async function sendMessageStream(chatId, message, token) {
 export async function getHistory(chatId, token) {
   const subject = getSubject();
   const res = await fetch(
-    `${BASE_URL}/chat/${chatId}/history?subject_id=${subject}`,{
+    `${BASE_URL}/chat/${chatId}/history?subject_id=${subject}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -92,10 +96,9 @@ export async function searchChats(query, token) {
         Authorization: `Bearer ${token}`,
       },
     }
-  ); 
+  );
   return res.json();
 }
-
 
 export async function logout() {
   const token = localStorage.getItem("token");
@@ -111,15 +114,17 @@ export async function logout() {
   localStorage.removeItem("token");
 }
 
+/* ---------- ADMIN FUNCTIONS ---------- */
+
 export async function getUsers(token) {
-  const res = await fetch(`${BASE_URL}/auth/users`, {
+  const res = await fetch(`${BASE_URL}/auth/students`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-
   return res.json();
 }
+
 export async function deleteUser(userId, token) {
   const res = await fetch(`${BASE_URL}/auth/users/${userId}`, {
     method: "DELETE",
@@ -127,12 +132,22 @@ export async function deleteUser(userId, token) {
       Authorization: `Bearer ${token}`,
     },
   });
-
   return res.json();
 }
 
 export async function createUser(data, token) {
-  const res = await fetch(`${BASE_URL}/auth/register`, {
+  // Route based on role
+  let endpoint = `${BASE_URL}/auth/register`;
+  
+  if (data.role === "admin") {
+    endpoint = `${BASE_URL}/auth/register/admin`;
+  } else if (data.role === "student") {
+    endpoint = `${BASE_URL}/auth/register/student`;
+  } else if (data.role === "teacher") {
+    endpoint = `${BASE_URL}/auth/register/teacher`;
+  }
+
+  const res = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -150,10 +165,59 @@ export async function getAdmins(token) {
       Authorization: `Bearer ${token}`,
     },
   });
-
   return res.json();
 }
 
-function getSubject() {
-  return localStorage.getItem("subject") || "physics";
+/* ---------- TEACHER FUNCTIONS ---------- */
+
+export async function getStudents(token) {
+  const res = await fetch(`${BASE_URL}/auth/students`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function createStudent(data, token) {
+  const res = await fetch(`${BASE_URL}/auth/register/student`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function updateStudentStatus(studentId, status, token) {
+  const res = await fetch(`${BASE_URL}/auth/students/${studentId}/status?status=${status}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function getTeachers(token) {
+  const res = await fetch(`${BASE_URL}/auth/teachers`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function createTeacher(data, token) {
+  const res = await fetch(`${BASE_URL}/auth/register/teacher`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  return res.json();
 }

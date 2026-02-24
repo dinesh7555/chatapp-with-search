@@ -4,7 +4,6 @@ class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
-    role: Literal["admin", "student"]
 
 class UserLogin(BaseModel):
     username: str
@@ -12,3 +11,20 @@ class UserLogin(BaseModel):
 
 class ChatMessage(BaseModel):
     message: str
+
+class StudentCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    roll_no: str
+    course_id: str
+    status: str = "active"
+
+
+class TeacherCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    subject: str
+    department: str
+    designation: str

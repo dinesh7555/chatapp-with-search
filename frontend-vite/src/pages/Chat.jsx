@@ -21,7 +21,7 @@ export default function Chat({ onLogout }) {
   const sendingRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -42,6 +42,15 @@ export default function Chat({ onLogout }) {
     social: "🌍",
   };
 
+  const SUBJECT_TOPICS = {
+    physics: ["mechanics", "optics"],
+    chemistry: ["organic", "inorganic"],
+    english: ["grammar", "literature"],
+    social: ["history", "geography"],
+  };
+
+  const [selectedTopic, setSelectedTopic] = useState(null);
+
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e) {
@@ -58,12 +67,13 @@ export default function Chat({ onLogout }) {
   function handleSubjectChange(newSubject) {
     localStorage.setItem("subject", newSubject);
     setSubject(newSubject);
+    setSelectedTopic(null); // Reset topic when subject changes
     setChatId(null);
     setMessages([]);
     setDropdownOpen(false);
   }
   function scrollToBottom() {
-  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }
   useEffect(() => {
     scrollToBottom();
@@ -97,10 +107,12 @@ export default function Chat({ onLogout }) {
 
   /* ---------------- Start new chat ---------------- */
 
-  async function handleNewChat() {
+  async function handleNewChat(topic) {
+    if (!topic) return;
     try {
-      const res = await startChat(token);
+      const res = await startChat(token, topic);
       setChatId(res.chat_id);
+      setSelectedTopic(topic);
       setMessages([]);
       setInput("");
 
@@ -110,52 +122,52 @@ export default function Chat({ onLogout }) {
       console.error("Failed to start new chat", err);
     }
   }
- 
+
   async function handleSend(e) {
-  e.preventDefault();
-  if (!input.trim() || !chatId || sendingRef.current) return;
+    e.preventDefault();
+    if (!input.trim() || !chatId || sendingRef.current) return;
 
-  sendingRef.current = true;
-  setLoading(true);
+    sendingRef.current = true;
+    setLoading(true);
 
-  const userText = input;
-  setInput("");
+    const userText = input;
+    setInput("");
 
-  setMessages((prev) => [
-    ...prev,
-    { sender: "user", text: userText },
-    { sender: "ai", text: "" } // placeholder
-  ]);
+    setMessages((prev) => [
+      ...prev,
+      { sender: "user", text: userText },
+      { sender: "ai", text: "" } // placeholder
+    ]);
 
-  try {
-    const res = await sendMessageStream(chatId, userText, token);
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
+    try {
+      const res = await sendMessageStream(chatId, userText, token);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
 
-    let aiText = "";
+      let aiText = "";
 
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
 
-      const chunk = decoder.decode(value);
-      aiText += chunk;
+        const chunk = decoder.decode(value);
+        aiText += chunk;
 
-      setMessages((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = {
-          sender: "ai",
-          text: aiText
-        };
-        return updated;
-      });
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            sender: "ai",
+            text: aiText
+          };
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error("Streaming failed", err);
+    } finally {
+      sendingRef.current = false;
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("Streaming failed", err);
-  } finally {
-    sendingRef.current = false;
-    setLoading(false);
-  }
   }
 
   function handleLogoutConfirm() {
@@ -168,17 +180,17 @@ export default function Chat({ onLogout }) {
     }
   }
 
-  /* ---------------- Search Chats ---------------- */  
+  /* ---------------- Search Chats ---------------- */
   async function handleSearch(query) {
-  if (!query.trim()) {
-    setIsSearching(false);
-    setSearchResults([]);
-    return;
-  }
+    if (!query.trim()) {
+      setIsSearching(false);
+      setSearchResults([]);
+      return;
+    }
 
-  const res = await searchChats(query, token);
-  setSearchResults(res.results || []);
-  setIsSearching(true);
+    const res = await searchChats(query, token);
+    setSearchResults(res.results || []);
+    setIsSearching(true);
   }
 
   /* ---------------- UI ---------------- */
@@ -231,7 +243,18 @@ export default function Chat({ onLogout }) {
 
         {!chatId ? (
           <div className="chat-placeholder">
-            <button className="start-chat-btn" onClick={handleNewChat}>Start Chat</button>
+            <h2>Select a Topic to Start Chatting</h2>
+            <div className="topic-grid">
+              {SUBJECT_TOPICS[subject]?.map((topic) => (
+                <button
+                  key={topic}
+                  className="topic-card"
+                  onClick={() => handleNewChat(topic)}
+                >
+                  {topic.charAt(0).toUpperCase() + topic.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <>
@@ -241,7 +264,7 @@ export default function Chat({ onLogout }) {
                   key={i}
                   className={`message ${m.sender}`}
                 >
-              <ReactMarkdown>{m.text}</ReactMarkdown>
+                  <ReactMarkdown>{m.text}</ReactMarkdown>
                 </div>
               ))}
               {loading && (
@@ -265,28 +288,28 @@ export default function Chat({ onLogout }) {
           </>
         )}
       </div>
-        {showLogoutModal && (
-          <div className="logout-modal-overlay">
-            <div className="logout-modal">
-              <h3>Confirm Logout</h3>
-              <p>Are you sure you want to logout?</p>
-              <div className="logout-actions">
-                <button
-                  className="cancel-btn"
-                  onClick={() => setShowLogoutModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="confirm-btn"
-                  onClick={handleLogoutConfirm}
-                >
-                  Logout
-                </button>
-              </div>
+      {showLogoutModal && (
+        <div className="logout-modal-overlay">
+          <div className="logout-modal">
+            <h3>Confirm Logout</h3>
+            <p>Are you sure you want to logout?</p>
+            <div className="logout-actions">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="confirm-btn"
+                onClick={handleLogoutConfirm}
+              >
+                Logout
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
     </div>
   );

@@ -2,6 +2,7 @@ import { useState } from "react";
 import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
 import AdminDashboard from "./pages/AdminDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
 
 function App() {
   const [authenticated, setAuthenticated] = useState(
@@ -23,7 +24,9 @@ function App() {
   if (role === "admin") {
     return <AdminDashboard onLogout={handleLogout} />;
   }
-
+  if (role === "teacher") {
+    return <TeacherDashboard onLogout={handleLogout} />;
+}
   return <Chat onLogout={handleLogout} />;
 }
 

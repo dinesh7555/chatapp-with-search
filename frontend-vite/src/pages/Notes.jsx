@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -16,8 +15,17 @@ const Notes = () => {
             setLoading(true);
             try {
                 const token = localStorage.getItem("token");
+                const params = new URLSearchParams({
+                    subject_id: subjectId,
+                    topic,
+                });
+                // include a `refresh` flag if the location query string contains it
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get("refresh") === "true") {
+                    params.set("refresh", "true");
+                }
                 const response = await fetch(
-                    `http://localhost:8000/subjects/notes?subject_id=${subjectId}&topic=${topic}`,
+                    `http://localhost:8000/subjects/notes?${params.toString()}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

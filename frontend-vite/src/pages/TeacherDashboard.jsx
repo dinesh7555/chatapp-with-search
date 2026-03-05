@@ -4,7 +4,8 @@ import {
     createStudent,
     updateStudentStatus,
     deleteUser,
-    logout
+    logout,
+    getStudentState
 } from "../services/api";
 import "./TeacherDashboard.css";
 
@@ -13,10 +14,17 @@ export default function TeacherDashboard({ onLogout }) {
     const [students, setStudents] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [activeTab, setActiveTab] = useState("students");
 
     // Filter states
     const [filterStatus, setFilterStatus] = useState("all");
-    const [filterCourse, setFilterCourse] = useState("all");
+    const [filterYear, setFilterYear] = useState("all");
+    const [filterBranch, setFilterBranch] = useState("all");
+    const [filterSubject, setFilterSubject] = useState("all");
+    const [filterTopic, setFilterTopic] = useState("all");
+
+    // Modal state
+    const [statsModal, setStatsModal] = useState({ show: false, student: null, state: null, loading: false });
 
     // Create student form states
     const [newUsername, setNewUsername] = useState("");
@@ -24,15 +32,26 @@ export default function TeacherDashboard({ onLogout }) {
     const [newPassword, setNewPassword] = useState("");
     const [newRollNo, setNewRollNo] = useState("");
     const [newCourseId, setNewCourseId] = useState("");
+    const [newYear, setNewYear] = useState("");
+    const [newBranch, setNewBranch] = useState("");
     const [newStatus, setNewStatus] = useState("active");
 
     useEffect(() => {
         loadStudents();
-    }, [token]);
+    }, [token, filterYear, filterBranch, filterSubject]);
+
+    // Reset topic when subject changes
+    useEffect(() => {
+        setFilterTopic("all");
+    }, [filterSubject]);
 
     async function loadStudents() {
         try {
-            const data = await getStudents(token);
+            const data = await getStudents(token, {
+                year: filterYear,
+                branch: filterBranch,
+                subject: filterSubject
+            });
             setStudents(data || []);
         } catch (err) {
             console.error("Failed to load students", err);
@@ -40,8 +59,8 @@ export default function TeacherDashboard({ onLogout }) {
     }
 
     async function handleCreateStudent() {
-        if (!newUsername || !newEmail || !newPassword || !newRollNo || !newCourseId) {
-            alert("All fields are required");
+        if (!newUsername || !newEmail || !newPassword || !newRollNo || !newYear || !newBranch) {
+            alert("Username, Email, Password, Roll No, Year, and Branch are required");
             return;
         }
 
@@ -53,6 +72,8 @@ export default function TeacherDashboard({ onLogout }) {
                     password: newPassword,
                     roll_no: newRollNo,
                     course_id: newCourseId,
+                    year: parseInt(newYear),
+                    branch: newBranch,
                     status: newStatus,
                 },
                 token
@@ -67,6 +88,8 @@ export default function TeacherDashboard({ onLogout }) {
                 setNewPassword("");
                 setNewRollNo("");
                 setNewCourseId("");
+                setNewYear("");
+                setNewBranch("");
                 setNewStatus("active");
             } else {
                 alert(res.detail || "Creation failed");
@@ -130,6 +153,28 @@ export default function TeacherDashboard({ onLogout }) {
         }
     }
 
+    async function handleViewStats(student) {
+        if (filterSubject === "all" || filterTopic === "all") {
+            alert("Please select a specific Subject and Topic to view student stats.");
+            return;
+        }
+
+        setStatsModal({ show: true, student, state: null, loading: true });
+
+        try {
+            const state = await getStudentState(token, filterSubject, filterTopic, student.id);
+            if (state.detail) {
+                // Backend might return error in body even with 200 (if handled loosely)
+                throw new Error(state.detail);
+            }
+            setStatsModal({ show: true, student, state, loading: false });
+        } catch (err) {
+            console.error("Failed to load student state", err);
+            setStatsModal({ show: false, student: null, state: null, loading: false });
+            alert(err.message || "Failed to load student insights.");
+        }
+    }
+
     async function handleBulkDelete() {
         if (selectedStudents.length === 0) {
             alert("Please select students first");
@@ -177,11 +222,10 @@ export default function TeacherDashboard({ onLogout }) {
         }
     }
 
-    // Filter logic
+    // Filter logic (status is still local, year/branch/subject are server-side)
     const filteredStudents = students.filter((student) => {
         const statusMatch = filterStatus === "all" || student.status === filterStatus;
-        const courseMatch = filterCourse === "all" || student.course_id === filterCourse;
-        return statusMatch && courseMatch;
+        return statusMatch;
     });
 
     // Get unique courses for filter dropdown
@@ -200,193 +244,321 @@ export default function TeacherDashboard({ onLogout }) {
                 </button>
             </header>
 
+            {/* Tabs (Only Students for now) */}
+            <nav className="dashboard-tabs">
+                <button
+                    className={`tab-btn ${activeTab === "students" ? "active" : ""}`}
+                    onClick={() => setActiveTab("students")}
+                >
+                    Students
+                </button>
+            </nav>
+
             <main className="teacher-content">
-                {/* Create Student Section */}
-                <section className="teacher-section">
-                    <h3>Create Student</h3>
-                    <div className="teacher-form-grid">
-                        <input
-                            className="teacher-input"
-                            placeholder="Username"
-                            value={newUsername}
-                            onChange={(e) => setNewUsername(e.target.value)}
-                        />
-                        <input
-                            className="teacher-input"
-                            placeholder="Email"
-                            value={newEmail}
-                            onChange={(e) => setNewEmail(e.target.value)}
-                        />
-                        <input
-                            className="teacher-input"
-                            type="password"
-                            placeholder="Password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                        />
-                        <input
-                            className="teacher-input"
-                            placeholder="Roll Number"
-                            value={newRollNo}
-                            onChange={(e) => setNewRollNo(e.target.value)}
-                        />
-                        <input
-                            className="teacher-input"
-                            placeholder="Course ID"
-                            value={newCourseId}
-                            onChange={(e) => setNewCourseId(e.target.value)}
-                        />
-                        <select
-                            className="teacher-select"
-                            value={newStatus}
-                            onChange={(e) => setNewStatus(e.target.value)}
-                        >
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                    <button className="teacher-btn-primary" onClick={handleCreateStudent}>
-                        Create Student
-                    </button>
-                </section>
-
-                {/* Students List Section */}
-                <section className="teacher-section">
-                    <div className="section-header">
-                        <h3>Students ({filteredStudents.length})</h3>
-
-                        {/* Filter Controls */}
-                        <div className="filter-controls">
-                            <select
-                                className="teacher-select-small"
-                                value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
-                            >
-                                <option value="all">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-
-                            <select
-                                className="teacher-select-small"
-                                value={filterCourse}
-                                onChange={(e) => setFilterCourse(e.target.value)}
-                            >
-                                <option value="all">All Courses</option>
-                                {uniqueCourses.map((course) => (
-                                    <option key={course} value={course}>
-                                        {course}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Bulk Actions */}
-                    {selectedStudents.length > 0 && (
-                        <div className="bulk-actions">
-                            <span className="bulk-count">
-                                {selectedStudents.length} selected
-                            </span>
-                            <button
-                                className="bulk-btn active"
-                                onClick={() => handleBulkStatusChange("active")}
-                            >
-                                Mark Active
+                {activeTab === "students" && (
+                    <>
+                        {/* Create Student Section */}
+                        <section className="teacher-section">
+                            <h3>Create Student</h3>
+                            <div className="teacher-form-grid">
+                                <input
+                                    className="teacher-input"
+                                    placeholder="Username"
+                                    value={newUsername}
+                                    onChange={(e) => setNewUsername(e.target.value)}
+                                />
+                                <input
+                                    className="teacher-input"
+                                    placeholder="Email"
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                />
+                                <input
+                                    className="teacher-input"
+                                    type="password"
+                                    placeholder="Password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                />
+                                <input
+                                    className="teacher-input"
+                                    placeholder="Roll Number"
+                                    value={newRollNo}
+                                    onChange={(e) => setNewRollNo(e.target.value)}
+                                />
+                                <input
+                                    className="teacher-input"
+                                    placeholder="Course ID (Optional)"
+                                    value={newCourseId}
+                                    onChange={(e) => setNewCourseId(e.target.value)}
+                                />
+                                <input
+                                    className="teacher-input"
+                                    type="number"
+                                    placeholder="Year"
+                                    value={newYear}
+                                    onChange={(e) => setNewYear(e.target.value)}
+                                />
+                                <input
+                                    className="teacher-input"
+                                    placeholder="Branch (e.g. cse, csm)"
+                                    value={newBranch}
+                                    onChange={(e) => setNewBranch(e.target.value)}
+                                />
+                                <select
+                                    className="teacher-select"
+                                    value={newStatus}
+                                    onChange={(e) => setNewStatus(e.target.value)}
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <button className="teacher-btn-primary" onClick={handleCreateStudent}>
+                                Create Student
                             </button>
-                            <button
-                                className="bulk-btn inactive"
-                                onClick={() => handleBulkStatusChange("inactive")}
-                            >
-                                Mark Inactive
-                            </button>
-                            <button
-                                className="bulk-btn delete"
-                                onClick={handleBulkDelete}
-                            >
-                                Delete Selected
-                            </button>
-                        </div>
-                    )}
+                        </section>
 
-                    {/* Students Table */}
-                    {filteredStudents.length === 0 ? (
-                        <p className="teacher-empty">No students found</p>
-                    ) : (
-                        <div className="teacher-table-wrapper">
-                            <table className="teacher-table">
-                                <thead>
-                                    <tr>
-                                        <th>
-                                            <input
-                                                type="checkbox"
-                                                checked={
-                                                    selectedStudents.length === filteredStudents.length &&
-                                                    filteredStudents.length > 0
-                                                }
-                                                onChange={toggleSelectAll}
-                                            />
-                                        </th>
-                                        <th>ID</th>
-                                        <th>Username</th>
-                                        <th>Email</th>
-                                        <th>Roll No</th>
-                                        <th>Course</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredStudents.map((student) => (
-                                        <tr key={student.id}>
-                                            <td>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedStudents.includes(student.id)}
-                                                    onChange={() => toggleSelectStudent(student.id)}
-                                                />
-                                            </td>
-                                            <td>{student.id}</td>
-                                            <td>{student.username}</td>
-                                            <td>{student.email}</td>
-                                            <td>{student.roll_no}</td>
-                                            <td>{student.course_id}</td>
-                                            <td>
-                                                <span
-                                                    className={`status-badge ${student.status}`}
-                                                >
-                                                    {student.status}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <div className="action-buttons">
-                                                    <select
-                                                        className="status-select"
-                                                        value={student.status}
-                                                        onChange={(e) =>
-                                                            handleStatusChange(student.id, e.target.value)
+                        {/* Students List Section */}
+                        <section className="teacher-section">
+                            <div className="section-header">
+                                <h3>Students ({filteredStudents.length})</h3>
+
+                                {/* Filter Controls */}
+                                <div className="filter-controls">
+                                    <select
+                                        className="teacher-select-small"
+                                        value={filterStatus}
+                                        onChange={(e) => setFilterStatus(e.target.value)}
+                                    >
+                                        <option value="all">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+
+                                    <select
+                                        className="teacher-select-small"
+                                        value={filterYear}
+                                        onChange={(e) => setFilterYear(e.target.value)}
+                                    >
+                                        <option value="all">All Years</option>
+                                        <option value="1">Year 1</option>
+                                        <option value="2">Year 2</option>
+                                        <option value="3">Year 3</option>
+                                        <option value="4">Year 4</option>
+                                    </select>
+
+                                    <select
+                                        className="teacher-select-small"
+                                        value={filterBranch}
+                                        onChange={(e) => setFilterBranch(e.target.value)}
+                                    >
+                                        <option value="all">All Branches</option>
+                                        <option value="cse">CSE</option>
+                                        <option value="csm">CSM</option>
+                                    </select>
+
+                                    <select
+                                        className="teacher-select-small"
+                                        value={filterSubject}
+                                        onChange={(e) => setFilterSubject(e.target.value)}
+                                    >
+                                        <option value="all">All Subjects</option>
+                                        <option value="physics">Physics</option>
+                                        <option value="chemistry">Chemistry</option>
+                                        <option value="english">English</option>
+                                        <option value="social">Social</option>
+                                    </select>
+
+                                    <select
+                                        className="teacher-select-small"
+                                        value={filterTopic}
+                                        onChange={(e) => setFilterTopic(e.target.value)}
+                                        disabled={filterSubject === "all"}
+                                    >
+                                        <option value="all">All Topics</option>
+                                        {filterSubject !== "all" &&
+                                            (filterSubject === "physics" ? ["mechanics", "optics"] :
+                                                filterSubject === "chemistry" ? ["organic", "inorganic"] :
+                                                    filterSubject === "english" ? ["grammar", "literature"] :
+                                                        filterSubject === "social" ? ["history", "geography"] : []
+                                            ).map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Bulk Actions */}
+                            {selectedStudents.length > 0 && (
+                                <div className="bulk-actions">
+                                    <span className="bulk-count">
+                                        {selectedStudents.length} selected
+                                    </span>
+                                    <button
+                                        className="bulk-btn active"
+                                        onClick={() => handleBulkStatusChange("active")}
+                                    >
+                                        Mark Active
+                                    </button>
+                                    <button
+                                        className="bulk-btn inactive"
+                                        onClick={() => handleBulkStatusChange("inactive")}
+                                    >
+                                        Mark Inactive
+                                    </button>
+                                    <button
+                                        className="bulk-btn delete"
+                                        onClick={handleBulkDelete}
+                                    >
+                                        Delete Selected
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Students Table */}
+                            {filteredStudents.length === 0 ? (
+                                <p className="teacher-empty">No students found</p>
+                            ) : (
+                                <div className="teacher-table-wrapper">
+                                    <table className="teacher-table">
+                                        <thead>
+                                            <tr>
+                                                <th>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={
+                                                            selectedStudents.length === filteredStudents.length &&
+                                                            filteredStudents.length > 0
                                                         }
-                                                    >
-                                                        <option value="active">Active</option>
-                                                        <option value="inactive">Inactive</option>
-                                                    </select>
-                                                    <button
-                                                        className="delete-btn-small"
-                                                        onClick={() => handleDelete(student.id)}
-                                                        title="Delete student"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </section>
+                                                        onChange={toggleSelectAll}
+                                                    />
+                                                </th>
+                                                <th>ID</th>
+                                                <th>Username</th>
+                                                <th>Email</th>
+                                                <th>Roll No</th>
+                                                <th>Year</th>
+                                                <th>Branch</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {filteredStudents.map((student) => (
+                                                <tr key={student.id}>
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedStudents.includes(student.id)}
+                                                            onChange={() => toggleSelectStudent(student.id)}
+                                                        />
+                                                    </td>
+                                                    <td>{student.id}</td>
+                                                    <td>{student.username}</td>
+                                                    <td>{student.email}</td>
+                                                    <td>{student.roll_no}</td>
+                                                    <td>{student.year}</td>
+                                                    <td>{student.branch}</td>
+                                                    <td>
+                                                        <span
+                                                            className={`status-badge ${student.status}`}
+                                                        >
+                                                            {student.status}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div className="action-buttons">
+                                                            <select
+                                                                className="status-select"
+                                                                value={student.status}
+                                                                onChange={(e) =>
+                                                                    handleStatusChange(student.id, e.target.value)
+                                                                }
+                                                            >
+                                                                <option value="active">Active</option>
+                                                                <option value="inactive">Inactive</option>
+                                                            </select>
+                                                            <button
+                                                                className="insights-btn-small"
+                                                                onClick={() => handleViewStats(student)}
+                                                                title="View student insights"
+                                                            >
+                                                                Insights
+                                                            </button>
+                                                            <button
+                                                                className="delete-btn-small"
+                                                                onClick={() => handleDelete(student.id)}
+                                                                title="Delete student"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </section>
+                    </>
+                )}
             </main>
+
+            {/* Insights Modal */}
+            {statsModal.show && (
+                <div className="logout-modal-overlay">
+                    <div className="stats-modal">
+                        <h3>Insights for {statsModal.student.username}</h3>
+                        <p className="stats-topic">Topic: <strong>{filterTopic}</strong> ({filterSubject})</p>
+
+                        {statsModal.loading ? (
+                            <div className="stats-loading">Loading insights...</div>
+                        ) : statsModal.state ? (
+                            <>
+                                <div className="stats-grid">
+                                    <div className="stat-item">
+                                        <label>Mastery Level</label>
+                                        <div className="stat-value">{statsModal.state.mastery_level}%</div>
+                                        <div className="stat-bar"><div style={{ width: `${statsModal.state.mastery_level}%` }}></div></div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <label>Learning Pace</label>
+                                        <div className="stat-value">{statsModal.state.learning_pace > 60 ? "Fast" : statsModal.state.learning_pace < 40 ? "Slow" : "Normal"} ({statsModal.state.learning_pace})</div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <label>Engagement</label>
+                                        <div className="stat-value">{statsModal.state.engagement_score}%</div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <label>Confusion</label>
+                                        <div className="stat-value">{statsModal.state.confusion_score}%</div>
+                                    </div>
+                                </div>
+
+                                <div className="misconceptions-section">
+                                    <h4>Identified Misconceptions</h4>
+                                    {statsModal.state.misconceptions && statsModal.state.misconceptions.length > 0 ? (
+                                        <ul>
+                                            {statsModal.state.misconceptions.map((m, i) => <li key={i}>{m}</li>)}
+                                        </ul>
+                                    ) : (
+                                        <p>No misconceptions identified yet.</p>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <p>No data available for this student.</p>
+                        )}
+
+                        <div className="logout-actions" style={{ marginTop: '20px' }}>
+                            <button className="cancel-btn" onClick={() => setStatsModal({ show: false, student: null, state: null, loading: false })}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Logout Modal */}
             {showLogoutModal && (

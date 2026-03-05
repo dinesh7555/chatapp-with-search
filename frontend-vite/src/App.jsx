@@ -30,6 +30,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import MySubjects from "./pages/MySubjects";
 import Notes from "./pages/Notes";
 import TeacherDashboard from "./pages/TeacherDashboard";
+import TopicView from "./pages/TopicView";
 
 function App() {
   const [authenticated, setAuthenticated] = useState(
@@ -64,6 +65,7 @@ function App() {
         {/* Keeping Chat as a route if needed, or maybe it's accessed differently now */}
         <Route path="/chat" element={<Chat onLogout={handleLogout} />} />
         <Route path="/notes/:subjectId/:topic" element={<Notes />} />
+        <Route path="/topic-view/:subjectId/:topic" element={<TopicView />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

@@ -1,112 +1,197 @@
+/* =============================================================
+   MYSUBJECTS.CSS — Subject Listing
+   Light Theme — Educational SaaS Platform
+   ============================================================= */
+
 .subjects-container {
-    padding: 2rem;
-    min-height: 100vh;
-    background-color: #f4f6f8;
+  padding: var(--space-8);
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
 }
 
-h1 {
-    text-align: center;
-    color: #2c3e50;
-    margin-bottom: 2rem;
+/* ── Page Header ── */
+.subjects-page-header {
+  max-width: 1100px;
+  margin: 0 auto var(--space-8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
 }
 
+.subjects-container h1 {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-6);
+  text-align: center;
+}
+
+/* ── Back Button ── */
 .back-btn {
-    display: block;
-    margin: 0 auto 2rem;
-    padding: 0.5rem 1rem;
-    background-color: #ca1016;
-    color: rgb(56, 45, 206);
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 auto var(--space-6);
+  height: 38px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-xs);
 }
 
+.back-btn:hover {
+  background: var(--color-accent-light);
+  border-color: var(--color-accent-mid);
+  color: var(--color-accent);
+}
+
+/* ── Grid ── */
 .subjects-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    padding: 0 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-5);
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
+/* ── Subject Card ── */
 .subject-card {
-    background: white;
-    border-radius: 10px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  animation: cardIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.subject-card:nth-child(1) { animation-delay: 0.05s; }
+.subject-card:nth-child(2) { animation-delay: 0.10s; }
+.subject-card:nth-child(3) { animation-delay: 0.15s; }
+.subject-card:nth-child(4) { animation-delay: 0.20s; }
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.subject-card:hover {
+  border-color: var(--color-accent-mid);
+  box-shadow: var(--shadow-md);
 }
 
 .subject-card h2 {
-    color: #34495e;
-    border-bottom: 2px solid #ecf0f1;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
+/* ── Topic List ── */
 .topics-list {
-    list-style: none;
-    padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .topic-item {
-    background-color: #ecf0f1;
-    margin-bottom: 0.8rem;
-    padding: 1rem;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #2c3e50;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all var(--transition-fast);
+}
+
+.topic-item:hover {
+  border-color: var(--color-accent-mid);
+  background: var(--color-accent-light);
 }
 
 .topic-name {
-    font-weight: 500;
-    font-size: 1.1rem;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-text-primary);
 }
 
 .topic-actions {
-    display: flex;
-    gap: 0.5rem;
+  display: flex;
+  gap: var(--space-2);
 }
 
+/* ── Topic Action Buttons ── */
 .action-btn {
-    padding: 0.4rem 0.8rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.2s, transform 0.1s;
+  height: 30px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-body);
+  transition: all var(--transition-fast);
 }
 
-.action-btn:active {
-    transform: scale(0.95);
-}
+.action-btn:active { transform: scale(0.96); }
 
 .notes-btn {
-    background-color: #3498db;
-    color: white;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  border: 1.5px solid var(--color-accent-mid);
 }
 
 .notes-btn:hover {
-    background-color: #2980b9;
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
 }
 
 .chat-btn {
-    background-color: #2ecc71;
-    color: white;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1.5px solid rgba(5, 150, 105, 0.2);
 }
 
 .chat-btn:hover {
-    background-color: #27ae60;
+  background: var(--color-success);
+  color: white;
+  border-color: var(--color-success);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
 }
 
+/* ── States ── */
 .loading,
 .error {
-    text-align: center;
-    margin-top: 2rem;
-    font-size: 1.2rem;
+  text-align: center;
+  margin-top: var(--space-12);
+  font-size: 15px;
+  color: var(--color-text-muted);
 }
 
-.error {
-    color: #e74c3c;
+.error { color: var(--color-danger); }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .subjects-container { padding: var(--space-5); }
+  .subjects-grid { grid-template-columns: 1fr; }
 }

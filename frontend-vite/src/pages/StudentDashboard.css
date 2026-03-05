@@ -1,63 +1,175 @@
+/* =============================================================
+   STUDENTDASHBOARD.CSS — Student Home
+   Light Theme — Educational SaaS Platform
+   ============================================================= */
 
+/* ── Layout ── */
 .dashboard-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #f4f6f8;
-    color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--color-bg);
+  background-image:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(79, 70, 229, 0.06) 0%, transparent 60%);
+  color: var(--color-text-primary);
+  padding: var(--space-8);
+  position: relative;
+  overflow: hidden;
+  font-family: var(--font-body);
 }
 
-h1 {
-    font-size: 2.5rem;
-    margin-bottom: 2rem;
-    color: #2c3e50;
+/* ── Subtle decorative pattern ── */
+.dashboard-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, var(--color-border) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.5;
+  pointer-events: none;
 }
 
+/* ── Welcome Section ── */
+.dashboard-welcome {
+  text-align: center;
+  margin-bottom: var(--space-10);
+  position: relative;
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.dashboard-logo {
+  width: 56px;
+  height: 56px;
+  background: var(--color-accent);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-5);
+  font-size: 24px;
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.25);
+}
+
+.dashboard-container h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-2);
+}
+
+.dashboard-subtitle {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* ── Cards Grid ── */
 .dashboard-actions {
-    display: flex;
-    gap: 2rem;
+  display: flex;
+  gap: var(--space-5);
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+  justify-content: center;
+  position: relative;
 }
 
 .card {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    width: 250px;
-    text-align: center;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  padding: var(--space-8) var(--space-6);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  width: 220px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.18s; }
+.card:nth-child(3) { animation-delay: 0.26s; }
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-accent), rgba(79, 70, 229, 0.4));
+  opacity: 0;
+  transition: opacity var(--transition-fast);
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--color-accent-mid);
+  background: var(--color-surface);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card:hover::before { opacity: 1; }
+
+.card:active { transform: translateY(-2px); }
+
+/* ── Card Icon ── */
+.card-icon {
+  font-size: 28px;
+  margin-bottom: var(--space-4);
+  display: block;
 }
 
 .card h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #34495e;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+  letter-spacing: -0.01em;
 }
 
 .card p {
-    color: #7f8c8d;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
 }
 
+/* ── Logout ── */
 .logout-btn {
-    margin-top: 2rem;
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 5px;
-    background-color: #e74c3c;
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  height: 40px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-body);
+  position: relative;
 }
 
 .logout-btn:hover {
-    background-color: #c0392b;
+  background: var(--color-danger-bg);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: var(--color-danger);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .dashboard-container h1 { font-size: 1.8rem; }
+  .dashboard-actions { flex-direction: column; align-items: center; }
+  .card { width: 100%; max-width: 320px; }
 }

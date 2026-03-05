@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MySubjects.css";
@@ -29,14 +28,13 @@ const MySubjects = () => {
     }, []);
 
     const handleNotesClick = (subjectId, topic) => {
-        console.log(`Viewing notes for ${subjectId} - ${topic}`);
-        navigate(`/notes/${subjectId.toLowerCase()}/${topic}`);
+        console.log(`Viewing integrated topic view for ${subjectId} - ${topic}`);
+        navigate(`/topic-view/${subjectId.toLowerCase()}/${topic}`);
     };
 
     const handleChatClick = (subjectId, topic) => {
-        console.log(`Starting chat for ${subjectId} - ${topic}`);
-        localStorage.setItem("subject", subjectId.toLowerCase());
-        navigate(`/chat?topic=${topic}`);
+        console.log(`Viewing integrated topic view for ${subjectId} - ${topic}`);
+        navigate(`/topic-view/${subjectId.toLowerCase()}/${topic}?chat=true`);
     };
 
     if (loading) return <div className="loading">Loading subjects...</div>;

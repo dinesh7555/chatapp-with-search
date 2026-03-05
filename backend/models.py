@@ -21,6 +21,8 @@ class StudentProfile(Base):
 
     roll_no = Column(String(50), nullable=True)
     course_id = Column(String(50), nullable=True)
+    year = Column(Integer, nullable=True)
+    branch = Column(String(50), nullable=True)
     status = Column(String(20), default="active")
     performance = Column(String(50), nullable=True)  # simple column for now
 

@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "http://172.168.11.8:8000";
 
 /* ---------- AUTH ---------- */
 
@@ -141,7 +141,7 @@ export async function deleteUser(userId, token) {
 export async function createUser(data, token) {
   // Route based on role
   let endpoint = `${BASE_URL}/auth/register`;
-  
+
   if (data.role === "admin") {
     endpoint = `${BASE_URL}/auth/register/admin`;
   } else if (data.role === "student") {
@@ -173,8 +173,20 @@ export async function getAdmins(token) {
 
 /* ---------- TEACHER FUNCTIONS ---------- */
 
-export async function getStudents(token) {
-  const res = await fetch(`${BASE_URL}/auth/students`, {
+export async function getStudents(token, filters = {}) {
+  const { year, branch, subject } = filters;
+  let url = `${BASE_URL}/auth/students`;
+  const params = new URLSearchParams();
+  if (year && year !== "all") params.append("year", year);
+  if (branch && branch !== "all") params.append("branch", branch);
+  if (subject && subject !== "all") params.append("subject", subject);
+
+  const queryString = params.toString();
+  if (queryString) {
+    url += `?${queryString}`;
+  }
+
+  const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -222,5 +234,41 @@ export async function createTeacher(data, token) {
     },
     body: JSON.stringify(data),
   });
+  return res.json();
+}
+
+export async function getStudentState(token, subjectId, topic, studentId = null) {
+  let url = `${BASE_URL}/chat/state?subject_id=${subjectId}&topic=${encodeURIComponent(topic)}`;
+  if (studentId) {
+    url += `&student_id=${studentId}`;
+  }
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+/* ---------- SUBJECT/NOTES FUNCTIONS ---------- */
+
+export async function getNotes(subjectId, topic, refresh = false) {
+  const token = localStorage.getItem("token");
+  const params = new URLSearchParams({
+    subject_id: subjectId,
+    topic,
+  });
+  if (refresh) {
+    params.set("refresh", "true");
+  }
+  const res = await fetch(`${BASE_URL}/subjects/notes?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.detail || "Failed to fetch notes");
+  }
   return res.json();
 }

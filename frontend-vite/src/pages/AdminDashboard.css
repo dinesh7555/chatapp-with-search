@@ -1,329 +1,369 @@
-/* =============================================
-   Admin Dashboard — Enhanced with Teacher features
-   ============================================= */
+/* =============================================================
+   ADMINDASHBOARD.CSS — Admin Panel
+   Light Theme — Educational SaaS Platform
+   ============================================================= */
 
-/* ── CSS Variables (mirrors Chat.css palette) ── */
-:root {
-  --bg-deep: #1e1f25;
-  --bg-surface: #2b2d36;
-  --bg-panel: rgba(32, 33, 35, 0.85);
-  --bg-input: #27272a;
-  --accent: #6366f1;
-  --accent-hover: #5558e3;
-  --border: #3f3f46;
-  --text-primary: #ffffff;
-  --text-muted: #a1a1aa;
-  --text-dim: #71717a;
-  --success: #10b981;
-  --success-hover: #059669;
-  --warning: #f59e0b;
-  --warning-hover: #d97706;
-  --danger: #dc2626;
-  --danger-hover: #b91c1c;
-  --radius: 8px;
-  --transition: 0.15s ease;
-}
-
-/* ── Page Layout ── */
+/* ── Layout ── */
 .admin-layout {
   min-height: 100vh;
-  background: radial-gradient(circle at top, #3b3f4a, #1e1f25);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
-  color: var(--text-primary);
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
   display: flex;
   flex-direction: column;
 }
 
-/* ── Top Header Bar ── */
+/* ══════════════════════════════════════
+   HEADER
+══════════════════════════════════════ */
 .admin-header {
-  height: 54px;
-  padding: 0 28px;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
+  height: 60px;
+  padding: 0 var(--space-8);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 50;
+  box-shadow: var(--shadow-xs);
+}
+
+/* ── Dashboard Tabs ── */
+.dashboard-tabs {
+  display: flex;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--space-8);
+  gap: var(--space-6);
+}
+
+.tab-btn {
+  padding: var(--space-4) 0;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: color var(--transition-fast);
+}
+
+.tab-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.tab-btn.active {
+  color: var(--color-accent);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-accent);
 }
 
 .admin-header h2 {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 0.01em;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.admin-header h2::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--color-accent);
+  border-radius: 50%;
 }
 
 /* ── Logout Button ── */
 .admin-logout-btn {
-  height: 38px;
-  padding: 0 16px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  height: 36px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
   background: transparent;
-  color: var(--text-muted);
-  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--transition-fast);
 }
 
 .admin-logout-btn:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: var(--accent);
-  color: #818cf8;
+  background: var(--color-danger-bg);
+  border-color: rgba(220, 38, 38, 0.25);
+  color: var(--color-danger);
 }
 
-/* ── Main Content Area ── */
+/* ══════════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════════ */
 .admin-content {
   flex: 1;
-  padding: 32px 28px;
+  padding: var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  max-width: 1200px;
+  gap: var(--space-6);
+  max-width: 1280px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
 }
 
-/* ── Section Card ── */
+/* ══════════════════════════════════════
+   SECTION CARD
+══════════════════════════════════════ */
 .admin-section {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
 }
+
+.admin-section:hover { box-shadow: var(--shadow-md); }
 
 .admin-section h3 {
-  margin: 0 0 18px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 0.02em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  font-size: 13px;
-  color: var(--text-muted);
+  margin-bottom: var(--space-5);
 }
 
-/* ── Section Header with Controls ── */
+/* ── Section Header ── */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
+  margin-bottom: var(--space-5);
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
-.section-header h3 {
-  margin: 0;
-}
+.section-header h3 { margin-bottom: 0; }
 
 /* ── Filter Controls ── */
 .filter-controls {
   display: flex;
-  gap: 10px;
+  gap: var(--space-2);
   align-items: center;
+  flex-wrap: wrap;
 }
 
-/* ── Form Row (inputs + button inline) ── */
+/* ══════════════════════════════════════
+   FORM ELEMENTS
+══════════════════════════════════════ */
 .admin-form-row {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
-/* ── Form Grid (for create student/teacher with multiple fields) ── */
 .admin-form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-/* ── Text / Email / Password Inputs ── */
+/* ── Text Input ── */
 .admin-input {
-  height: 44px;
+  height: 42px;
   flex: 1;
-  min-width: 150px;
-  padding: 0 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-primary);
+  min-width: 140px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
   font-size: 14px;
+  font-family: var(--font-body);
   outline: none;
-  transition: border var(--transition), background var(--transition);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   box-sizing: border-box;
+  width: 100%;
 }
 
-.admin-input::placeholder {
-  color: var(--text-dim);
-}
+.admin-input::placeholder { color: var(--color-text-muted); }
+
+.admin-input:hover { border-color: var(--color-border-strong); }
 
 .admin-input:focus {
-  border-color: var(--accent);
-  background: var(--bg-input);
+  border-color: var(--color-accent);
+  background: var(--color-surface);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
 }
 
-/* ── Select Dropdown (full size) ── */
+/* ── Select (full size) ── */
 .admin-select {
-  height: 44px;
-  padding: 0 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-primary);
+  height: 42px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
   font-size: 14px;
+  font-family: var(--font-body);
   outline: none;
   cursor: pointer;
-  transition: border var(--transition);
+  transition: border-color var(--transition-fast);
+  width: 100%;
 }
 
-.admin-select:focus {
-  border-color: var(--accent);
-}
+.admin-select:focus { border-color: var(--color-accent); }
 
-/* ── Select Dropdown (small, for filters) ── */
+/* ── Select (small, for filters) ── */
 .admin-select-small {
   height: 36px;
-  padding: 0 12px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-primary);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   font-size: 13px;
+  font-family: var(--font-body);
   outline: none;
   cursor: pointer;
-  transition: border var(--transition);
+  transition: all var(--transition-fast);
 }
 
-.admin-select-small:focus {
-  border-color: var(--accent);
+.admin-select-small:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
 }
 
-/* ── Primary Action Button (Create / Submit) ── */
+.admin-select-small:focus { border-color: var(--color-accent); }
+
+/* ── Primary Button ── */
 .admin-btn-primary {
-  height: 44px;
-  padding: 0 20px;
-  border-radius: var(--radius);
+  height: 42px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-md);
   border: none;
-  background: var(--accent);
+  background: var(--color-accent);
   color: white;
+  font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--transition-base);
   white-space: nowrap;
 }
 
-.admin-btn-primary:hover {
-  background: var(--accent-hover);
+.admin-btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  transform: translateY(-1px);
 }
 
-.admin-btn-primary:active {
-  transform: scale(0.98);
-}
+.admin-btn-primary:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
 
-.admin-btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.admin-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
 
-/* ── Danger / Delete Button ── */
+/* ── Danger Button ── */
 .admin-btn-danger {
-  height: 32px;
-  padding: 0 14px;
-  border-radius: var(--radius);
-  border: 1px solid transparent;
-  background: rgba(220, 38, 38, 0.15);
-  color: #f87171;
+  height: 34px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1.5px solid rgba(220, 38, 38, 0.2);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--transition-fast);
 }
 
 .admin-btn-danger:hover {
-  background: var(--danger);
+  background: var(--color-danger);
+  border-color: var(--color-danger);
   color: white;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
 }
 
-.admin-btn-danger:active {
-  transform: scale(0.97);
-}
-
-/* ── Bulk Actions Bar ── */
+/* ══════════════════════════════════════
+   BULK ACTIONS
+══════════════════════════════════════ */
 .bulk-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   align-items: center;
-  padding: 12px 16px;
-  background: rgba(99, 102, 241, 0.08);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-accent-light);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--color-accent-mid);
+  flex-wrap: wrap;
 }
 
 .bulk-count {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent);
   margin-right: auto;
 }
 
 .bulk-btn {
-  height: 36px;
-  padding: 0 16px;
-  border-radius: var(--radius);
+  height: 34px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
   border: none;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--transition-fast);
 }
 
 .bulk-btn.active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid rgba(5, 150, 105, 0.2);
 }
 
-.bulk-btn.active:hover {
-  background: var(--success);
-  color: white;
-}
+.bulk-btn.active:hover { background: var(--color-success); color: white; }
 
 .bulk-btn.inactive {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  border: 1px solid rgba(217, 119, 6, 0.2);
 }
 
-.bulk-btn.inactive:hover {
-  background: var(--warning);
-  color: white;
-}
+.bulk-btn.inactive:hover { background: var(--color-warning); color: white; }
 
 .bulk-btn.delete {
-  background: rgba(220, 38, 38, 0.15);
-  color: #f87171;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
-.bulk-btn.delete:hover {
-  background: var(--danger);
-  color: white;
-}
+.bulk-btn.delete:hover { background: var(--color-danger); color: white; }
 
-/* ── Data Table ── */
+/* ══════════════════════════════════════
+   DATA TABLE
+══════════════════════════════════════ */
 .admin-table-wrapper {
   overflow-x: auto;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
 }
 
 .admin-table {
@@ -333,275 +373,228 @@
 }
 
 .admin-table thead tr {
-  background: rgba(99, 102, 241, 0.08);
+  background: var(--color-bg-alt);
 }
 
 .admin-table th {
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   text-align: left;
-  font-weight: 600;
-  font-size: 12px;
+  font-weight: 700;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
 }
 
 .admin-table td {
-  padding: 12px 16px;
-  color: var(--text-primary);
-  border-bottom: 1px solid rgba(63, 63, 70, 0.5);
+  padding: var(--space-4);
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
 }
 
-.admin-table tbody tr:last-child td {
-  border-bottom: none;
-}
+.admin-table tbody tr:last-child td { border-bottom: none; }
 
 .admin-table tbody tr {
-  transition: background var(--transition);
+  transition: background var(--transition-fast);
 }
 
-.admin-table tbody tr:hover {
-  background: rgba(99, 102, 241, 0.06);
-}
+.admin-table tbody tr:hover { background: var(--color-bg-alt); }
 
-/* ── Checkbox Styling ── */
+/* ── Checkbox ── */
 .admin-table input[type="checkbox"] {
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: var(--accent);
+  accent-color: var(--color-accent);
+  border-radius: 4px;
 }
 
 /* ── Status Badge ── */
 .status-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: capitalize;
+  letter-spacing: 0.01em;
+}
+
+.status-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
 }
 
 .status-badge.active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
+
+.status-badge.active::before { background: var(--color-success); }
 
 .status-badge.inactive {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
-/* ── Status Select Dropdown (in table) ── */
+.status-badge.inactive::before { background: var(--color-warning); }
+
+/* ── Status Select in Table ── */
 .status-select {
   height: 32px;
-  padding: 0 10px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-primary);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   font-size: 13px;
   cursor: pointer;
   outline: none;
-  transition: border var(--transition);
+  transition: border-color var(--transition-fast);
+  font-family: var(--font-body);
 }
 
-.status-select:focus {
-  border-color: var(--accent);
-}
+.status-select:focus { border-color: var(--color-accent); }
 
-/* ── Action Buttons Container ── */
+/* ── Action Buttons ── */
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
 }
 
-/* ── Small Delete Button (in table) ── */
 .delete-btn-small {
   height: 32px;
-  padding: 0 12px;
-  border-radius: var(--radius);
-  border: none;
-  background: rgba(220, 38, 38, 0.15);
-  color: #f87171;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1.5px solid rgba(220, 38, 38, 0.15);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--transition-fast);
   white-space: nowrap;
 }
 
 .delete-btn-small:hover {
-  background: var(--danger);
+  background: var(--color-danger);
+  border-color: var(--color-danger);
   color: white;
-}
-
-.delete-btn-small:active {
-  transform: scale(0.97);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
 }
 
 /* ── Empty State ── */
 .admin-empty {
   font-size: 14px;
-  color: var(--text-dim);
+  color: var(--color-text-muted);
   text-align: center;
-  padding: 24px 0;
-  margin: 0;
+  padding: var(--space-10) 0;
 }
 
-/* ── Logout Modal ── */
+/* ══════════════════════════════════════
+   LOGOUT MODAL
+══════════════════════════════════════ */
 .logout-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(28, 25, 23, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: overlayIn 0.15s ease;
 }
 
 .logout-modal {
-  background: #1e1f25;
-  color: #fff;
-  padding: 22px;
-  border-radius: 10px;
-  width: 320px;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--space-8);
+  border-radius: var(--radius-xl);
+  width: 360px;
+  box-shadow: var(--shadow-xl);
   text-align: center;
-  border: 1px solid #3f3f46;
+  animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .logout-modal h3 {
-  margin: 0 0 10px;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
 }
 
 .logout-modal p {
   font-size: 14px;
-  color: #a1a1aa;
-  margin-bottom: 20px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
 }
 
 .logout-actions {
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: var(--space-3);
 }
 
 .cancel-btn {
-  background: transparent;
-  border: 1px solid #3f3f46;
-  color: #a1a1aa;
-  padding: 8px 14px;
-  border-radius: 8px;
+  flex: 1;
+  height: 42px;
+  background: var(--color-bg-alt);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--transition-fast);
+  font-family: var(--font-body);
 }
 
-.cancel-btn:hover {
-  background: rgba(99, 102, 241, 0.1);
-  color: #818cf8;
-}
+.cancel-btn:hover { background: var(--color-bg); color: var(--color-text-primary); }
 
 .confirm-btn {
-  background: #dc2626;
+  flex: 1;
+  height: 42px;
+  background: var(--color-danger);
   border: none;
   color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all var(--transition-fast);
+  font-family: var(--font-body);
 }
 
 .confirm-btn:hover {
-  background: #b91c1c;
+  background: var(--color-danger-hover);
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.3);
 }
 
-/* ── Scrollbar (matches Chat.css) ── */
-.admin-content::-webkit-scrollbar,
-.admin-table-wrapper::-webkit-scrollbar {
-  width: 8px;
-}
-
-.admin-content::-webkit-scrollbar-track,
-.admin-table-wrapper::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.admin-content::-webkit-scrollbar-thumb,
-.admin-table-wrapper::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
-}
-
-.admin-content::-webkit-scrollbar-thumb:hover,
-.admin-table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
-}
-
-/* ── Responsive ── */
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
 @media (max-width: 768px) {
-  .admin-content {
-    padding: 20px 16px;
-  }
-
-  .admin-form-row {
-    flex-direction: column;
-  }
-
-  .admin-form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-input,
-  .admin-btn-primary {
-    width: 100%;
-  }
-
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .filter-controls {
-    width: 100%;
-  }
-
-  .admin-select-small {
-    flex: 1;
-  }
-
-  .bulk-actions {
-    flex-wrap: wrap;
-  }
-
-  .admin-table th,
-  .admin-table td {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
+  .admin-content { padding: var(--space-5) var(--space-4); }
+  .admin-form-row { flex-direction: column; }
+  .admin-form-grid { grid-template-columns: 1fr; }
+  .admin-input, .admin-btn-primary { width: 100%; }
+  .section-header { flex-direction: column; align-items: flex-start; }
+  .filter-controls { width: 100%; }
+  .admin-select-small { flex: 1; }
+  .bulk-actions { flex-wrap: wrap; }
+  .admin-table th, .admin-table td { padding: var(--space-3) var(--space-3); font-size: 13px; }
 }
 
 @media (max-width: 480px) {
-  .admin-header {
-    padding: 0 16px;
-  }
-
-  .admin-header h2 {
-    font-size: 15px;
-  }
-
-  .admin-section {
-    padding: 16px;
-  }
-
-  .admin-table th,
-  .admin-table td {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
+  .admin-header { padding: 0 var(--space-4); }
+  .admin-section { padding: var(--space-4); }
+  .admin-table th, .admin-table td { font-size: 12px; padding: var(--space-2) var(--space-3); }
 }

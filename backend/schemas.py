@@ -5,13 +5,6 @@ class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
-    role: Literal["admin","student"]
-    
-class AdminUserCreate(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-    role: str   # admin can choose role
 
 class UserLogin(BaseModel):
     username: str
@@ -26,6 +19,8 @@ class StudentCreate(BaseModel):
     password: str
     roll_no: str
     course_id: str
+    year: int
+    branch: str
     status: str = "active"
 
 

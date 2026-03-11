@@ -7,12 +7,14 @@ import {
   createUser,
   createStudent,
   updateStudentStatus,
-  logout
+  logout,
+  getStudentState
 } from "../services/api";
 import "./AdminDashboard.css";
 
 export default function AdminDashboard({ onLogout }) {
   const token = localStorage.getItem("token");
+  const username = localStorage.getItem("username") || "Admin";
 
   // Data states
   const [students, setStudents] = useState([]);
@@ -25,6 +27,10 @@ export default function AdminDashboard({ onLogout }) {
   const [filterYear, setFilterYear] = useState("all");
   const [filterBranch, setFilterBranch] = useState("all");
   const [filterSubject, setFilterSubject] = useState("all");
+  const [filterTopic, setFilterTopic] = useState("all");
+
+  // Modal state
+  const [statsModal, setStatsModal] = useState({ show: false, student: null, state: null, loading: false });
 
   // Create student form
   const [newStudentUsername, setNewStudentUsername] = useState("");
@@ -55,6 +61,11 @@ export default function AdminDashboard({ onLogout }) {
   useEffect(() => {
     loadAllData();
   }, [token, filterYear, filterBranch, filterSubject]);
+
+  // Reset topic when subject changes
+  useEffect(() => {
+    setFilterTopic("all");
+  }, [filterSubject]);
 
   async function loadAllData() {
     try {
@@ -145,6 +156,27 @@ export default function AdminDashboard({ onLogout }) {
     } catch (err) {
       console.error("Status update failed", err);
       alert("Failed to update status");
+    }
+  }
+
+  async function handleViewStats(student) {
+    if (filterSubject === "all" || filterTopic === "all") {
+      alert("Please select a specific Subject and Topic to view student stats.");
+      return;
+    }
+
+    setStatsModal({ show: true, student, state: null, loading: true });
+
+    try {
+      const state = await getStudentState(token, filterSubject, filterTopic, student.id);
+      if (state.detail) {
+        throw new Error(state.detail);
+      }
+      setStatsModal({ show: true, student, state, loading: false });
+    } catch (err) {
+      console.error("Failed to load student state", err);
+      setStatsModal({ show: false, student: null, state: null, loading: false });
+      alert(err.message || "Failed to load student insights.");
     }
   }
 
@@ -306,7 +338,7 @@ export default function AdminDashboard({ onLogout }) {
     <div className="admin-layout">
       {/* Header */}
       <header className="admin-header">
-        <h2>Admin Dashboard</h2>
+        <h2>Welcome, {username}</h2>
         <button className="admin-logout-btn" onClick={() => setShowLogoutModal(true)}>
           Logout
         </button>
@@ -474,10 +506,10 @@ export default function AdminDashboard({ onLogout }) {
                           <td>{teacher.designation}</td>
                           <td>
                             <button
-                              className="admin-btn-danger"
+                              className="delete-btn-small"
                               onClick={() => handleDeleteTeacher(teacher.id)}
                             >
-                              Delete
+                              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>
                             </button>
                           </td>
                         </tr>
@@ -604,6 +636,22 @@ export default function AdminDashboard({ onLogout }) {
                     <option value="english">English</option>
                     <option value="social">Social</option>
                   </select>
+
+                  <select
+                    className="admin-select-small"
+                    value={filterTopic}
+                    onChange={(e) => setFilterTopic(e.target.value)}
+                    disabled={filterSubject === "all"}
+                  >
+                    <option value="all">All Topics</option>
+                    {filterSubject !== "all" &&
+                      (filterSubject === "physics" ? ["mechanics", "optics"] :
+                        filterSubject === "chemistry" ? ["organic", "inorganic"] :
+                          filterSubject === "english" ? ["grammar", "literature"] :
+                            filterSubject === "social" ? ["history", "geography"] : []
+                      ).map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)
+                    }
+                  </select>
                 </div>
               </div>
 
@@ -695,6 +743,13 @@ export default function AdminDashboard({ onLogout }) {
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                               </select>
+                              <button
+                                className="insights-btn-small"
+                                onClick={() => handleViewStats(student)}
+                                title="View student insights"
+                              >
+                                <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6" /></svg>
+                              </button>
                             </div>
                           </td>
                           <td>
@@ -704,7 +759,7 @@ export default function AdminDashboard({ onLogout }) {
                                 onClick={() => handleDeleteStudent(student.id)}
                                 title="Delete student"
                               >
-                                Delete
+                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>
                               </button>
                             </div>
                           </td>
@@ -734,6 +789,61 @@ export default function AdminDashboard({ onLogout }) {
               </button>
               <button className="confirm-btn" onClick={handleLogoutConfirm}>
                 Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Insights Modal */}
+      {statsModal.show && (
+        <div className="logout-modal-overlay">
+          <div className="stats-modal">
+            <h3>Insights for {statsModal.student.username}</h3>
+            <p className="stats-topic">Topic: <strong>{filterTopic}</strong> ({filterSubject})</p>
+
+            {statsModal.loading ? (
+              <div className="stats-loading">Loading insights...</div>
+            ) : statsModal.state ? (
+              <>
+                <div className="stats-grid">
+                  <div className="stat-item">
+                    <label>Mastery Level</label>
+                    <div className="stat-value">{statsModal.state.mastery_level}%</div>
+                    <div className="stat-bar"><div style={{ width: `${statsModal.state.mastery_level}%` }}></div></div>
+                  </div>
+                  <div className="stat-item">
+                    <label>Learning Pace</label>
+                    <div className="stat-value">{statsModal.state.learning_pace > 60 ? "Fast" : statsModal.state.learning_pace < 40 ? "Slow" : "Normal"} ({statsModal.state.learning_pace})</div>
+                  </div>
+                  <div className="stat-item">
+                    <label>Engagement</label>
+                    <div className="stat-value">{statsModal.state.engagement_score}%</div>
+                  </div>
+                  <div className="stat-item">
+                    <label>Confusion</label>
+                    <div className="stat-value">{statsModal.state.confusion_score}%</div>
+                  </div>
+                </div>
+
+                <div className="misconceptions-section">
+                  <h4>Identified Misconceptions</h4>
+                  {statsModal.state.misconceptions && statsModal.state.misconceptions.length > 0 ? (
+                    <ul>
+                      {statsModal.state.misconceptions.map((m, i) => <li key={i}>{m}</li>)}
+                    </ul>
+                  ) : (
+                    <p>No misconceptions identified yet.</p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p>No data available for this student.</p>
+            )}
+
+            <div className="logout-actions" style={{ marginTop: '20px' }}>
+              <button className="cancel-btn" onClick={() => setStatsModal({ show: false, student: null, state: null, loading: false })}>
+                Close
               </button>
             </div>
           </div>

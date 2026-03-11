@@ -1,4 +1,4 @@
-const BASE_URL = "http://172.168.11.8:8000";
+const BASE_URL = "http://localhost:8000";
 
 /* ---------- AUTH ---------- */
 
@@ -78,6 +78,15 @@ export async function getChatSessions(token) {
   const subject = getSubject();
   const res = await fetch(
     `${BASE_URL}/chat/sessions?subject_id=${subject}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function getAllChatSessions(token) {
+  const res = await fetch(`${BASE_URL}/chat/sessions/all`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -271,4 +280,62 @@ export async function getNotes(subjectId, topic, refresh = false) {
     throw new Error(errorData.detail || "Failed to fetch notes");
   }
   return res.json();
+}
+/* ---------- RESOURCE FUNCTIONS ---------- */
+
+export async function uploadResource(data, token) {
+  const formData = new FormData();
+  formData.append("title", data.title);
+  formData.append("branch", data.branch);
+  formData.append("subject", data.subject);
+  formData.append("file", data.file);
+
+  const res = await fetch(`${BASE_URL}/resources/upload`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  return res.json();
+}
+
+export async function getResources(token, filters = {}) {
+  const { branch, subject } = filters;
+  let url = `${BASE_URL}/resources/`;
+  const params = new URLSearchParams();
+  if (branch && branch !== "all") params.append("branch", branch);
+  if (subject && subject !== "all") params.append("subject", subject);
+
+  const queryString = params.toString();
+  if (queryString) {
+    url += `?${queryString}`;
+  }
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function deleteResource(resourceId, token) {
+  const res = await fetch(`${BASE_URL}/resources/${resourceId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function downloadResource(resourceId, token) {
+  const res = await fetch(`${BASE_URL}/resources/download/${resourceId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error("Download failed");
+  return res.blob();
 }

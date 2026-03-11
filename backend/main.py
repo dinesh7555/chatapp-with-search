@@ -40,7 +40,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import user, chat , search, subjects
+from routes import user, chat, search, subjects, resource
 
 # 🔴 ADD THESE IMPORTS
 from database import engine, Base
@@ -69,6 +69,7 @@ app.include_router(user.router)
 app.include_router(chat.router)
 app.include_router(search.router) 
 app.include_router(subjects.router)
+app.include_router(resource.router)
 print(">>> Routers loaded")
 
 # 🔴 ADD THIS BLOCK

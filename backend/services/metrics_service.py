@@ -13,36 +13,38 @@ async def calculate_metrics(text: str, subject_id: str = None, topic: str = None
         context_info = f" The student is currently studying '{topic}' in the subject '{subject_id}'."
 
     system_content = (
-        f"Analyze the user's LATEST message for learning state indicators.{context_info} "
-        "You are provided with several previous messages for context ONLY. "
-        "Evaluate the LATEST message based on how it relates to the previous conversation. "
-        "For example, if the latest message is 'explain more', look at what was previously discussed. "
-        "Return valid JSON ONLY with these keys: "
-        "'mastery_level' (0-100), 'misconceptions' (list of descriptive strings), "
-        "'learning_pace' (0-100), 'engagement_score' (0-100), "
-        "'confusion_score' (0-100), 'stress_score' (0-100). "
-        "0 means none/low, 100 means extreme/full mastery. "
-        "For learning_pace: 50 is average, 100 is very fast, 0 is very slow/struggling. "
-        "For misconceptions: provide clear, specific descriptions of what the student is getting wrong "
-        "(e.g., 'Confuses past perfect with simple past' instead of 'wrong tense'). "
-        "Do not include any explanation or markdown formatting."
+        "You are an educational analytics engine. Your task is to analyze a student's latest message "
+        "in the context of their conversation history and provide learning state metrics in JSON format."
     )
 
-    messages = [{"role": "system", "content": system_content}]
-
-    # Add history for context
+    user_prompt = f"### TASK: Analyze the LATEST message for the following metrics:\n"
+    user_prompt += "- mastery_level (0-100)\n"
+    user_prompt += "- misconceptions (list of strings)\n"
+    user_prompt += "- learning_pace (0-100)\n"
+    user_prompt += "- engagement_score (0-100)\n"
+    user_prompt += "- confusion_score (0-100)\n"
+    user_prompt += "- stress_score (0-100)\n\n"
+    user_prompt += "### CONTEXT:\n"
+    user_prompt += f"- Subject: {subject_id or 'Unknown'}\n"
+    user_prompt += f"- Topic: {topic or 'Unknown'}\n\n"
+    
+    user_prompt += "### CONVERSATION HISTORY (for context only):\n"
     if history:
         for msg in history:
-            messages.append({
-                "role": "user" if msg.get("sender") == "user" else "assistant",
-                "content": msg.get("text", "")
-            })
+            role = "Student" if msg.get("sender") == "user" else "Tutor"
+            user_prompt += f"{role}: {msg.get('text', '')}\n"
+    else:
+        user_prompt += "(No history available)\n"
+    
+    user_prompt += f"\n### LATEST MESSAGE TO ANALYZE:\nStudent: {text}\n\n"
+    user_prompt += "### RESPONSE INSTRUCTIONS:\n"
+    user_prompt += "Return ONLY valid JSON. No conversational filler, no markdown blocks, no explanations.\n"
+    user_prompt += "Example format: {\"mastery_level\": 45, \"misconceptions\": [\"example\"], ...}"
 
-    # Add the current message to be evaluated
-    messages.append({
-        "role": "user",
-        "content": text
-    })
+    messages = [
+        {"role": "system", "content": system_content},
+        {"role": "user", "content": user_prompt}
+    ]
 
     response = await get_ai_response_with_context(messages)
 

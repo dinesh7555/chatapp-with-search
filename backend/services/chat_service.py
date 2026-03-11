@@ -122,6 +122,8 @@ def store_message(chat_id: str, user_id: int,sender: str, text: str ,subject_id:
         )
 
         record = result.single()
+        if not record:
+            raise ValueError(f"Could not store message: Chat session {chat_id} not found or doesn't belong to user {user_id}")
         return record["sequence"]
 
 def get_chat_history(chat_id: str, user_id: int, subject_id: str):
@@ -259,6 +261,40 @@ def get_user_chat_sessions(user_id: int,subject_id: str):
                 "title": record["title"],
                 "topic": record.get("topic"),
                 "created_at": record["created_at"],
+                "message_count": record["messageCount"]
+            })
+
+    return sessions
+
+
+def get_all_user_chat_sessions(user_id: int):
+    query = """
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession)
+    MATCH (s:Subject)-[:HAS_TOPIC]->(:Topic)-[:HAS_CHAT]->(c)
+    OPTIONAL MATCH (c)-[:HAS_MESSAGE]->(m:Message)
+    WITH c, s, count(m) AS messageCount
+    RETURN
+        c.chat_id AS chat_id,
+        COALESCE(c.title, 'New Chat') AS title,
+        c.topic AS topic,
+        c.created_at AS created_at,
+        s.subject_id AS subject_id,
+        messageCount
+    ORDER BY c.created_at DESC
+    """
+
+    sessions = []
+
+    with get_neo4j_session() as session:
+        result = session.run(query, user_id=user_id)
+
+        for record in result:
+            sessions.append({
+                "chat_id": record["chat_id"],
+                "title": record["title"],
+                "topic": record.get("topic"),
+                "created_at": record["created_at"],
+                "subject_id": record["subject_id"],
                 "message_count": record["messageCount"]
             })
 

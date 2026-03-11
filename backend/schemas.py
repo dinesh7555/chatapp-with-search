@@ -31,3 +31,17 @@ class TeacherCreate(BaseModel):
     subject: str
     department: str
     designation: str
+
+
+class ResourceResponse(BaseModel):
+    id: int
+    title: str
+    filename: str
+    file_type: str
+    branch: str
+    subject: str
+    teacher_name: str
+    created_at: object # date/datetime
+
+    class Config:
+        from_attributes = True

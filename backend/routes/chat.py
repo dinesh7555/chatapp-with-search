@@ -8,6 +8,7 @@ from services.chat_service import (
     update_chat_title_if_empty , 
     get_first_user_messages , 
     get_user_chat_sessions,
+    get_all_user_chat_sessions,
     get_chat_topic,
     find_empty_chat_session
 )
@@ -246,6 +247,8 @@ def build_llm_messages(
     system_content += "- Stay strictly within your subject area.\n"
     system_content += "- Be concise but thorough.\n"
     system_content += "- Use Markdown for formatting (bold, lists, etc.).\n"
+    system_content += "- IMPORTANT: Use proper spacing. Ensure there's a double newline before and after every list and header.\n"
+    system_content += "- For lists, start each item on a new line with a clear bullet point or number.\n"
 
     messages = [
         {"role": "system", "content": system_content}
@@ -341,6 +344,11 @@ async def send_message_stream(
 
     # 3️⃣ Get Topic & User State
     topic = get_chat_topic(chat_id, current_user.id,subject_id)
+    if topic is None and not history:
+        # Check if session exists at all even without messages
+        # get_chat_topic returning None means session not found for this user/subject
+        raise HTTPException(status_code=404, detail="Chat session not found")
+
     user_state = get_user_topic_state(current_user.id, topic,subject_id) if topic else None
 
     # 4️⃣ Build prompt
@@ -353,13 +361,16 @@ async def send_message_stream(
     )
 
     # 4️⃣ Store USER message immediately
-    user_seq = store_message(
-        chat_id=chat_id,
-        user_id=current_user.id,
-        subject_id=subject_id,
-        sender="user",
-        text=payload.message
-    )
+    try:
+        user_seq = store_message(
+            chat_id=chat_id,
+            user_id=current_user.id,
+            subject_id=subject_id,
+            sender="user",
+            text=payload.message
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     async def event_generator():
         full_response = ""
@@ -420,6 +431,13 @@ def list_chat_sessions(subject_id: str = Query(...), current_user = Depends(requ
     if subject_id not in ALLOWED_SUBJECTS:
         raise HTTPException(status_code=400, detail="Invalid subject")
     sessions = get_user_chat_sessions(current_user.id, subject_id)
+    return {
+        "sessions": sessions
+    }
+
+@router.get("/sessions/all")
+def list_all_chat_sessions(current_user = Depends(require_student)):
+    sessions = get_all_user_chat_sessions(current_user.id)
     return {
         "sessions": sessions
     }

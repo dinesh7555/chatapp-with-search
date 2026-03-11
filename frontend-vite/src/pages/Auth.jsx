@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { loginUser} from "../services/api";
+import { loginUser } from "../services/api";
 import "./Auth.css";
 
 
@@ -13,6 +13,7 @@ export default function Auth({ onAuth }) {
     if (res.access_token) {
       localStorage.setItem("token", res.access_token);
       localStorage.setItem("role", res.role);
+      localStorage.setItem("username", username);
       onAuth();
     } else {
       alert(res.detail || "Login failed");
@@ -23,20 +24,20 @@ export default function Auth({ onAuth }) {
     <div className="auth-container">
       <div className="auth-card">
         <h2>Login</h2>
-          <input
-            placeholder="Username"
-            onChange={(e) => setUsername(e.target.value)}
-          />
+        <input
+          placeholder="Username"
+          onChange={(e) => setUsername(e.target.value)}
+        />
 
-          <input
-            type="password"
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-          />
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-          <button onClick={handleSubmit}>
-            Login
-          </button>
+        <button onClick={handleSubmit}>
+          Login
+        </button>
       </div>
     </div>
   );

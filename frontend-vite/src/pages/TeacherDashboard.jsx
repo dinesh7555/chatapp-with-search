@@ -5,12 +5,16 @@ import {
     updateStudentStatus,
     deleteUser,
     logout,
-    getStudentState
+    getStudentState,
+    uploadResource,
+    getResources,
+    deleteResource
 } from "../services/api";
 import "./TeacherDashboard.css";
 
 export default function TeacherDashboard({ onLogout }) {
     const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username") || "Teacher";
     const [students, setStudents] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -36,9 +40,20 @@ export default function TeacherDashboard({ onLogout }) {
     const [newBranch, setNewBranch] = useState("");
     const [newStatus, setNewStatus] = useState("active");
 
+    // Resource management states
+    const [teacherResources, setTeacherResources] = useState([]);
+    const [uploadingResource, setUploadingResource] = useState(false);
+    const [resTitle, setResTitle] = useState("");
+    const [resBranch, setResBranch] = useState("all");
+    const [resSubject, setResSubject] = useState("all");
+    const [resFile, setResFile] = useState(null);
+
     useEffect(() => {
         loadStudents();
-    }, [token, filterYear, filterBranch, filterSubject]);
+        if (activeTab === "resources") {
+            loadResources();
+        }
+    }, [token, filterYear, filterBranch, filterSubject, activeTab]);
 
     // Reset topic when subject changes
     useEffect(() => {
@@ -196,6 +211,58 @@ export default function TeacherDashboard({ onLogout }) {
         }
     }
 
+    async function loadResources() {
+        try {
+            const data = await getResources(token);
+            setTeacherResources(data || []);
+        } catch (err) {
+            console.error("Failed to load resources", err);
+        }
+    }
+
+    async function handleUploadResource() {
+        if (!resTitle || !resFile || resBranch === "all" || resSubject === "all") {
+            alert("Title, File, Branch, and Subject are required");
+            return;
+        }
+
+        setUploadingResource(true);
+        try {
+            const res = await uploadResource({
+                title: resTitle,
+                branch: resBranch,
+                subject: resSubject,
+                file: resFile
+            }, token);
+
+            if (res.message) {
+                alert("Resource uploaded successfully");
+                setResTitle("");
+                setResFile(null);
+                await loadResources();
+            } else {
+                alert(res.detail || "Upload failed");
+            }
+        } catch (err) {
+            console.error("Upload failed", err);
+            alert("Failed to upload resource");
+        } finally {
+            setUploadingResource(false);
+        }
+    }
+
+    async function handleDeleteResource(resourceId) {
+        if (!window.confirm("Are you sure you want to delete this resource?")) return;
+        try {
+            await deleteResource(resourceId, token);
+            alert("Resource deleted successfully");
+            await loadResources();
+        } catch (err) {
+            console.error("Delete resource failed", err);
+            alert("Failed to delete resource");
+        }
+    }
+
     function toggleSelectStudent(studentId) {
         setSelectedStudents((prev) =>
             prev.includes(studentId)
@@ -235,7 +302,7 @@ export default function TeacherDashboard({ onLogout }) {
         <div className="teacher-layout">
             {/* Header */}
             <header className="teacher-header">
-                <h2>Teacher Dashboard</h2>
+                <h2>Welcome, {username}</h2>
                 <button
                     className="teacher-logout-btn"
                     onClick={() => setShowLogoutModal(true)}
@@ -251,6 +318,12 @@ export default function TeacherDashboard({ onLogout }) {
                     onClick={() => setActiveTab("students")}
                 >
                     Students
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === "resources" ? "active" : ""}`}
+                    onClick={() => setActiveTab("resources")}
+                >
+                    Resources
                 </button>
             </nav>
 
@@ -299,12 +372,15 @@ export default function TeacherDashboard({ onLogout }) {
                                     value={newYear}
                                     onChange={(e) => setNewYear(e.target.value)}
                                 />
-                                <input
-                                    className="teacher-input"
-                                    placeholder="Branch (e.g. cse, csm)"
+                                <select
+                                    className="teacher-select"
                                     value={newBranch}
                                     onChange={(e) => setNewBranch(e.target.value)}
-                                />
+                                >
+                                    <option value="">Select Branch</option>
+                                    <option value="cse">CSE</option>
+                                    <option value="csm">CSM</option>
+                                </select>
                                 <select
                                     className="teacher-select"
                                     value={newStatus}
@@ -483,16 +559,106 @@ export default function TeacherDashboard({ onLogout }) {
                                                                 onClick={() => handleViewStats(student)}
                                                                 title="View student insights"
                                                             >
-                                                                Insights
+                                                                <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6" /></svg>
                                                             </button>
                                                             <button
                                                                 className="delete-btn-small"
                                                                 onClick={() => handleDelete(student.id)}
                                                                 title="Delete student"
                                                             >
-                                                                Delete
+                                                                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>
                                                             </button>
                                                         </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </section>
+                    </>
+                )}
+
+                {activeTab === "resources" && (
+                    <>
+                        <section className="teacher-section">
+                            <h3>Upload New Resource</h3>
+                            <div className="teacher-form-grid">
+                                <input
+                                    className="teacher-input"
+                                    placeholder="Resource Title (e.g. Physics Chapter 1 Notes)"
+                                    value={resTitle}
+                                    onChange={(e) => setResTitle(e.target.value)}
+                                />
+                                <select
+                                    className="teacher-select"
+                                    value={resBranch}
+                                    onChange={(e) => setResBranch(e.target.value)}
+                                >
+                                    <option value="all">Select Branch</option>
+                                    <option value="cse">CSE</option>
+                                    <option value="csm">CSM</option>
+                                </select>
+                                <select
+                                    className="teacher-select"
+                                    value={resSubject}
+                                    onChange={(e) => setResSubject(e.target.value)}
+                                >
+                                    <option value="all">Select Subject</option>
+                                    <option value="physics">Physics</option>
+                                    <option value="chemistry">Chemistry</option>
+                                    <option value="english">English</option>
+                                    <option value="social">Social</option>
+                                </select>
+                                <input
+                                    className="teacher-input"
+                                    type="file"
+                                    onChange={(e) => setResFile(e.target.files[0])}
+                                />
+                            </div>
+                            <button
+                                className="teacher-btn-primary"
+                                onClick={handleUploadResource}
+                                disabled={uploadingResource}
+                            >
+                                {uploadingResource ? "Uploading..." : "Upload Resource"}
+                            </button>
+                        </section>
+
+                        <section className="teacher-section">
+                            <h3>My Uploaded Resources ({teacherResources.length})</h3>
+                            {teacherResources.length === 0 ? (
+                                <p className="teacher-empty">No resources uploaded yet</p>
+                            ) : (
+                                <div className="teacher-table-wrapper">
+                                    <table className="teacher-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Branch</th>
+                                                <th>Subject</th>
+                                                <th>Type</th>
+                                                <th>Date</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {teacherResources.map((res) => (
+                                                <tr key={res.id}>
+                                                    <td>{res.title}</td>
+                                                    <td>{res.branch.toUpperCase()}</td>
+                                                    <td>{res.subject.toUpperCase()}</td>
+                                                    <td>{res.file_type}</td>
+                                                    <td>{new Date(res.created_at).toLocaleDateString()}</td>
+                                                    <td>
+                                                        <button
+                                                            className="delete-btn-small"
+                                                            onClick={() => handleDeleteResource(res.id)}
+                                                            title="Delete resource"
+                                                        >
+                                                            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" /></svg>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}

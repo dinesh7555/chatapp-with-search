@@ -17,6 +17,7 @@ const TopicView = () => {
     const navigate = useNavigate();
 
     const [topic, setTopic] = useState(topicParam);
+    const [allTopics, setAllTopics] = useState([]);
     const [notes, setNotes] = useState("");
     const [loadingNotes, setLoadingNotes] = useState(true);
 
@@ -29,18 +30,60 @@ const TopicView = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
 
+    const [showHistory, setShowHistory] = useState(false);
+    const [notesActive, setNotesActive] = useState(true);
+    const [chatActive, setChatActive] = useState(true);
+    const [notesWidth, setNotesWidth] = useState(50); // percentage
+    const isResizing = useRef(false);
+
     const sendingRef = useRef(false);
     const messagesEndRef = useRef(null);
 
     const token = localStorage.getItem("token");
 
     useEffect(() => {
-        if (subjectId && topic) {
-            fetchNotes();
-            autoStartChat();
-            loadSessions();
+        const fetchAllTopics = async () => {
+            try {
+                const response = await fetch("http://localhost:8000/subjects/");
+                if (response.ok) {
+                    const data = await response.json();
+                    const currentSubject = data.subjects.find(
+                        (s) => s.name.toLowerCase() === subjectId.toLowerCase()
+                    );
+                    if (currentSubject) {
+                        setAllTopics(currentSubject.topics);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch topics:", err);
+            }
+        };
+
+        if (subjectId) {
+            fetchAllTopics();
         }
-    }, [subjectId, topic]);
+    }, [subjectId]);
+
+    useEffect(() => {
+        if (subjectId && topicParam) {
+            // Update localStorage to ensure API calls use the correct subject
+            localStorage.setItem("subject", subjectId.toLowerCase());
+
+            setTopic(topicParam);
+            // Reset states for new topic
+            setNotes("");
+            setLoadingNotes(true);
+            setMessages([]);
+            setChatId(null);
+
+            // Auto-load notes on mount as per user request
+            fetchNotes(subjectId, topicParam);
+            // Load sessions for history
+            loadSessions();
+            // Automatically start/resume chat for the topic
+            autoStartChat(subjectId, topicParam);
+        }
+    }, [subjectId, topicParam]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,13 +93,47 @@ const TopicView = () => {
         scrollToBottom();
     }, [messages]);
 
-    const fetchNotes = async (refresh = false) => {
-        setLoadingNotes(true);
+    // Resizing Logic
+    const handleMouseDown = (e) => {
+        isResizing.current = true;
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isResizing.current) return;
+
+        // Calculate new width as percentage of the container
+        const container = document.querySelector(".topic-view-container");
+        if (!container) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+
+        // Constrain between 10% and 90%
+        if (newWidth > 10 && newWidth < 90) {
+            setNotesWidth(newWidth);
+        }
+    };
+
+    const handleMouseUp = () => {
+        isResizing.current = false;
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+        document.body.style.cursor = "default";
+        document.body.style.userSelect = "auto";
+    };
+
+    const fetchNotes = async (sId = subjectId, tName = topicParam) => {
         try {
-            const data = await getNotes(subjectId, topic, refresh);
+            setLoadingNotes(true);
+            const data = await getNotes(sId, tName);
+            // Change data.content to data.notes to match backend response
             setNotes(data.notes || "No notes available for this topic.");
-        } catch (error) {
-            console.error("Error fetching notes:", error);
+        } catch (err) {
+            console.error("Error fetching notes:", err);
             setNotes("Failed to load notes.");
         } finally {
             setLoadingNotes(false);
@@ -72,21 +149,28 @@ const TopicView = () => {
         }
     };
 
-    const autoStartChat = async () => {
+    const autoStartChat = async (sId = subjectId, tName = topicParam) => {
         try {
-            localStorage.setItem("subject", subjectId.toLowerCase());
-            const res = await startChat(token, topic);
-            setChatId(res.chat_id);
+            setLoading(true);
+            localStorage.setItem("subject", sId.toLowerCase());
+            const data = await startChat(token, tName);
+            setChatId(data.chat_id);
 
-            const history = await getHistory(res.chat_id, token);
-            // Normalize history messages (handle both 'sender/text' and 'role/content' formats)
-            const normalized = (history.messages || []).map(m => ({
-                sender: m.role ? (m.role === "assistant" ? "ai" : "user") : (m.sender || "user"),
-                text: m.content || m.text || ""
-            }));
-            setMessages(normalized);
-        } catch (error) {
-            console.error("Error starting chat session:", error);
+            // If reusing session, fetch history
+            if (data.reused) {
+                const history = await getHistory(data.chat_id, token);
+                const normalized = (history.messages || []).map(m => ({
+                    sender: m.role ? (m.role === "assistant" ? "ai" : "user") : (m.sender || "user"),
+                    text: m.content || m.text || ""
+                }));
+                setMessages(normalized);
+            } else {
+                setMessages([]);
+            }
+        } catch (err) {
+            console.error("Error starting chat:", err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -188,35 +272,53 @@ const TopicView = () => {
 
     return (
         <div className="topic-view-layout">
-            <ChatSidebar
-                sessions={isSearching ? searchResults : sessions}
-                activeChatId={chatId}
-                onSelectChat={handleSelectChat}
-                onNewChat={handleNewChat}
-                onSearch={handleSearch}
-            />
-
             <div className="topic-view-main">
                 <header className="topic-view-header">
-                    <div className="topic-info">
-                        <span className="subject-tag">{subjectId.toUpperCase()}</span>
-                        <h1>{topic}</h1>
+                    <div className="header-left">
+                        <button className="back-link" onClick={() => navigate("/my-subjects")}>
+                            <span className="back-icon">‹</span> Subjects
+                        </button>
+                        <div className="topic-info">
+                            <span className="subject-label">{subjectId?.toUpperCase()}</span>
+                            <h1>{topicParam}</h1>
+                        </div>
+                    </div>
+
+                    <nav className="topic-nav">
+                        {allTopics.map((t) => (
+                            <button
+                                key={t}
+                                className={`nav-topic-item ${t === topicParam ? "active" : ""}`}
+                                onClick={() => navigate(`/topic-view/${subjectId}/${t}`)}
+                            >
+                                {t}
+                            </button>
+                        ))}
+                        <div className="nav-divider"></div>
+                        <button
+                            className="nav-code-btn"
+                            onClick={() => navigate(`/code-editor/${subjectId}/${topicParam}`)}
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="code-icon">
+                                <polyline points="16 18 22 12 16 6"></polyline>
+                                <polyline points="8 6 2 12 8 18"></polyline>
+                            </svg>
+                            Code
+                        </button>
+                    </nav>
+
+                    <div className="header-actions">
+                        <button className="history-toggle" onClick={() => setShowHistory(!showHistory)}>
+                            {showHistory ? "Hide History" : "Chat History"}
+                        </button>
                     </div>
                 </header>
 
-                <div className="topic-view-container">
+                <div className="topic-view-container split-view">
                     {/* Left Panel: Notes */}
-                    <div className="notes-panel">
+                    <div className="notes-panel" style={{ width: `${notesWidth}%`, flex: "none" }}>
                         <div className="panel-header">
                             <h2>Notes</h2>
-                            <button
-                                className="regenerate-btn"
-                                onClick={() => fetchNotes(true)}
-                                disabled={loadingNotes}
-                                title="Regenerate notes with AI"
-                            >
-                                {loadingNotes ? "Regenerating..." : "Regenerate Content"}
-                            </button>
                         </div>
                         <div className="notes-content markdown-body">
                             {loadingNotes ? (
@@ -230,46 +332,74 @@ const TopicView = () => {
                         </div>
                     </div>
 
+                    {/* Resizer Handle */}
+                    <div className="resizer-handle" onMouseDown={handleMouseDown}></div>
+
                     {/* Right Panel: Chat */}
-                    <div className="chat-panel">
+                    <div className="chat-panel" style={{ width: `${100 - notesWidth}%`, flex: "none" }}>
                         <div className="panel-header">
                             <h2>AI Tutor</h2>
-                        </div>
-                        <div className="chat-messages">
-                            {messages.length === 0 ? (
-                                <div className="chat-empty">
-                                    Ask anything about <strong>{topic}</strong> to start learning!
-                                </div>
-                            ) : (
-                                messages.map((msg, i) => (
-                                    <div key={i} className={`message ${msg.sender}`}>
-                                        <div className="message-content">
-                                            <ReactMarkdown>{msg.text}</ReactMarkdown>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                            {loading && (
-                                <div className="message ai typing">
-                                    <span className="dot">.</span>
-                                    <span className="dot">.</span>
-                                    <span className="dot">.</span>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-                        <form className="chat-input-area" onSubmit={handleSendMessage}>
-                            <input
-                                type="text"
-                                placeholder="Ask a question..."
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                disabled={loading}
-                            />
-                            <button type="submit" disabled={loading || !input.trim()}>
-                                Send
+                            <button
+                                className={`history-toggle ${showHistory ? "active" : ""}`}
+                                onClick={() => setShowHistory(!showHistory)}
+                                title="Past Conversations"
+                            >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="clock-icon">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
                             </button>
-                        </form>
+                        </div>
+
+                        <div className="chat-body-container">
+                            {showHistory && (
+                                <ChatSidebar
+                                    sessions={isSearching ? searchResults : sessions}
+                                    activeChatId={chatId}
+                                    onSelectChat={handleSelectChat}
+                                    onNewChat={handleNewChat}
+                                    onSearch={handleSearch}
+                                />
+                            )}
+
+                            <div className="chat-interaction-area">
+                                <div className="chat-messages">
+                                    {messages.length === 0 ? (
+                                        <div className="chat-empty">
+                                            Ask anything about <strong>{topic}</strong> to start learning!
+                                        </div>
+                                    ) : (
+                                        messages.map((msg, i) => (
+                                            <div key={i} className={`message ${msg.sender}`}>
+                                                <div className="message-content">
+                                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                    {loading && (
+                                        <div className="message ai typing">
+                                            <span className="dot">.</span>
+                                            <span className="dot">.</span>
+                                            <span className="dot">.</span>
+                                        </div>
+                                    )}
+                                    <div ref={messagesEndRef} />
+                                </div>
+                                <form className="chat-input-area" onSubmit={handleSendMessage}>
+                                    <input
+                                        type="text"
+                                        placeholder="Ask a question..."
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        disabled={loading}
+                                    />
+                                    <button type="submit" disabled={loading || !input.trim()}>
+                                        Send
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

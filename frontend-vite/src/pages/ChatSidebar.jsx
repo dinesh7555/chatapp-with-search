@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { searchChats } from "../services/api";
+import "./ChatSidebar.css";
 
 
 export default function ChatSidebar({
@@ -21,7 +22,7 @@ export default function ChatSidebar({
 
     setSearching(true);
     try {
-      const res = await searchChats(query);
+      const res = await searchChats(query, localStorage.getItem("token"));
       setSearchResults(res.results || []);
     } catch (err) {
       console.error("Search failed", err);
@@ -55,7 +56,7 @@ export default function ChatSidebar({
         <button onClick={handleSearch}>
           {searching ? "..." : "Search"}
         </button>
-        
+
       </div>
 
       {/* LIST */}
@@ -69,9 +70,8 @@ export default function ChatSidebar({
         {list.map((chat) => (
           <div
             key={chat.chat_id}
-            className={`chat-item ${
-              chat.chat_id === activeChatId ? "active" : ""
-            }`}
+            className={`chat-item ${chat.chat_id === activeChatId ? "active" : ""
+              }`}
             onClick={() => {
               setSearchResults([]);
               setQuery("");

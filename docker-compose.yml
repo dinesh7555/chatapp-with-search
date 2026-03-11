@@ -59,6 +59,7 @@ services:
     volumes:
       - faiss_data:/app/faiss
       - ./backend/notes:/app/notes
+      - ./backend/uploads:/app/uploads
     environment:
       - REDIS_URL=redis://redis:6379
     healthcheck:

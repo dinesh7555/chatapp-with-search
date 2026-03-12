@@ -5,13 +5,6 @@ class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
-    role: Literal["admin","student"]
-    
-class AdminUserCreate(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-    role: str   # admin can choose role
 
 class UserLogin(BaseModel):
     username: str
@@ -20,12 +13,19 @@ class UserLogin(BaseModel):
 class ChatMessage(BaseModel):
     message: str
 
+class QuizSubmit(BaseModel):
+    score: int
+    total: int
+    incorrect_questions: list[dict] # Contains question, user_answer, correct_answer, explanation
+
 class StudentCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
     roll_no: str
     course_id: str
+    year: int
+    branch: str
     status: str = "active"
 
 
@@ -36,3 +36,17 @@ class TeacherCreate(BaseModel):
     subject: str
     department: str
     designation: str
+
+
+class ResourceResponse(BaseModel):
+    id: int
+    title: str
+    filename: str
+    file_type: str
+    branch: str
+    subject: str
+    teacher_name: str
+    created_at: object # date/datetime
+
+    class Config:
+        from_attributes = True

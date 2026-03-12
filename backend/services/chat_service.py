@@ -63,6 +63,7 @@ def create_chat_session(user_id: int, subject_id: str, topic: str):
         topic: $topic
     })
 
+    CREATE (u)-[:HAS_CHAT_SESSION]->(c)
     CREATE (t)-[:HAS_CHAT]->(c)
     """
 
@@ -82,9 +83,7 @@ def create_chat_session(user_id: int, subject_id: str, topic: str):
 
 def store_message(chat_id: str, user_id: int,sender: str, text: str ,subject_id: str):
     query = """
-    MATCH (u:User {user_id: $user_id})
-      -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
-      -[:HAS_CHAT|HAS_TOPIC*1..2]->(c:ChatSession {chat_id: $chat_id})
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession {chat_id: $chat_id})
 
     OPTIONAL MATCH (c)-[oldRel:LAST_MESSAGE]->(last:Message)
 
@@ -123,13 +122,13 @@ def store_message(chat_id: str, user_id: int,sender: str, text: str ,subject_id:
         )
 
         record = result.single()
+        if not record:
+            raise ValueError(f"Could not store message: Chat session {chat_id} not found or doesn't belong to user {user_id}")
         return record["sequence"]
 
 def get_chat_history(chat_id: str, user_id: int, subject_id: str):
     query = """
-    MATCH (u:User {user_id: $user_id})
-      -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
-      -[:HAS_CHAT|HAS_TOPIC*1..2]->(c:ChatSession {chat_id: $chat_id})
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession {chat_id: $chat_id})
       -[:HAS_MESSAGE]->(m:Message)
     RETURN m
     ORDER BY m.sequence ASC
@@ -192,9 +191,7 @@ def get_first_user_messages(chat_id: str, user_id: int, subject_id: str, limit: 
     Returns the first N user messages in a chat (ordered by sequence).
     """
     query = """
-    MATCH (u:User {user_id: $user_id})
-          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
-          -[:HAS_CHAT|HAS_TOPIC*1..2]->(c:ChatSession {chat_id: $chat_id})
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession {chat_id: $chat_id})
           -[:HAS_MESSAGE]->(m:Message {sender: 'user'})
     RETURN m.text AS text
     ORDER BY m.sequence ASC
@@ -225,9 +222,7 @@ def update_chat_title_if_empty(
     subject_id: str
 ):
     query = """
-    MATCH (u:User {user_id: $user_id})
-          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
-          -[:HAS_CHAT|HAS_TOPIC*1..2]->(c:ChatSession {chat_id: $chat_id})
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession {chat_id: $chat_id})
     WHERE c.title IS NULL
     SET c.title = $title
     """
@@ -242,9 +237,8 @@ def update_chat_title_if_empty(
 
 def get_user_chat_sessions(user_id: int,subject_id: str):
     query = """
-    MATCH (u:User {user_id: $user_id})
-          -[:HAS_SUBJECT]->(s:Subject {subject_id: $subject_id})
-          -[:HAS_CHAT|HAS_TOPIC*1..2]->(c:ChatSession)
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession)
+    MATCH (:Subject {subject_id: $subject_id})-[:HAS_TOPIC]->(:Topic)-[:HAS_CHAT]->(c)
     OPTIONAL MATCH (c)-[:HAS_MESSAGE]->(m:Message)
     WITH c, count(m) AS messageCount
     RETURN
@@ -273,13 +267,44 @@ def get_user_chat_sessions(user_id: int,subject_id: str):
     return sessions
 
 
+def get_all_user_chat_sessions(user_id: int):
+    query = """
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession)
+    MATCH (s:Subject)-[:HAS_TOPIC]->(:Topic)-[:HAS_CHAT]->(c)
+    OPTIONAL MATCH (c)-[:HAS_MESSAGE]->(m:Message)
+    WITH c, s, count(m) AS messageCount
+    RETURN
+        c.chat_id AS chat_id,
+        COALESCE(c.title, 'New Chat') AS title,
+        c.topic AS topic,
+        c.created_at AS created_at,
+        s.subject_id AS subject_id,
+        messageCount
+    ORDER BY c.created_at DESC
+    """
+
+    sessions = []
+
+    with get_neo4j_session() as session:
+        result = session.run(query, user_id=user_id)
+
+        for record in result:
+            sessions.append({
+                "chat_id": record["chat_id"],
+                "title": record["title"],
+                "topic": record.get("topic"),
+                "created_at": record["created_at"],
+                "subject_id": record["subject_id"],
+                "message_count": record["messageCount"]
+            })
+
+    return sessions
+
+
 def get_chat_topic(chat_id: str, user_id: int,subject_id: str):
     query = """
-    MATCH (u:User {user_id: $user_id})
-          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
-          -[:HAS_TOPIC]->(t:Topic)
-          -[:HAS_CHAT]->(c:ChatSession {chat_id: $chat_id})
-    RETURN t.name as topic
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession {chat_id: $chat_id})
+    RETURN c.topic as topic
     """
     with get_neo4j_session() as session:
         result = session.run(query, chat_id=chat_id, user_id=user_id,subject_id=subject_id)
@@ -288,3 +313,22 @@ def get_chat_topic(chat_id: str, user_id: int,subject_id: str):
             return record["topic"]
     return None
 
+def find_empty_chat_session(user_id: int, subject_id: str, topic: str) -> str:
+    """
+    Finds a chat session for a user and topic that has no messages yet.
+    """
+    query = """
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession {topic: $topic})
+    MATCH (:Subject {subject_id: $subject_id})-[:HAS_TOPIC]->(:Topic {name: $topic})-[:HAS_CHAT]->(c)
+    OPTIONAL MATCH (c)-[:HAS_MESSAGE]->(m:Message)
+    WITH c, count(m) AS messageCount
+    WHERE messageCount = 0
+    RETURN c.chat_id AS chat_id
+    LIMIT 1
+    """
+    with get_neo4j_session() as session:
+        result = session.run(query, user_id=user_id, subject_id=subject_id, topic=topic)
+        record = result.single()
+        if record:
+            return record["chat_id"]
+    return None

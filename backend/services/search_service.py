@@ -48,10 +48,9 @@ def search_chats_by_keyword(user_id: int, subject_id: str, keyword: str, limit: 
     Keyword-based search across all chats for a user
     """
     query = """
-    MATCH (u:User {user_id: $user_id})
-          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
-          -[:HAS_CHAT]->(c:ChatSession)
-          -[:HAS_MESSAGE]->(m:Message {sender: 'user'})
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession)
+    MATCH (s:Subject {subject_id: $subject_id})-[:HAS_TOPIC]->(:Topic)-[:HAS_CHAT]->(c)
+    MATCH (c)-[:HAS_MESSAGE]->(m:Message {sender: 'user'})
     WHERE toLower(m.text) CONTAINS toLower($keyword)
     WITH c, collect(m.text)[0..3] AS matchedMessages
     RETURN
@@ -85,12 +84,10 @@ def search_chats_by_topic(user_id: int, subject_id: str, keyword: str, limit: in
     Topic-based search across chats for a user
     """
     query = """
-    MATCH (u:User {user_id: $user_id})
-          -[:HAS_SUBJECT]->(:Subject {subject_id: $subject_id})
-          -[:HAS_CHAT]->(c:ChatSession)
-          -[:HAS_MESSAGE]->(m:Message)
-          -[:ABOUT_TOPIC]->(t:Topic)
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession)
+    MATCH (s:Subject {subject_id: $subject_id})-[:HAS_TOPIC]->(t:Topic)-[:HAS_CHAT]->(c)
     WHERE toLower(t.name) CONTAINS toLower($keyword)
+    OPTIONAL MATCH (c)-[:HAS_MESSAGE]->(m:Message)
     WITH c, collect(DISTINCT m.text)[0..3] AS matchedMessages
     RETURN
         c.chat_id AS chat_id,

@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import user, chat , search, subjects
+from routes import user, chat, search, subjects, resource
 
 # 🔴 ADD THESE IMPORTS
 from database import engine, Base
@@ -19,7 +19,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "http://172.168.11.81:3000"
+        "http://172.168.11.8:3000",
+        "http://172.168.12.102:3000"
     ],
     # allow_credentials=False,
     allow_methods=["*"],
@@ -30,6 +31,7 @@ app.include_router(user.router)
 app.include_router(chat.router)
 app.include_router(search.router) 
 app.include_router(subjects.router)
+app.include_router(resource.router)
 print(">>> Routers loaded")
 
 # 🔴 ADD THIS BLOCK

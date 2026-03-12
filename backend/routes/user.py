@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import User
@@ -9,6 +9,8 @@ from redis_client import redis_client
 from jose import jwt
 from auth import require_admin, require_student , require_roles, security
 from models import StudentProfile, TeacherProfile
+from models import StudentProfile
+from routes.chat import ALLOWED_SUBJECTS
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 def get_db():
@@ -17,21 +19,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-# @router.post("/register")
-# def register(user: UserCreate, db: Session = Depends(get_db), admin_user: User = Depends(require_admin)):
-#     existing = db.query(User).filter(User.username == user.username).first()
-#     if existing:
-#         raise HTTPException(status_code=400, detail="Username already exists")
-#     new_user = User(
-#         username=user.username,
-#         email=user.email,
-#         hashed_password=hash_password(user.password),
-#         role=user.role
-#     )
-#     db.add(new_user)
-#     db.commit()
-#     return {"message": "registered successfully"}
 
 @router.post("/register/admin")
 def register_admin(
@@ -78,6 +65,8 @@ def register_student(
         user_id=new_user.id,
         roll_no=student.roll_no,
         course_id=student.course_id,
+        year=student.year,
+        branch=student.branch,
         status=student.status
     )
 
@@ -166,17 +155,27 @@ def logout(
 
 @router.get("/students")
 def list_students(
+    year: int = Query(None),
+    branch: str = Query(None),
+    subject: str = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles("admin", "teacher"))
 ):
-    from models import StudentProfile
 
-    students = (
-        db.query(User, StudentProfile)
-        .join(StudentProfile, User.id == StudentProfile.user_id)
-        .filter(User.role == "student")
-        .all()
-    )
+    query = db.query(User, StudentProfile).join(StudentProfile, User.id == StudentProfile.user_id).filter(User.role == "student")
+
+    if year:
+        query = query.filter(StudentProfile.year == year)
+    if branch:
+        query = query.filter(StudentProfile.branch == branch)
+    
+    if subject:
+        if subject not in ALLOWED_SUBJECTS:
+             return [] # Or raise an exception, but returning empty list if subject is invalid for the system is safe
+        # In this implementation, we assume all students are associated with all allowed subjects
+        # So we just keep the existing filters.
+
+    students = query.all()
 
     return [
         {
@@ -185,6 +184,8 @@ def list_students(
             "email": user.email,
             "roll_no": profile.roll_no,
             "course_id": profile.course_id,
+            "year": profile.year,
+            "branch": profile.branch,
             "status": profile.status
         }
         for user, profile in students

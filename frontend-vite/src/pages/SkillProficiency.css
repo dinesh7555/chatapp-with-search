@@ -1,0 +1,297 @@
+/* =============================================================
+   SKILL PROFICIENCY — sepia theme, vertical, mastery only
+   ============================================================= */
+
+.skill-proficiency-block {
+  background: var(--surface, #fefaf3);
+  border: 1px solid var(--border, rgba(160, 130, 90, 0.2));
+  border-radius: var(--radius-lg, 14px);
+  padding: 1.4rem 1.6rem 1.5rem;
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(92, 72, 50, 0.12));
+  margin-bottom: 1.75rem;
+  /* spacing gap before Quick Actions */
+}
+
+/* ── Header ── */
+.sp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.sp-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink, #2c1f0e);
+  margin: 0 0 0.18rem;
+  letter-spacing: 0.01em;
+}
+
+.sp-subtitle {
+  font-size: 0.77rem;
+  color: var(--ink-muted, #9b836a);
+  font-style: italic;
+  display: block;
+}
+
+/* ── Dropdown selector ── */
+.sp-selector {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sp-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.8rem;
+  background: var(--surface-2, #fdf5e8);
+  border: 1.5px solid var(--border-strong, rgba(160, 130, 90, 0.4));
+  border-radius: var(--radius-pill, 999px);
+  color: var(--ink-soft, #5c4a30);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+  white-space: nowrap;
+}
+
+.sp-selector-btn:hover {
+  background: var(--accent-light, rgba(196, 124, 43, 0.12));
+  box-shadow: 0 2px 8px rgba(196, 124, 43, 0.15);
+}
+
+.sp-sel-icon {
+  font-size: 0.9rem;
+}
+
+.sp-sel-name {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sp-sel-caret {
+  font-size: 0.72rem;
+  transition: transform 0.2s;
+  display: inline-block;
+  color: var(--ink-muted, #9b836a);
+}
+
+.sp-sel-caret.open {
+  transform: rotate(180deg);
+}
+
+.sp-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface, #fefaf3);
+  border: 1px solid var(--border-strong, rgba(160, 130, 90, 0.4));
+  border-radius: var(--radius-md, 10px);
+  box-shadow: var(--shadow-lg, 0 8px 32px rgba(92, 72, 50, 0.15));
+  list-style: none;
+  margin: 0;
+  padding: 0.3rem 0;
+  min-width: 155px;
+  z-index: 99;
+  animation: sp-drop-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sp-drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.sp-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.83rem;
+  color: var(--ink-soft, #5c4a30);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.14s;
+}
+
+.sp-dropdown-item:hover {
+  background: var(--accent-light, rgba(196, 124, 43, 0.1));
+}
+
+.sp-dropdown-item.active {
+  background: var(--accent-light, rgba(196, 124, 43, 0.14));
+  color: var(--accent, #c47c2b);
+  font-weight: 700;
+}
+
+.sp-check {
+  margin-left: auto;
+  color: var(--accent, #c47c2b);
+  font-size: 0.8rem;
+}
+
+/* ── Mastery card ── */
+.sp-card {
+  background: var(--surface-2, #fdf5e8);
+  border: 1px solid var(--border, rgba(160, 130, 90, 0.2));
+  border-radius: var(--radius-md, 10px);
+  padding: 1.2rem 1.4rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  animation: sp-card-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sp-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Ring + subject row ── */
+.sp-card-top {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+/* Ring */
+.sp-ring-wrap {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Percentage — single centred block */
+.sp-ring-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: var(--accent, #c47c2b);
+  line-height: 1;
+}
+
+/* Render "35%" as one compact inline-flex unit */
+.sp-ring-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+}
+
+.sp-ring-num {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sp-ring-pct {
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 2px;
+  align-self: flex-end;
+}
+
+/* Subject info */
+.sp-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.sp-card-subject {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink, #2c1f0e);
+}
+
+.sp-card-desc {
+  font-size: 0.72rem;
+  color: var(--ink-muted, #9b836a);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+
+/* ── Progress bar ── */
+.sp-bar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+}
+
+.sp-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--ink-muted, #9b836a);
+  font-weight: 600;
+}
+
+.sp-bar-current {
+  color: var(--accent, #c47c2b);
+  font-weight: 700;
+}
+
+.sp-bar-track {
+  height: 9px;
+  background: rgba(160, 130, 90, 0.15);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.sp-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--accent, #c47c2b);
+  transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Badge ── */
+.sp-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.8rem;
+  border-radius: var(--radius-pill, 999px);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  background: var(--accent-light, rgba(196, 124, 43, 0.12));
+  color: var(--accent, #c47c2b);
+  border: 1px solid var(--accent-mid, rgba(196, 124, 43, 0.3));
+  white-space: nowrap;
+}
+
+.sp-status-note {
+  font-size: 0.78rem;
+  color: var(--ink-muted, #9b836a);
+  font-style: italic;
+}

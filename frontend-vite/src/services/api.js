@@ -88,6 +88,15 @@ export async function getChatSessions(token) {
   return res.json();
 }
 
+export async function getAllChatSessions(token) {
+  const res = await fetch(`${BASE_URL}/chat/sessions/all`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
 export async function searchChats(query, token) {
   const subject = getSubject();
   const res = await fetch(
@@ -139,7 +148,7 @@ export async function deleteUser(userId, token) {
 export async function createUser(data, token) {
   // Route based on role
   let endpoint = `${BASE_URL}/auth/register`;
-  
+
   if (data.role === "admin") {
     endpoint = `${BASE_URL}/auth/register/admin`;
   } else if (data.role === "student") {
@@ -171,8 +180,20 @@ export async function getAdmins(token) {
 
 /* ---------- TEACHER FUNCTIONS ---------- */
 
-export async function getStudents(token) {
-  const res = await fetch(`${BASE_URL}/auth/students`, {
+export async function getStudents(token, filters = {}) {
+  const { year, branch, subject } = filters;
+  let url = `${BASE_URL}/auth/students`;
+  const params = new URLSearchParams();
+  if (year && year !== "all") params.append("year", year);
+  if (branch && branch !== "all") params.append("branch", branch);
+  if (subject && subject !== "all") params.append("subject", subject);
+
+  const queryString = params.toString();
+  if (queryString) {
+    url += `?${queryString}`;
+  }
+
+  const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -219,6 +240,123 @@ export async function createTeacher(data, token) {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function getStudentState(token, subjectId, topic, studentId = null) {
+  let url = `${BASE_URL}/chat/state?subject_id=${subjectId}&topic=${encodeURIComponent(topic)}`;
+  if (studentId) {
+    url += `&student_id=${studentId}`;
+  }
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+/* ---------- SUBJECT/NOTES FUNCTIONS ---------- */
+
+export async function getNotes(subjectId, topic, refresh = false) {
+  const token = localStorage.getItem("token");
+  const params = new URLSearchParams({
+    subject_id: subjectId,
+    topic,
+  });
+  if (refresh) {
+    params.set("refresh", "true");
+  }
+  const res = await fetch(`${BASE_URL}/subjects/notes?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.detail || "Failed to fetch notes");
+  }
+  return res.json();
+}
+/* ---------- RESOURCE FUNCTIONS ---------- */
+
+export async function uploadResource(data, token) {
+  const formData = new FormData();
+  formData.append("title", data.title);
+  formData.append("branch", data.branch);
+  formData.append("subject", data.subject);
+  formData.append("file", data.file);
+
+  const res = await fetch(`${BASE_URL}/resources/upload`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  return res.json();
+}
+
+export async function getResources(token, filters = {}) {
+  const { branch, subject } = filters;
+  let url = `${BASE_URL}/resources/`;
+  const params = new URLSearchParams();
+  if (branch && branch !== "all") params.append("branch", branch);
+  if (subject && subject !== "all") params.append("subject", subject);
+
+  const queryString = params.toString();
+  if (queryString) {
+    url += `?${queryString}`;
+  }
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function deleteResource(resourceId, token) {
+  const res = await fetch(`${BASE_URL}/resources/${resourceId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function downloadResource(resourceId, token) {
+  const res = await fetch(`${BASE_URL}/resources/download/${resourceId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error("Download failed");
+  return res.blob();
+}
+
+export async function generateQuiz(chatId, token) {
+  const subject = getSubject();
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/quiz?subject_id=${subject}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function submitQuiz(chatId, quizData, token) {
+  const subject = getSubject();
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/quiz/submit?subject_id=${subject}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(quizData),
   });
   return res.json();
 }

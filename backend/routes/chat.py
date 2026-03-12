@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends ,BackgroundTasks, HTTPException , Query
 from auth import require_student
-from schemas import ChatMessage
+from schemas import ChatMessage, QuizSubmit
 from services.chat_service import (
     create_chat_session,
     store_message,
@@ -8,18 +8,22 @@ from services.chat_service import (
     update_chat_title_if_empty , 
     get_first_user_messages , 
     get_user_chat_sessions,
-    get_chat_topic
+    get_all_user_chat_sessions,
+    get_chat_topic,
+    find_empty_chat_session
 )
 from services.metrics_service import (
     calculate_metrics,
     update_user_topic_state,
     get_user_topic_state
 )
+from auth import require_student, require_roles
 from services.llm_service import get_ai_response_with_context , stream_ai_response
 from services.vector_service import store_embedding, search_similar
 # from services.topic_service import extract_topics_llm
 from services.title_service import generate_title_from_messages
 from fastapi.responses import StreamingResponse
+from services.llm_service import generate_quiz_from_history
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -31,7 +35,8 @@ async def process_message_background(
     user_text: str,
     ai_seq: int,
     ai_text: str,
-    topic: str = None
+    topic: str = None,
+    history: list = None
 ):
     # 🔹 Topics (UNCHANGED)
     # topics = await extract_topics_llm(user_text)
@@ -78,7 +83,8 @@ async def process_message_background(
 
     # 🔹 Calculate and update metrics
     if topic:
-        scores = await calculate_metrics(user_text)
+        # Pass history to calculate_metrics for contextual scoring
+        scores = await calculate_metrics(user_text, subject_id=subject_id, topic=topic, history=history)
         print(f"Metrics for topic '{topic}': {scores}")
         update_user_topic_state(user_id, topic,subject_id,scores)
 
@@ -143,6 +149,21 @@ def start_chat(
     allowed_topics = SUBJECT_TOPICS.get(subject_id, [])
     if topic not in allowed_topics:
         raise HTTPException(status_code=400, detail="Invalid topic for this subject")
+
+    # 🔹 Check for an existing empty chat session for this topic
+    existing_chat_id = find_empty_chat_session(
+        user_id=current_user.id,
+        subject_id=subject_id,
+        topic=topic
+    )
+
+    if existing_chat_id:
+        return {
+            "chat_id": existing_chat_id,
+            "subject_id": subject_id,
+            "topic": topic,
+            "reused": True
+        }
 
     chat_id = create_chat_session(
         user_id=current_user.id,
@@ -218,36 +239,27 @@ def build_llm_messages(
     subject_id: str,
     user_state: dict = None
 ):
-    subject_prompt = SUBJECT_PROMPTS.get(subject_id)
+    # 1. CORE SYSTEM ROLE & CONSTRAINTS
+    subject_prompt = SUBJECT_PROMPTS.get(subject_id, "You are a helpful tutor.")
+    
+    # Consolidate core identity and constraints into the first message
+    system_content = f"{subject_prompt.strip()}\n\n"
+    system_content += "CORE CONSTRAINTS:\n"
+    system_content += "- Stay strictly within your subject area.\n"
+    system_content += "- Be concise but thorough.\n"
+    system_content += "- Use Markdown for formatting (bold, lists, etc.).\n"
+    system_content += "- IMPORTANT: Use proper spacing. Ensure there's a double newline before and after every list and header.\n"
+    system_content += "- For lists, start each item on a new line with a clear bullet point or number.\n"
+    system_content += "- STUDY AND LEARN MODE: You are an active tutor. After answering the user's query, you MUST ask a relevant follow-up question to test their understanding.\n"
+    system_content += "- If the user is answering a previous question of yours, evaluate their answer, explain any misconceptions, and ask another follow-up question to deepen their knowledge. Promote active recall.\n"
 
     messages = [
-        {
-            "role": "system",
-            "content": subject_prompt
-        }
+        {"role": "system", "content": system_content}
     ]
 
-    # 🔹 Inject User State (Confusion/Stress)
-    if user_state and (user_state.get("confusion_score", 0) > 0 or user_state.get("stress_score", 0) > 0):
-        confusion = user_state.get("confusion_score", 0)
-        stress = user_state.get("stress_score", 0)
-        
-        state_prompt = f"User Status: Confusion Level: {confusion}/100, Stress Level: {stress}/100.\n"
-        
-        if confusion > 50:
-            state_prompt += "The user is confused. Be extra clear, patient, and explain step-by-step. "
-        if stress > 50:
-            state_prompt += "The user is stressed. Be encouraging, supportive, and avoid overwhelming them. "
-            
-        messages.append({
-            "role": "system",
-            "content": state_prompt
-        })
-
-    # 🔹 Inject semantic memory (Step 4)
+    # 2. CONTEXTUAL MEMORY (RAG)
     if semantic_memory:
         memory_texts = []
-
         for item in semantic_memory:
             if isinstance(item, dict):
                 memory_texts.append(item.get("text", ""))
@@ -256,20 +268,54 @@ def build_llm_messages(
 
         messages.append({
             "role": "system",
-            "content": (
-                "Relevant past discussions from this user:\n"
-                + "\n".join(memory_texts)
-            )
+            "content": f"CONTEXT FROM PAST DISCUSSIONS:\n{chr(10).join(memory_texts)}"
         })
 
-    # 🔹 Add chat history (Step 2)
+    # 3. CONVERSATION HISTORY
     for msg in history:
         messages.append({
             "role": "user" if msg["sender"] == "user" else "assistant",
             "content": msg["text"]
         })
 
-    # 🔹 Current user message
+    # 4. TUTOR ADAPTIVITY PROTOCOL (Final System Instruction)
+    if user_state:
+        # Helper to map 0-100 to Qualitative labels
+        def get_label(val):
+            if val < 30: return "LOW"
+            if val < 70: return "MEDIUM"
+            return "HIGH"
+
+        mastery = user_state.get("mastery_level", 0)
+        confusion = user_state.get("confusion_score", 0)
+        stress = user_state.get("stress_score", 0)
+        pace = user_state.get("learning_pace", 50)
+        misconceptions = user_state.get("misconceptions", [])
+
+        adaptivity_prompt = "### TUTOR ADAPTIVITY PROTOCOL\n"
+        adaptivity_prompt += f"STUDENT STATE: Mastery: {get_label(mastery)} | Confusion: {get_label(confusion)} | Stress: {get_label(stress)} | Pace: {get_label(pace)}\n"
+        
+        directives = []
+        if confusion >= 50:
+            directives.append("- MANDATORY: The student is confused. Use simpler language, break down complex steps, and use concrete analogies.")
+        if stress >= 50:
+            directives.append("- MANDATORY: The student is stressed. Be highly encouraging, validate their effort, and avoid overwhelming them.")
+        if mastery < 40:
+            directives.append("- MANDATORY: Focus on foundational concepts. Avoid advanced jargon without explaining it first.")
+        if pace > 75:
+            directives.append("- OPTIONAL: The student is a fast learner. You may introduce slightly more advanced connections or depth.")
+        if misconceptions:
+            directives.append(f"- CRITICAL: Address these misconceptions if they surface: {', '.join(misconceptions)}")
+
+        if directives:
+            adaptivity_prompt += "\nREQUIRED BEHAVIORAL CHANGES FOR THIS RESPONSE:\n" + "\n".join(directives)
+
+        messages.append({
+            "role": "system",
+            "content": adaptivity_prompt
+        })
+
+    # 5. CURRENT STUDENT QUERY
     messages.append({
         "role": "user",
         "content": new_message
@@ -301,6 +347,11 @@ async def send_message_stream(
 
     # 3️⃣ Get Topic & User State
     topic = get_chat_topic(chat_id, current_user.id,subject_id)
+    if topic is None and not history:
+        # Check if session exists at all even without messages
+        # get_chat_topic returning None means session not found for this user/subject
+        raise HTTPException(status_code=404, detail="Chat session not found")
+
     user_state = get_user_topic_state(current_user.id, topic,subject_id) if topic else None
 
     # 4️⃣ Build prompt
@@ -313,13 +364,16 @@ async def send_message_stream(
     )
 
     # 4️⃣ Store USER message immediately
-    user_seq = store_message(
-        chat_id=chat_id,
-        user_id=current_user.id,
-        subject_id=subject_id,
-        sender="user",
-        text=payload.message
-    )
+    try:
+        user_seq = store_message(
+            chat_id=chat_id,
+            user_id=current_user.id,
+            subject_id=subject_id,
+            sender="user",
+            text=payload.message
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     async def event_generator():
         full_response = ""
@@ -347,7 +401,8 @@ async def send_message_stream(
             payload.message,
             ai_seq,
             full_response,
-            topic
+            topic,
+            history[-5:] if history else [] # Pass last 5 messages for context
         )
 
 
@@ -374,6 +429,64 @@ def chat_history(
         "messages": history
     }
 
+@router.get("/{chat_id}/quiz")
+async def generate_chat_quiz(
+    chat_id: str,
+    subject_id: str = Query(...),
+    current_user = Depends(require_student)
+):
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail="Invalid subject")
+
+    history = get_chat_history(chat_id, current_user.id, subject_id)
+    
+    if not history or len(history) < 2:
+        return {"quiz": []} # Not enough context
+
+    # We might want to limit history if it's too long
+    recent_history = history[-20:]
+    
+    quiz_data = await generate_quiz_from_history(recent_history, subject_id)
+    return {"quiz": quiz_data}
+
+@router.post("/{chat_id}/quiz/submit")
+def submit_quiz_results(
+    chat_id: str,
+    payload: QuizSubmit,
+    subject_id: str = Query(...),
+    current_user = Depends(require_student)
+):
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail="Invalid subject")
+
+    # Format the quiz results into a hidden "system" context message
+    # Since we can only store "user" or "ai" easily right now without changing db schemas,
+    # we'll store it as a user message that the AI will see as context.
+    
+    report = f"[SYSTEM: QUIZ COMPLETED] I just completed a quiz and scored {payload.score} out of {payload.total}.\n"
+    
+    if payload.incorrect_questions:
+        report += "Here are the questions I got wrong:\n"
+        for idx, q in enumerate(payload.incorrect_questions):
+            report += f"{idx+1}. Question: {q.get('question')}\n"
+            report += f"   My Answer: {q.get('user_answer')}\n"
+            report += f"   Correct Answer: {q.get('correct_answer')}\n"
+        report += "\nPlease help me understand these topics better in your next responses."
+    else:
+        report += "I got a perfect score! Keep challenging me!"
+
+    try:
+        user_seq = store_message(
+            chat_id=chat_id,
+            user_id=current_user.id,
+            subject_id=subject_id,
+            sender="user", # Or "system" if DB allows it, "user" is safest
+            text=report
+        )
+        return {"status": "success", "message": "Quiz context saved."}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
 @router.get("/sessions")
 def list_chat_sessions(subject_id: str = Query(...), current_user = Depends(require_student)):
     if subject_id not in ALLOWED_SUBJECTS:
@@ -382,4 +495,27 @@ def list_chat_sessions(subject_id: str = Query(...), current_user = Depends(requ
     return {
         "sessions": sessions
     }
+
+@router.get("/sessions/all")
+def list_all_chat_sessions(current_user = Depends(require_student)):
+    sessions = get_all_user_chat_sessions(current_user.id)
+    return {
+        "sessions": sessions
+    }
+
+@router.get("/state")
+def get_student_topic_state(
+    subject_id: str = Query(...),
+    topic: str = Query(...),
+    student_id: int = Query(None),
+    current_user = Depends(require_roles("teacher", "admin"))
+):
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail="Invalid subject")
+    
+    # If student_id is provided, use it. Otherwise use current user's ID
+    target_user_id = student_id if student_id is not None else current_user.id
+
+    state = get_user_topic_state(target_user_id, topic, subject_id)
+    return state
 

@@ -13,6 +13,11 @@ class UserLogin(BaseModel):
 class ChatMessage(BaseModel):
     message: str
 
+class QuizSubmit(BaseModel):
+    score: int
+    total: int
+    incorrect_questions: list[dict] # Contains question, user_answer, correct_answer, explanation
+
 class StudentCreate(BaseModel):
     username: str
     email: EmailStr

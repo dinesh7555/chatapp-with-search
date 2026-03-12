@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import {
     getNotes,
     startChat,
-    sendMessageStream,
     getHistory,
     getChatSessions,
-    searchChats
+    searchChats,
+    sendMessageStream
 } from "../services/api";
 import ChatSidebar from "./ChatSidebar";
 import "./TopicView.css";
@@ -15,6 +15,8 @@ import "./TopicView.css";
 const TopicView = () => {
     const { subjectId, topic: topicParam } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const chatIdParam = searchParams.get("chatId");
 
     const [topic, setTopic] = useState(topicParam);
     const [allTopics, setAllTopics] = useState([]);
@@ -79,11 +81,16 @@ const TopicView = () => {
             // Auto-load notes on mount as per user request
             fetchNotes(subjectId, topicParam);
             // Load sessions for history
-            loadSessions();
-            // Automatically start/resume chat for the topic
-            autoStartChat(subjectId, topicParam);
+            loadSessions().then(() => {
+                if (chatIdParam) {
+                    handleSelectChat(chatIdParam);
+                } else {
+                    // Automatically start/resume chat for the topic
+                    autoStartChat(subjectId, topicParam);
+                }
+            });
         }
-    }, [subjectId, topicParam]);
+    }, [subjectId, topicParam, chatIdParam]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -305,6 +312,16 @@ const TopicView = () => {
                             </svg>
                             Code
                         </button>
+                        <button
+                            className="nav-quiz-btn"
+                            onClick={() => navigate(`/quiz/${subjectId}/${topicParam}?chatId=${chatId || ''}`)}
+                        >
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="quiz-icon" style={{ width: '18px', height: '18px', marginRight: '6px' }}>
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                            Quiz
+                        </button>
                     </nav>
 
                     <div className="header-actions">
@@ -369,13 +386,15 @@ const TopicView = () => {
                                             Ask anything about <strong>{topic}</strong> to start learning!
                                         </div>
                                     ) : (
-                                        messages.map((msg, i) => (
-                                            <div key={i} className={`message ${msg.sender}`}>
-                                                <div className="message-content">
-                                                    <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                        messages
+                                            .filter(msg => !msg.text.startsWith("[SYSTEM:"))
+                                            .map((msg, i) => (
+                                                <div key={i} className={`message ${msg.sender}`}>
+                                                    <div className="message-content">
+                                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))
+                                            ))
                                     )}
                                     {loading && (
                                         <div className="message ai typing">

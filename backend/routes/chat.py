@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends ,BackgroundTasks, HTTPException , Query
 from auth import require_student
-from schemas import ChatMessage
+from schemas import ChatMessage, QuizSubmit
 from services.chat_service import (
     create_chat_session,
     store_message,
@@ -23,6 +23,7 @@ from services.vector_service import store_embedding, search_similar
 # from services.topic_service import extract_topics_llm
 from services.title_service import generate_title_from_messages
 from fastapi.responses import StreamingResponse
+from services.llm_service import generate_quiz_from_history
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -249,6 +250,8 @@ def build_llm_messages(
     system_content += "- Use Markdown for formatting (bold, lists, etc.).\n"
     system_content += "- IMPORTANT: Use proper spacing. Ensure there's a double newline before and after every list and header.\n"
     system_content += "- For lists, start each item on a new line with a clear bullet point or number.\n"
+    system_content += "- STUDY AND LEARN MODE: You are an active tutor. After answering the user's query, you MUST ask a relevant follow-up question to test their understanding.\n"
+    system_content += "- If the user is answering a previous question of yours, evaluate their answer, explain any misconceptions, and ask another follow-up question to deepen their knowledge. Promote active recall.\n"
 
     messages = [
         {"role": "system", "content": system_content}
@@ -425,6 +428,64 @@ def chat_history(
         "subject_id": subject_id,
         "messages": history
     }
+
+@router.get("/{chat_id}/quiz")
+async def generate_chat_quiz(
+    chat_id: str,
+    subject_id: str = Query(...),
+    current_user = Depends(require_student)
+):
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail="Invalid subject")
+
+    history = get_chat_history(chat_id, current_user.id, subject_id)
+    
+    if not history or len(history) < 2:
+        return {"quiz": []} # Not enough context
+
+    # We might want to limit history if it's too long
+    recent_history = history[-20:]
+    
+    quiz_data = await generate_quiz_from_history(recent_history, subject_id)
+    return {"quiz": quiz_data}
+
+@router.post("/{chat_id}/quiz/submit")
+def submit_quiz_results(
+    chat_id: str,
+    payload: QuizSubmit,
+    subject_id: str = Query(...),
+    current_user = Depends(require_student)
+):
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail="Invalid subject")
+
+    # Format the quiz results into a hidden "system" context message
+    # Since we can only store "user" or "ai" easily right now without changing db schemas,
+    # we'll store it as a user message that the AI will see as context.
+    
+    report = f"[SYSTEM: QUIZ COMPLETED] I just completed a quiz and scored {payload.score} out of {payload.total}.\n"
+    
+    if payload.incorrect_questions:
+        report += "Here are the questions I got wrong:\n"
+        for idx, q in enumerate(payload.incorrect_questions):
+            report += f"{idx+1}. Question: {q.get('question')}\n"
+            report += f"   My Answer: {q.get('user_answer')}\n"
+            report += f"   Correct Answer: {q.get('correct_answer')}\n"
+        report += "\nPlease help me understand these topics better in your next responses."
+    else:
+        report += "I got a perfect score! Keep challenging me!"
+
+    try:
+        user_seq = store_message(
+            chat_id=chat_id,
+            user_id=current_user.id,
+            subject_id=subject_id,
+            sender="user", # Or "system" if DB allows it, "user" is safest
+            text=report
+        )
+        return {"status": "success", "message": "Quiz context saved."}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @router.get("/sessions")
 def list_chat_sessions(subject_id: str = Query(...), current_user = Depends(require_student)):

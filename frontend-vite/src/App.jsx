@@ -7,6 +7,7 @@ import MySubjects from "./pages/MySubjects";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import TopicView from "./pages/TopicView";
 import CodeEditor from "./pages/CodeEditor";
+import QuizPage from "./pages/QuizPage";
 
 function App() {
   const [authenticated, setAuthenticated] = useState(
@@ -40,6 +41,7 @@ function App() {
         <Route path="/my-subjects" element={<MySubjects />} />
         <Route path="/topic-view/:subjectId/:topic" element={<TopicView />} />
         <Route path="/code-editor/:subjectId/:topic" element={<CodeEditor />} />
+        <Route path="/quiz/:subjectId/:topic" element={<QuizPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

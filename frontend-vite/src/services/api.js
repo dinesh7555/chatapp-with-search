@@ -339,3 +339,26 @@ export async function downloadResource(resourceId, token) {
   if (!res.ok) throw new Error("Download failed");
   return res.blob();
 }
+
+export async function generateQuiz(chatId, token) {
+  const subject = getSubject();
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/quiz?subject_id=${subject}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function submitQuiz(chatId, quizData, token) {
+  const subject = getSubject();
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/quiz/submit?subject_id=${subject}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(quizData),
+  });
+  return res.json();
+}

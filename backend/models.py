@@ -8,14 +8,16 @@ class User(Base):
     username = Column(String(50), unique=True, index=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    role = Column(String(20), nullable=False, default="student")
+    role = Column(String(20), default="student", nullable=False)
     student_profile = relationship("StudentProfile", back_populates="user", uselist=False)
     teacher_profile = relationship("TeacherProfile", back_populates="user", uselist=False)  
 
 class StudentProfile(Base):
     __tablename__ = "student_profiles"
+
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+
     roll_no = Column(String(50), nullable=True)
     course_id = Column(String(50), nullable=True)
     status = Column(String(20), default="active")

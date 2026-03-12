@@ -1,4 +1,6 @@
+
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   startChat,
   sendMessage,
@@ -13,6 +15,10 @@ import ChatSidebar from "./ChatSidebar";
 import ReactMarkdown from "react-markdown";
 
 export default function Chat({ onLogout }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(location.search);
+  const topicParam = searchParams.get("topic");
   const token = localStorage.getItem("token");
   const [sessions, setSessions] = useState([]);
   const [chatId, setChatId] = useState(null);
@@ -30,6 +36,18 @@ export default function Chat({ onLogout }) {
   const [subject, setSubject] = useState(
     localStorage.getItem("subject") || "physics"
   );
+
+  // Handle auto-starting chat for topic from parameter
+  useEffect(() => {
+    const autoStartTopic = async () => {
+      if (topicParam && !chatId && !sendingRef.current) {
+        await handleNewChat(topicParam);
+        // Clear query param to prevent re-triggering
+        navigate("/chat", { replace: true });
+      }
+    };
+    autoStartTopic();
+  }, [topicParam, chatId]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const subjects = ["physics", "chemistry", "english", "social"];

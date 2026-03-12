@@ -4,24 +4,24 @@
 
 /* ── CSS Variables (mirrors Chat.css palette) ── */
 :root {
-  --bg-deep:        #1e1f25;
-  --bg-surface:     #2b2d36;
-  --bg-panel:       rgba(32, 33, 35, 0.85);
-  --bg-input:       #27272a;
-  --accent:         #6366f1;
-  --accent-hover:   #5558e3;
-  --border:         #3f3f46;
-  --text-primary:   #ffffff;
-  --text-muted:     #a1a1aa;
-  --text-dim:       #71717a;
-  --success:        #10b981;
-  --success-hover:  #059669;
-  --warning:        #f59e0b;
-  --warning-hover:  #d97706;
-  --danger:         #dc2626;
-  --danger-hover:   #b91c1c;
-  --radius:         8px;
-  --transition:     0.15s ease;
+  --bg-deep: #1e1f25;
+  --bg-surface: #2b2d36;
+  --bg-panel: rgba(32, 33, 35, 0.85);
+  --bg-input: #27272a;
+  --accent: #6366f1;
+  --accent-hover: #5558e3;
+  --border: #3f3f46;
+  --text-primary: #ffffff;
+  --text-muted: #a1a1aa;
+  --text-dim: #71717a;
+  --success: #10b981;
+  --success-hover: #059669;
+  --warning: #f59e0b;
+  --warning-hover: #d97706;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --radius: 8px;
+  --transition: 0.15s ease;
 }
 
 /* ── Page Layout ── */

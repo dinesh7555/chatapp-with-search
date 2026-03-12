@@ -101,6 +101,7 @@ def get_user_topic_state(user_id: int, topic: str,subject_id: str) -> dict:
     RETURN
         COALESCE(r.confusion_score, 0) AS confusion,
         COALESCE(r.stress_score, 0) AS stress
+
     """
 
     with get_neo4j_session() as session:

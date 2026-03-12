@@ -1,6 +1,7 @@
 import json
 from services.llm_service import stream_ai_response
 
+
 async def extract_topics_llm(text: str) -> list[str]:
     """
     Extract 2–4 concise topics from user text.
@@ -29,5 +30,8 @@ async def extract_topics_llm(text: str) -> list[str]:
             return [t.strip() for t in topics][:4]
     except Exception:
         pass
+
+    return []
+
 
     return []

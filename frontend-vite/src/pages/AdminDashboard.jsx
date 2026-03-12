@@ -1,29 +1,29 @@
 import { useEffect, useState } from "react";
-import { 
+import {
   getStudents,
-  getAdmins, 
+  getAdmins,
   getTeachers,
-  deleteUser, 
+  deleteUser,
   createUser,
   createStudent,
   updateStudentStatus,
-  logout 
+  logout
 } from "../services/api";
 import "./AdminDashboard.css";
 
 export default function AdminDashboard({ onLogout }) {
   const token = localStorage.getItem("token");
-  
+
   // Data states
   const [students, setStudents] = useState([]);
   const [admins, setAdmins] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  
+
   // Filter states
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCourse, setFilterCourse] = useState("all");
-  
+
   // Create student form
   const [newStudentUsername, setNewStudentUsername] = useState("");
   const [newStudentEmail, setNewStudentEmail] = useState("");
@@ -228,10 +228,10 @@ export default function AdminDashboard({ onLogout }) {
     }
     try {
       const res = await createUser(
-        { 
-          username: teacherUsername, 
-          email: teacherEmail, 
-          password: teacherPassword, 
+        {
+          username: teacherUsername,
+          email: teacherEmail,
+          password: teacherPassword,
           role: "teacher",
           subject: teacherSubject,
           department: teacherDepartment,
@@ -430,7 +430,7 @@ export default function AdminDashboard({ onLogout }) {
         <section className="admin-section">
           <div className="section-header">
             <h3>Students ({filteredStudents.length})</h3>
-            
+
             {/* Filter Controls */}
             <div className="filter-controls">
               <select

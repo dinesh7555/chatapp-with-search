@@ -4,556 +4,556 @@
 
 /* ── CSS Variables (mirrors Chat.css palette) ── */
 :root {
-  --bg-deep:        #1e1f25;
-  --bg-surface:     #2b2d36;
-  --bg-panel:       rgba(32, 33, 35, 0.85);
-  --bg-input:       #27272a;
-  --accent:         #6366f1;
-  --accent-hover:   #5558e3;
-  --border:         #3f3f46;
-  --text-primary:   #ffffff;
-  --text-muted:     #a1a1aa;
-  --text-dim:       #71717a;
-  --success:        #10b981;
-  --success-hover:  #059669;
-  --warning:        #f59e0b;
-  --warning-hover:  #d97706;
-  --danger:         #dc2626;
-  --danger-hover:   #b91c1c;
-  --radius:         8px;
-  --transition:     0.15s ease;
+    --bg-deep: #1e1f25;
+    --bg-surface: #2b2d36;
+    --bg-panel: rgba(32, 33, 35, 0.85);
+    --bg-input: #27272a;
+    --accent: #6366f1;
+    --accent-hover: #5558e3;
+    --border: #3f3f46;
+    --text-primary: #ffffff;
+    --text-muted: #a1a1aa;
+    --text-dim: #71717a;
+    --success: #10b981;
+    --success-hover: #059669;
+    --warning: #f59e0b;
+    --warning-hover: #d97706;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --radius: 8px;
+    --transition: 0.15s ease;
 }
 
 /* ── Page Layout ── */
 .teacher-layout {
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #3b3f4a, #1e1f25);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
-  color: var(--text-primary);
-  display: flex;
-  flex-direction: column;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #3b3f4a, #1e1f25);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont;
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
 }
 
 /* ── Top Header Bar ── */
 .teacher-header {
-  height: 54px;
-  padding: 0 28px;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+    height: 54px;
+    padding: 0 28px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .teacher-header h2 {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 0.01em;
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
 }
 
 /* ── Logout Button ── */
 .teacher-logout-btn {
-  height: 38px;
-  padding: 0 16px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition);
+    height: 38px;
+    padding: 0 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
 }
 
 .teacher-logout-btn:hover {
-  background: rgba(99, 102, 241, 0.1);
-  border-color: var(--accent);
-  color: #818cf8;
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--accent);
+    color: #818cf8;
 }
 
 /* ── Main Content Area ── */
 .teacher-content {
-  flex: 1;
-  padding: 32px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
+    flex: 1;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
 }
 
 /* ── Section Card ── */
 .teacher-section {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
 }
 
 .teacher-section h3 {
-  margin: 0 0 18px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  font-size: 13px;
-  color: var(--text-muted);
+    margin: 0 0 18px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    font-size: 13px;
+    color: var(--text-muted);
 }
 
 /* ── Section Header with Controls ── */
 .section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-  gap: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .section-header h3 {
-  margin: 0;
+    margin: 0;
 }
 
 /* ── Filter Controls ── */
 .filter-controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 /* ── Form Grid (for create student) ── */
 .teacher-form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 /* ── Text / Email / Password Inputs ── */
 .teacher-input {
-  height: 44px;
-  padding: 0 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 14px;
-  outline: none;
-  transition: border var(--transition), background var(--transition);
-  box-sizing: border-box;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border var(--transition), background var(--transition);
+    box-sizing: border-box;
 }
 
 .teacher-input::placeholder {
-  color: var(--text-dim);
+    color: var(--text-dim);
 }
 
 .teacher-input:focus {
-  border-color: var(--accent);
-  background: var(--bg-input);
+    border-color: var(--accent);
+    background: var(--bg-input);
 }
 
 /* ── Select Dropdown (full size) ── */
 .teacher-select {
-  height: 44px;
-  padding: 0 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 14px;
-  outline: none;
-  cursor: pointer;
-  transition: border var(--transition);
+    height: 44px;
+    padding: 0 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border var(--transition);
 }
 
 .teacher-select:focus {
-  border-color: var(--accent);
+    border-color: var(--accent);
 }
 
 /* ── Select Dropdown (small, for filters) ── */
 .teacher-select-small {
-  height: 36px;
-  padding: 0 12px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 13px;
-  outline: none;
-  cursor: pointer;
-  transition: border var(--transition);
+    height: 36px;
+    padding: 0 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    transition: border var(--transition);
 }
 
 .teacher-select-small:focus {
-  border-color: var(--accent);
+    border-color: var(--accent);
 }
 
 /* ── Primary Action Button ── */
 .teacher-btn-primary {
-  height: 44px;
-  padding: 0 20px;
-  border-radius: var(--radius);
-  border: none;
-  background: var(--accent);
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
 }
 
 .teacher-btn-primary:hover {
-  background: var(--accent-hover);
+    background: var(--accent-hover);
 }
 
 .teacher-btn-primary:active {
-  transform: scale(0.98);
+    transform: scale(0.98);
 }
 
 /* ── Bulk Actions Bar ── */
 .bulk-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 12px 16px;
-  background: rgba(99, 102, 241, 0.08);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(99, 102, 241, 0.08);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 .bulk-count {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-right: auto;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-right: auto;
 }
 
 .bulk-btn {
-  height: 36px;
-  padding: 0 16px;
-  border-radius: var(--radius);
-  border: none;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition);
+    height: 36px;
+    padding: 0 16px;
+    border-radius: var(--radius);
+    border: none;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
 }
 
 .bulk-btn.active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
 }
 
 .bulk-btn.active:hover {
-  background: var(--success);
-  color: white;
+    background: var(--success);
+    color: white;
 }
 
 .bulk-btn.inactive {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
 }
 
 .bulk-btn.inactive:hover {
-  background: var(--warning);
-  color: white;
+    background: var(--warning);
+    color: white;
 }
 
 .bulk-btn.delete {
-  background: rgba(220, 38, 38, 0.15);
-  color: #f87171;
+    background: rgba(220, 38, 38, 0.15);
+    color: #f87171;
 }
 
 .bulk-btn.delete:hover {
-  background: var(--danger);
-  color: white;
+    background: var(--danger);
+    color: white;
 }
 
 /* ── Data Table ── */
 .teacher-table-wrapper {
-  overflow-x: auto;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+    overflow-x: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
 }
 
 .teacher-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
 }
 
 .teacher-table thead tr {
-  background: rgba(99, 102, 241, 0.08);
+    background: rgba(99, 102, 241, 0.08);
 }
 
 .teacher-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
 }
 
 .teacher-table td {
-  padding: 12px 16px;
-  color: var(--text-primary);
-  border-bottom: 1px solid rgba(63, 63, 70, 0.5);
-  vertical-align: middle;
+    padding: 12px 16px;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(63, 63, 70, 0.5);
+    vertical-align: middle;
 }
 
 .teacher-table tbody tr:last-child td {
-  border-bottom: none;
+    border-bottom: none;
 }
 
 .teacher-table tbody tr {
-  transition: background var(--transition);
+    transition: background var(--transition);
 }
 
 .teacher-table tbody tr:hover {
-  background: rgba(99, 102, 241, 0.06);
+    background: rgba(99, 102, 241, 0.06);
 }
 
 /* ── Checkbox Styling ── */
 .teacher-table input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent);
 }
 
 /* ── Status Badge ── */
 .status-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: capitalize;
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
 }
 
 .status-badge.active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
 }
 
 .status-badge.inactive {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
 }
 
 /* ── Status Select Dropdown (in table) ── */
 .status-select {
-  height: 32px;
-  padding: 0 10px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-input);
-  color: var(--text-primary);
-  font-size: 13px;
-  cursor: pointer;
-  outline: none;
-  transition: border var(--transition);
+    height: 32px;
+    padding: 0 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    transition: border var(--transition);
 }
 
 .status-select:focus {
-  border-color: var(--accent);
+    border-color: var(--accent);
 }
 
 /* ── Action Buttons Container ── */
 .action-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
 /* ── Small Delete Button (in table) ── */
 .delete-btn-small {
-  height: 32px;
-  padding: 0 12px;
-  border-radius: var(--radius);
-  border: none;
-  background: rgba(220, 38, 38, 0.15);
-  color: #f87171;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius);
+    border: none;
+    background: rgba(220, 38, 38, 0.15);
+    color: #f87171;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
 }
 
 .delete-btn-small:hover {
-  background: var(--danger);
-  color: white;
+    background: var(--danger);
+    color: white;
 }
 
 .delete-btn-small:active {
-  transform: scale(0.97);
+    transform: scale(0.97);
 }
 
 /* ── Empty State ── */
 .teacher-empty {
-  font-size: 14px;
-  color: var(--text-dim);
-  text-align: center;
-  padding: 24px 0;
-  margin: 0;
+    font-size: 14px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 24px 0;
+    margin: 0;
 }
 
 /* ── Logout Modal (from Chat.css) ── */
 .logout-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
 }
 
 .logout-modal {
-  background: #1e1f25;
-  color: #fff;
-  padding: 22px;
-  border-radius: 10px;
-  width: 320px;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
-  text-align: center;
-  border: 1px solid #3f3f46;
+    background: #1e1f25;
+    color: #fff;
+    padding: 22px;
+    border-radius: 10px;
+    width: 320px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+    text-align: center;
+    border: 1px solid #3f3f46;
 }
 
 .logout-modal h3 {
-  margin: 0 0 10px;
-  font-size: 16px;
-  font-weight: 600;
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .logout-modal p {
-  font-size: 14px;
-  color: #a1a1aa;
-  margin-bottom: 20px;
+    font-size: 14px;
+    color: #a1a1aa;
+    margin-bottom: 20px;
 }
 
 .logout-actions {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
 }
 
 .cancel-btn {
-  background: transparent;
-  border: 1px solid #3f3f46;
-  color: #a1a1aa;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all var(--transition);
+    background: transparent;
+    border: 1px solid #3f3f46;
+    color: #a1a1aa;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition);
 }
 
 .cancel-btn:hover {
-  background: rgba(99, 102, 241, 0.1);
-  color: #818cf8;
+    background: rgba(99, 102, 241, 0.1);
+    color: #818cf8;
 }
 
 .confirm-btn {
-  background: #dc2626;
-  border: none;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all var(--transition);
+    background: #dc2626;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all var(--transition);
 }
 
 .confirm-btn:hover {
-  background: #b91c1c;
+    background: #b91c1c;
 }
 
 /* ── Scrollbar (matches Chat.css) ── */
 .teacher-content::-webkit-scrollbar,
 .teacher-table-wrapper::-webkit-scrollbar {
-  width: 8px;
+    width: 8px;
 }
 
 .teacher-content::-webkit-scrollbar-track,
 .teacher-table-wrapper::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 
 .teacher-content::-webkit-scrollbar-thumb,
 .teacher-table-wrapper::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
+    background: var(--border);
+    border-radius: 4px;
 }
 
 .teacher-content::-webkit-scrollbar-thumb:hover,
 .teacher-table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+    background: #52525b;
 }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .teacher-content {
-    padding: 20px 16px;
-  }
+    .teacher-content {
+        padding: 20px 16px;
+    }
 
-  .teacher-form-grid {
-    grid-template-columns: 1fr;
-  }
+    .teacher-form-grid {
+        grid-template-columns: 1fr;
+    }
 
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-  .filter-controls {
-    width: 100%;
-  }
+    .filter-controls {
+        width: 100%;
+    }
 
-  .teacher-select-small {
-    flex: 1;
-  }
+    .teacher-select-small {
+        flex: 1;
+    }
 
-  .bulk-actions {
-    flex-wrap: wrap;
-  }
+    .bulk-actions {
+        flex-wrap: wrap;
+    }
 
-  .teacher-table th,
-  .teacher-table td {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
+    .teacher-table th,
+    .teacher-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
 }
 
 @media (max-width: 480px) {
-  .teacher-header {
-    padding: 0 16px;
-  }
+    .teacher-header {
+        padding: 0 16px;
+    }
 
-  .teacher-header h2 {
-    font-size: 15px;
-  }
+    .teacher-header h2 {
+        font-size: 15px;
+    }
 
-  .teacher-section {
-    padding: 16px;
-  }
+    .teacher-section {
+        padding: 16px;
+    }
 
-  .teacher-table th,
-  .teacher-table td {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
+    .teacher-table th,
+    .teacher-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
 }

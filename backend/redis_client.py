@@ -7,3 +7,4 @@ redis_client = redis.Redis.from_url(
     REDIS_URL,
     decode_responses=True
 )
+# automatically decode bytes to strings for convenience

@@ -20,7 +20,6 @@ export async function loginUser(data) {
   return res.json();
 }
 
-/* ---------- CHAT ---------- */
 
 function getSubject() {
   return localStorage.getItem("subject") || "physics";
@@ -75,6 +74,8 @@ export async function getHistory(chatId, token) {
   });
   return res.json();
 }
+
+
 
 export async function getChatSessions(token) {
   const subject = getSubject();

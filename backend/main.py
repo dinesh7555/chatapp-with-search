@@ -2,15 +2,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import user, chat , search
+from routes import user, chat , search, subjects
 
 # 🔴 ADD THESE IMPORTS
 from database import engine, Base
-from database import SessionLocal
-from models import User
+from models import User # VERY IMPORTANT (loads User model)
 from auth import hash_password
 import os
-
+from database import SessionLocal
 print(">>> Starting FastAPI app")
 
 app = FastAPI()
@@ -30,6 +29,7 @@ app.add_middleware(
 app.include_router(user.router)
 app.include_router(chat.router)
 app.include_router(search.router) 
+app.include_router(subjects.router)
 print(">>> Routers loaded")
 
 # 🔴 ADD THIS BLOCK

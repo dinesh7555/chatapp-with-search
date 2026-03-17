@@ -332,3 +332,36 @@ def find_empty_chat_session(user_id: int, subject_id: str, topic: str) -> str:
         if record:
             return record["chat_id"]
     return None
+
+def set_chat_quiz(chat_id: str, quiz_json_str: str):
+    query = """
+    MATCH (c:ChatSession {chat_id: $chat_id})
+    SET c.quiz_status = 'pending',
+        c.pending_quiz = $quiz_json_str
+    """
+    with get_neo4j_session() as session:
+        session.run(query, chat_id=chat_id, quiz_json_str=quiz_json_str)
+
+def get_chat_quiz(chat_id: str):
+    query = """
+    MATCH (c:ChatSession {chat_id: $chat_id})
+    RETURN c.quiz_status as quiz_status, c.pending_quiz as pending_quiz
+    """
+    with get_neo4j_session() as session:
+        result = session.run(query, chat_id=chat_id)
+        record = result.single()
+        if record:
+            return {
+                "quiz_status": record.get("quiz_status", "none"),
+                "pending_quiz": record.get("pending_quiz")
+            }
+    return {"quiz_status": "none", "pending_quiz": None}
+
+def clear_chat_quiz(chat_id: str):
+    query = """
+    MATCH (c:ChatSession {chat_id: $chat_id})
+    SET c.quiz_status = 'none'
+    REMOVE c.pending_quiz
+    """
+    with get_neo4j_session() as session:
+        session.run(query, chat_id=chat_id)

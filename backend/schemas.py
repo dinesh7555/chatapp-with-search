@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr
-from typing import Literal
+from pydantic import BaseModel, EmailStr , ConfigDict
+from typing import Literal, List, Optional
 
 class UserCreate(BaseModel):
     username: str
@@ -16,7 +16,21 @@ class ChatMessage(BaseModel):
 class QuizSubmit(BaseModel):
     score: int
     total: int
-    incorrect_questions: list[dict] # Contains question, user_answer, correct_answer, explanation
+    incorrect_questions: List[dict] # Contains question, user_answer, correct_answer, explanation
+
+class QuizAnswerItem(BaseModel):
+    model_config = ConfigDict(extra='allow')
+    
+    type: str
+    question: str
+    user_answer: str
+    answer: Optional[str] = None # Using 'answer' to match generation prompt
+    correct_answer: Optional[str] = None 
+    explanation: Optional[str] = None
+    options: Optional[List[str]] = None
+
+class QuizSubmission(BaseModel):
+    answers: List[dict]
 
 class StudentCreate(BaseModel):
     username: str

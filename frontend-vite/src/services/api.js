@@ -1,4 +1,4 @@
-const BASE_URL = "http://172.168.11.81:8000";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 /* ---------- AUTH ---------- */
 
@@ -338,9 +338,10 @@ export async function downloadResource(resourceId, token) {
   return res.blob();
 }
 
-export async function generateQuiz(chatId, token) {
+export async function generateQuestions(chatId, token) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/quiz?subject_id=${subject}`, {
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/generate-questions?subject_id=${subject}`, {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -348,15 +349,25 @@ export async function generateQuiz(chatId, token) {
   return res.json();
 }
 
-export async function submitQuiz(chatId, quizData, token) {
+export async function getQuestions(chatId, token) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/quiz/submit?subject_id=${subject}`, {
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/questions?subject_id=${subject}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function submitQuiz(chatId, payload, token) {
+  const subject = getSubject();
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/submit-quiz?subject_id=${subject}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(quizData),
+    body: JSON.stringify(payload),
   });
   return res.json();
 }

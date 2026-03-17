@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends ,BackgroundTasks, HTTPException , Query
 from auth import require_student
-from schemas import ChatMessage, QuizSubmit
+from schemas import ChatMessage, QuizSubmit, QuizSubmission
 from services.chat_service import (
     create_chat_session,
     store_message,
@@ -10,7 +10,10 @@ from services.chat_service import (
     get_user_chat_sessions,
     get_all_user_chat_sessions,
     get_chat_topic,
-    find_empty_chat_session
+    find_empty_chat_session,
+    set_chat_quiz,
+    get_chat_quiz,
+    clear_chat_quiz
 )
 from services.metrics_service import (
     calculate_metrics,
@@ -23,7 +26,8 @@ from services.vector_service import store_embedding, search_similar
 # from services.topic_service import extract_topics_llm
 from services.title_service import generate_title_from_messages
 from fastapi.responses import StreamingResponse
-from services.llm_service import generate_quiz_from_history
+from services.llm_service import generate_quiz_from_history, evaluate_quiz_answers, detect_topic_shift
+import json
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -250,6 +254,8 @@ def build_llm_messages(
     system_content += "- Use Markdown for formatting (bold, lists, etc.).\n"
     system_content += "- IMPORTANT: Use proper spacing. Ensure there's a double newline before and after every list and header.\n"
     system_content += "- For lists, start each item on a new line with a clear bullet point or number.\n"
+    system_content += "- ANTI-REPETITION: Do NOT repeat the same explanations, definitions, or bullet points if they have already appeared in the conversation history or the context below.\n"
+    system_content += "- PROGRESSIVE LEARNING: If the student understands a concept, acknowledge it and move forward. Do NOT re-lecture on topics already covered unless the student clearly shows a misconception.\n"
     system_content += "- STUDY AND LEARN MODE: You are an active tutor. After answering the user's query, you MUST ask a relevant follow-up question to test their understanding.\n"
     system_content += "- If the user is answering a previous question of yours, evaluate their answer, explain any misconceptions, and ask another follow-up question to deepen their knowledge. Promote active recall.\n"
 
@@ -260,16 +266,19 @@ def build_llm_messages(
     # 2. CONTEXTUAL MEMORY (RAG)
     if semantic_memory:
         memory_texts = []
-        for item in semantic_memory:
+        # Limit to top 2 to reduce redundancy
+        for item in semantic_memory[:2]:
             if isinstance(item, dict):
-                memory_texts.append(item.get("text", ""))
+                text = item.get("text", "")
+                if text: memory_texts.append(text)
             else:
                 memory_texts.append(str(item))
 
-        messages.append({
-            "role": "system",
-            "content": f"CONTEXT FROM PAST DISCUSSIONS:\n{chr(10).join(memory_texts)}"
-        })
+        if memory_texts:
+            messages.append({
+                "role": "system",
+                "content": f"CONTEXT FROM PAST DISCUSSIONS (Reference only if new): \n{chr(10).join(memory_texts)}"
+            })
 
     # 3. CONVERSATION HISTORY
     for msg in history:
@@ -279,7 +288,7 @@ def build_llm_messages(
         })
 
     # 4. TUTOR ADAPTIVITY PROTOCOL (Final System Instruction)
-    if user_state:
+    if not user_state:
         # Helper to map 0-100 to Qualitative labels
         def get_label(val):
             if val < 30: return "LOW"
@@ -334,8 +343,12 @@ async def send_message_stream(
     if subject_id not in ALLOWED_SUBJECTS:
         raise HTTPException(status_code=400, detail="Invalid subject")
 
-    # 1️⃣ Fetch history
+    # 1️⃣ Fetch history and check quiz status
     history = get_chat_history(chat_id, current_user.id, subject_id)
+    
+    quiz_data_db = get_chat_quiz(chat_id)
+    if quiz_data_db["quiz_status"] == "pending":
+        raise HTTPException(status_code=403, detail="Please complete the pending quiz to continue.")
 
     # 2️⃣ Semantic memory
     semantic_memory = await search_similar(
@@ -363,7 +376,24 @@ async def send_message_stream(
         user_state=user_state
     )
 
-    # 4️⃣ Store USER message immediately
+    # 5️⃣ DETECT TOPIC SHIFT / CONCLUSION (Auto-Quiz Trigger)
+    if len(history) >= 4:
+        is_shift = await detect_topic_shift(history, payload.message)
+        if is_shift:
+            # Trigger quiz generation for the PREVIOUS history only (exclude current message)
+            recent_history = history[-20:]
+            quiz_data = await generate_quiz_from_history(recent_history, subject_id)
+            if quiz_data:
+                quiz_json_str = json.dumps(quiz_data)
+                set_chat_quiz(chat_id, quiz_json_str)
+                
+                # Intercept stream and return quiz notification
+                return StreamingResponse(
+                    iter(["[SYSTEM:QUIZ_TRIGGER] I see you're ready to move on. Before we continue, let's review what we've learned so far!"]),
+                    media_type="text/plain"
+                )
+
+    # 4️⃣ Store USER message immediately (if no quiz triggered)
     try:
         user_seq = store_message(
             chat_id=chat_id,
@@ -423,67 +453,88 @@ def chat_history(
         raise HTTPException(status_code=400, detail="Invalid subject")
 
     history = get_chat_history(chat_id, current_user.id, subject_id)
+    quiz_data = get_chat_quiz(chat_id)
     return {
         "chat_id": chat_id,
         "subject_id": subject_id,
-        "messages": history
+        "messages": history,
+        "quiz_status": quiz_data["quiz_status"]
     }
 
-@router.get("/{chat_id}/quiz")
-async def generate_chat_quiz(
+@router.post("/{chat_id}/generate-questions")
+async def generate_chat_questions(
     chat_id: str,
     subject_id: str = Query(...),
     current_user = Depends(require_student)
 ):
     if subject_id not in ALLOWED_SUBJECTS:
         raise HTTPException(status_code=400, detail="Invalid subject")
+
+    # Check current status
+    quiz_data_db = get_chat_quiz(chat_id)
+    if quiz_data_db["quiz_status"] == "pending":
+        return {"status": "pending", "message": "A quiz is already pending for this session."}
 
     history = get_chat_history(chat_id, current_user.id, subject_id)
     
     if not history or len(history) < 2:
-        return {"quiz": []} # Not enough context
+        raise HTTPException(status_code=400, detail="Not enough context to generate questions.")
 
-    # We might want to limit history if it's too long
     recent_history = history[-20:]
     
     quiz_data = await generate_quiz_from_history(recent_history, subject_id)
-    return {"quiz": quiz_data}
+    
+    if quiz_data:
+        quiz_json_str = json.dumps(quiz_data)
+        set_chat_quiz(chat_id, quiz_json_str)
+        return {"status": "success", "message": "Quiz generated."}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to generate quiz.")
 
-@router.post("/{chat_id}/quiz/submit")
-def submit_quiz_results(
+@router.get("/{chat_id}/questions")
+async def get_chat_questions(
     chat_id: str,
-    payload: QuizSubmit,
+    subject_id: str = Query(...),
+    current_user = Depends(require_student)
+):
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail="Invalid subject")
+    
+    quiz_data_db = get_chat_quiz(chat_id)
+    if quiz_data_db["quiz_status"] != "pending" or not quiz_data_db["pending_quiz"]:
+        return {"quiz": []}
+    
+    quiz_json = json.loads(quiz_data_db["pending_quiz"])
+    return {"quiz": quiz_json}
+
+@router.post("/{chat_id}/submit-quiz")
+async def submit_chat_quiz(
+    chat_id: str,
+    payload: QuizSubmission,
     subject_id: str = Query(...),
     current_user = Depends(require_student)
 ):
     if subject_id not in ALLOWED_SUBJECTS:
         raise HTTPException(status_code=400, detail="Invalid subject")
 
-    # Format the quiz results into a hidden "system" context message
-    # Since we can only store "user" or "ai" easily right now without changing db schemas,
-    # we'll store it as a user message that the AI will see as context.
-    
-    report = f"[SYSTEM: QUIZ COMPLETED] I just completed a quiz and scored {payload.score} out of {payload.total}.\n"
-    
-    if payload.incorrect_questions:
-        report += "Here are the questions I got wrong:\n"
-        for idx, q in enumerate(payload.incorrect_questions):
-            report += f"{idx+1}. Question: {q.get('question')}\n"
-            report += f"   My Answer: {q.get('user_answer')}\n"
-            report += f"   Correct Answer: {q.get('correct_answer')}\n"
-        report += "\nPlease help me understand these topics better in your next responses."
-    else:
-        report += "I got a perfect score! Keep challenging me!"
+    quiz_data_db = get_chat_quiz(chat_id)
+    if quiz_data_db["quiz_status"] != "pending":
+        raise HTTPException(status_code=400, detail="No pending quiz to submit.")
 
+    # Evaluate using LLM - payload.answers is the list of dicts
+    feedback = await evaluate_quiz_answers(payload.answers, subject_id)
+
+    # Store AI feedback in chat
     try:
-        user_seq = store_message(
+        store_message(
             chat_id=chat_id,
             user_id=current_user.id,
             subject_id=subject_id,
-            sender="user", # Or "system" if DB allows it, "user" is safest
-            text=report
+            sender="ai",
+            text=f"### Quiz Evaluation\n\n{feedback}"
         )
-        return {"status": "success", "message": "Quiz context saved."}
+        clear_chat_quiz(chat_id)
+        return {"status": "success", "message": "Quiz evaluated and saved.", "feedback": feedback}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

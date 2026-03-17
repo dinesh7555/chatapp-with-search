@@ -7,10 +7,14 @@ import {
     getHistory,
     getChatSessions,
     searchChats,
-    sendMessageStream
+    sendMessageStream,
+    generateQuestions,
+    getQuestions,
+    submitQuiz
 } from "../services/api";
 import ChatSidebar from "./ChatSidebar";
 import "./TopicView.css";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const TopicView = () => {
     const { subjectId, topic: topicParam } = useParams();
@@ -32,6 +36,22 @@ const TopicView = () => {
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
 
+    // Quiz states
+    const [quizActive, setQuizActive] = useState(false);
+    const [quizData, setQuizData] = useState([]);
+    const [quizAnswers, setQuizAnswers] = useState({});
+    const [generatingQuiz, setGeneratingQuiz] = useState(false);
+    const [submittingQuiz, setSubmittingQuiz] = useState(false);
+
+    // Track previous chatId and topic to detect transitions
+    const prevChatIdRef = useRef(null);
+    const prevTopicRef = useRef(null);
+    const messagesRef = useRef([]);
+
+    useEffect(() => {
+        messagesRef.current = messages;
+    }, [messages]);
+
     const [showHistory, setShowHistory] = useState(false);
     const [notesActive, setNotesActive] = useState(true);
     const [chatActive, setChatActive] = useState(true);
@@ -46,7 +66,7 @@ const TopicView = () => {
     useEffect(() => {
         const fetchAllTopics = async () => {
             try {
-                const response = await fetch("http://localhost:8000/subjects/");
+                const response = await fetch(`${BASE_URL}/subjects/`);
                 if (response.ok) {
                     const data = await response.json();
                     const currentSubject = data.subjects.find(
@@ -78,6 +98,9 @@ const TopicView = () => {
             setMessages([]);
             setChatId(null);
 
+            // Update refs for the new topic
+            prevTopicRef.current = topicParam;
+
             // Auto-load notes on mount as per user request
             fetchNotes(subjectId, topicParam);
             // Load sessions for history
@@ -91,6 +114,12 @@ const TopicView = () => {
             });
         }
     }, [subjectId, topicParam, chatIdParam]);
+
+    useEffect(() => {
+        if (chatId) {
+            prevChatIdRef.current = chatId;
+        }
+    }, [chatId]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -193,6 +222,15 @@ const TopicView = () => {
             }));
             setMessages(normalized);
 
+            if (history.quiz_status === "pending") {
+                setQuizActive(true);
+                fetchActiveQuiz(id);
+            } else {
+                setQuizActive(false);
+                setQuizData([]);
+                setQuizAnswers({});
+            }
+
             const chat = sessions.find(s => s.chat_id === id);
             if (chat && chat.title) {
                 // Topic remains consistent for notes, but we could update if chat title is different
@@ -260,14 +298,28 @@ const TopicView = () => {
                 const chunk = decoder.decode(value);
                 aiText += chunk;
 
-                setMessages((prev) => {
-                    const updated = [...prev];
-                    updated[updated.length - 1] = {
-                        sender: "ai",
-                        text: aiText
-                    };
-                    return updated;
-                });
+                // Check for special system trigger
+                if (aiText.startsWith("[SYSTEM:QUIZ_TRIGGER]")) {
+                    const cleanText = aiText.replace("[SYSTEM:QUIZ_TRIGGER]", "").trim();
+                    setMessages((prev) => {
+                        const updated = [...prev];
+                        updated[updated.length - 1] = { sender: "ai", text: cleanText || "Wait, before we continue, let's review what we've learned so far!" };
+                        return updated;
+                    });
+                    // Trigger quiz fetch
+                    await fetchActiveQuiz(chatId);
+                    // We can stop here or let it finish, but usually it's a short system message
+                    if (done) break;
+                } else {
+                    setMessages((prev) => {
+                        const updated = [...prev];
+                        updated[updated.length - 1] = {
+                            sender: "ai",
+                            text: aiText
+                        };
+                        return updated;
+                    });
+                }
             }
         } catch (error) {
             console.error("Streaming failed", error);
@@ -277,8 +329,130 @@ const TopicView = () => {
         }
     };
 
+    const fetchActiveQuiz = async (id = chatId) => {
+        try {
+            const res = await getQuestions(id, token);
+            if (res.quiz && res.quiz.length > 0) {
+                setQuizData(res.quiz);
+                // Initialize answers
+                const initialAnswers = {};
+                res.quiz.forEach((q, i) => {
+                    initialAnswers[i] = "";
+                });
+                setQuizAnswers(initialAnswers);
+                setQuizActive(true);
+            }
+        } catch (err) {
+            console.error("Failed to fetch active quiz", err);
+        }
+    };
+
+    const handleGenerateQuestions = async () => {
+        if (!chatId) return;
+        setGeneratingQuiz(true);
+        try {
+            const res = await generateQuestions(chatId, token);
+            if (res.status === "success" || res.status === "pending") {
+                await fetchActiveQuiz(chatId);
+            } else {
+                alert(res.detail || "Failed to generate questions. Try chatting more first.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error generating questions.");
+        } finally {
+            setGeneratingQuiz(false);
+        }
+    };
+
+    const handleQuizOptionChange = (qIndex, value) => {
+        setQuizAnswers(prev => ({ ...prev, [qIndex]: value }));
+    };
+
+    const handleSubmitQuiz = async () => {
+        setSubmittingQuiz(true);
+        // Format payload - wrap in 'answers' to match Pydantic QuizSubmission
+        const answersList = quizData.map((q, i) => ({
+            ...q,
+            user_answer: quizAnswers[i] || ""
+        }));
+
+        const payload = { answers: answersList };
+
+        try {
+            const res = await submitQuiz(chatId, payload, token);
+            if (res.status === "success") {
+                setQuizActive(false);
+                setQuizData([]);
+                setQuizAnswers({});
+
+                // Add the feedback as an AI message immediately
+                setMessages(prev => [
+                    ...prev,
+                    { sender: "ai", text: `### Quiz Evaluation\n\n${res.feedback}` }
+                ]);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Failed to submit quiz.");
+        } finally {
+            setSubmittingQuiz(false);
+        }
+    };
+
+    const renderQuizOverlay = () => {
+        return (
+            <div className="quiz-overlay">
+                <div className="quiz-overlay-card">
+                    <h3>Evaluation Time! 📝</h3>
+                    <p className="quiz-intro">Please answer the following questions to continue our chat:</p>
+
+                    {quizData.map((q, idx) => (
+                        <div key={idx} className="quiz-question-item">
+                            <p className="question-text"><strong>Q{idx + 1}:</strong> {q.question}</p>
+
+                            {q.type === "mcq" ? (
+                                <div className="mcq-options-vertical">
+                                    {(q.options || []).map((opt, oIdx) => (
+                                        <label key={oIdx} className="mcq-option-label">
+                                            <input
+                                                type="radio"
+                                                name={`q-${idx}`}
+                                                value={opt}
+                                                checked={quizAnswers[idx] === opt}
+                                                onChange={() => handleQuizOptionChange(idx, opt)}
+                                            />
+                                            <span className="option-text">{opt}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            ) : (
+                                <textarea
+                                    className="normal-q-textarea"
+                                    placeholder="Type your answer here..."
+                                    value={quizAnswers[idx] || ""}
+                                    onChange={(e) => handleQuizOptionChange(idx, e.target.value)}
+                                    rows="3"
+                                />
+                            )}
+                        </div>
+                    ))}
+
+                    <button
+                        className="submit-quiz-inline-btn"
+                        onClick={handleSubmitQuiz}
+                        disabled={submittingQuiz}
+                    >
+                        {submittingQuiz ? "Submitting..." : "Submit Answers"}
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
     return (
-        <div className="topic-view-layout">
+        <>
+            <div className={`topic-view-layout ${quizActive ? "content-blurred" : ""}`}>
             <div className="topic-view-main">
                 <header className="topic-view-header">
                     <div className="header-left">
@@ -311,16 +485,6 @@ const TopicView = () => {
                                 <polyline points="8 6 2 12 8 18"></polyline>
                             </svg>
                             Code
-                        </button>
-                        <button
-                            className="nav-quiz-btn"
-                            onClick={() => navigate(`/quiz/${subjectId}/${topicParam}?chatId=${chatId || ''}`)}
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="quiz-icon" style={{ width: '18px', height: '18px', marginRight: '6px' }}>
-                                <path d="M9 11l3 3L22 4"></path>
-                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                            </svg>
-                            Quiz
                         </button>
                     </nav>
 
@@ -408,12 +572,12 @@ const TopicView = () => {
                                 <form className="chat-input-area" onSubmit={handleSendMessage}>
                                     <input
                                         type="text"
-                                        placeholder="Ask a question..."
+                                        placeholder={quizActive ? "Please submit the quiz to continue chatting..." : "Ask a question..."}
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
-                                        disabled={loading}
+                                        disabled={loading || quizActive}
                                     />
-                                    <button type="submit" disabled={loading || !input.trim()}>
+                                    <button type="submit" disabled={loading || !input.trim() || quizActive}>
                                         Send
                                     </button>
                                 </form>
@@ -421,8 +585,10 @@ const TopicView = () => {
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
+            {quizActive && quizData.length > 0 && renderQuizOverlay()}
+        </>
     );
 };
 

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { logout, getAllChatSessions, getResources, downloadResource } from "../services/api";
 import SkillProficiency from "./SkillProficiency";
 import "./StudentDashboard.css";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const SUBJECT_ICONS = {
     physics: "⚛️",
@@ -45,7 +46,7 @@ const SubjectsNavDropdown = () => {
         const fetchSubjects = async () => {
             setLoadingSubjects(true);
             try {
-                const response = await fetch("http://localhost:8000/subjects/");
+                const response = await fetch(`${BASE_URL}/subjects/`);
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 setSubjects(data.subjects || []);

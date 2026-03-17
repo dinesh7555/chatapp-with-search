@@ -179,27 +179,35 @@ async def embed_text(text: str) -> List[float]:
         "input": text
     }
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.post(
-            EMBED_URL,
-            headers=headers,
-            json=payload
-        )
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                EMBED_URL,
+                headers=headers,
+                json=payload
+            )
 
-        # 🔥 IMPORTANT DEBUG
-        if response.status_code != 200:
-            print("Embedding error:", response.status_code)
-            print(response.text)
+            # 🔥 IMPORTANT DEBUG
+            if response.status_code != 200:
+                print("Embedding error:", response.status_code)
+                print(response.text)
+                return None
 
-        response.raise_for_status()
-        data = response.json()
+            response.raise_for_status()
+            data = response.json()
 
-    return data["data"][0]["embedding"]
+        return data["data"][0]["embedding"]
+    except Exception as e:
+        print(f"Failed to fetch embedding: {e}")
+        return None
 
 # ---------------- STORE EMBEDDING ----------------
 
 async def store_embedding(user_id: int, message_id: str, text: str, subject_id: str):
     embedding = await embed_text(text)
+    if not embedding:
+        print(f"Skipping store_embedding for message {message_id} due to embedding failure.")
+        return
 
     # ✅ Convert to NumPy float32, shape (1, dim)
     vector = np.array([embedding], dtype="float32")
@@ -225,6 +233,9 @@ async def search_similar(user_id: int, query: str, subject_id: str, top_k: int =
         return []
 
     query_embedding = await embed_text(query)
+    if not query_embedding:
+        print(f"Skipping search_similar for query due to embedding failure.")
+        return []
 
     # ✅ Convert query to NumPy
     query_vector = np.array([query_embedding], dtype="float32")

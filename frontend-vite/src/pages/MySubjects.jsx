@@ -67,6 +67,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./MySubjects.css";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const MySubjects = () => {
     const [subjects, setSubjects] = useState([]);
@@ -77,7 +78,7 @@ const MySubjects = () => {
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
-                const response = await fetch("http://localhost:8000/subjects/");
+                const response = await fetch(`${BASE_URL}/subjects/`);
                 if (!response.ok) {
                     throw new Error("Failed to fetch subjects");
                 }

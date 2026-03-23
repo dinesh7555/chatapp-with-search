@@ -97,14 +97,16 @@ ALLOWED_SUBJECTS = {
     "chemistry",
     "physics",
     "english",
-    "social"
+    "social",
+    "javascript"
 }
 # 🔹 Hardcoded topics per subject
 SUBJECT_TOPICS = {
     "physics": ["mechanics", "optics"],
     "chemistry": ["organic", "inorganic"],
     "english": ["grammar", "literature"],
-    "social": ["history", "geography"]
+    "social": ["history", "geography"],
+    "javascript": ["basics", "dom-manipulation", "async-js"]
 }
 
 # @router.get("/topics")
@@ -230,6 +232,19 @@ If the user asks anything outside Social Studies,
 you MUST refuse by saying:
 
 "I am the Social Studies assistant and can only answer Social Studies-related questions."
+
+Do not explain further.
+Do not answer outside subject.
+""",
+
+    "javascript": """
+You are a JavaScript tutor.
+You must ONLY answer JavaScript-related questions such as syntax, DOM manipulation, async programming, etc.
+
+If the user asks anything outside JavaScript,
+you MUST refuse by saying:
+
+"I am the JavaScript assistant and can only answer JavaScript-related questions."
 
 Do not explain further.
 Do not answer outside subject.

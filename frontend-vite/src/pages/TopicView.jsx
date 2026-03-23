@@ -58,6 +58,8 @@ const TopicView = () => {
     const [notesWidth, setNotesWidth] = useState(50); // percentage
     const isResizing = useRef(false);
 
+    const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
+    const topicDropdownRef = useRef(null);
     const sendingRef = useRef(false);
     const messagesEndRef = useRef(null);
 
@@ -85,6 +87,16 @@ const TopicView = () => {
             fetchAllTopics();
         }
     }, [subjectId]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (topicDropdownRef.current && !topicDropdownRef.current.contains(event.target)) {
+                setTopicDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         if (subjectId && topicParam) {
@@ -130,36 +142,46 @@ const TopicView = () => {
     }, [messages]);
 
     // Resizing Logic
-    const handleMouseDown = (e) => {
-        isResizing.current = true;
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", handleMouseUp);
-        document.body.style.cursor = "col-resize";
-        document.body.style.userSelect = "none";
-    };
-
-    const handleMouseMove = (e) => {
+    useEffect(() => {
         if (!isResizing.current) return;
 
-        // Calculate new width as percentage of the container
-        const container = document.querySelector(".topic-view-container");
-        if (!container) return;
+        const handleMouseMove = (e) => {
+            const container = document.querySelector(".topic-view-container");
+            if (!container) return;
 
-        const containerRect = container.getBoundingClientRect();
-        const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            const containerRect = container.getBoundingClientRect();
+            const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
 
-        // Constrain between 10% and 90%
-        if (newWidth > 10 && newWidth < 90) {
-            setNotesWidth(newWidth);
-        }
-    };
+            if (newWidth > 15 && newWidth < 85) {
+                setNotesWidth(newWidth);
+            }
+        };
 
-    const handleMouseUp = () => {
-        isResizing.current = false;
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-        document.body.style.cursor = "default";
-        document.body.style.userSelect = "auto";
+        const handleMouseUp = () => {
+            isResizing.current = false;
+            document.body.style.cursor = "default";
+            document.body.style.userSelect = "auto";
+            // Force a re-render to cleanup effect if needed, though ref change doesn't trigger it
+            // We use a state to track active resizing for the effect
+            setResizingState(false);
+        };
+
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+
+        return () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
+    }, [isResizing.current]); // This will be triggered by setResizingState
+
+    const [resizingState, setResizingState] = useState(false);
+
+    const handleMouseDown = (e) => {
+        isResizing.current = true;
+        setResizingState(true);
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
     };
 
     const fetchNotes = async (sId = subjectId, tName = topicParam) => {
@@ -453,29 +475,48 @@ const TopicView = () => {
     return (
         <>
             <div className={`topic-view-layout ${quizActive ? "content-blurred" : ""}`}>
-            <div className="topic-view-main">
-                <header className="topic-view-header">
-                    <div className="header-left">
-                        <button className="back-link" onClick={() => navigate("/my-subjects")}>
-                            <span className="back-icon">‹</span> Subjects
-                        </button>
-                        <div className="topic-info">
-                            <span className="subject-label">{subjectId?.toUpperCase()}</span>
-                            <h1>{topicParam}</h1>
-                        </div>
-                    </div>
-
-                    <nav className="topic-nav">
-                        {allTopics.map((t) => (
-                            <button
-                                key={t}
-                                className={`nav-topic-item ${t === topicParam ? "active" : ""}`}
-                                onClick={() => navigate(`/topic-view/${subjectId}/${t}`)}
-                            >
-                                {t}
+                <div className="topic-view-main">
+                    <header className="topic-view-header">
+                        <div className="header-left">
+                            <button className="back-link" onClick={() => navigate("/my-subjects")}>
+                                <span className="back-icon">‹</span> Subjects
                             </button>
-                        ))}
-                        <div className="nav-divider"></div>
+                            <div className="topic-info">
+                                <span className="subject-label">{subjectId?.toUpperCase()}</span>
+                                <h1>{topicParam}</h1>
+                            </div>
+                        </div>
+
+                        <div className="topic-dropdown-container" ref={topicDropdownRef}>
+                            <button
+                                className={`topic-dropdown-trigger ${topicDropdownOpen ? "active" : ""}`}
+                                onClick={() => setTopicDropdownOpen(!topicDropdownOpen)}
+                            >
+                                <span className="current-topic-text">{topicParam}</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="chevron-icon">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+
+                            {topicDropdownOpen && (
+                                <ul className="topic-dropdown-menu">
+                                    {allTopics.map((t) => (
+                                        <li
+                                            key={t}
+                                            className={`topic-dropdown-item ${t === topicParam ? "current" : ""}`}
+                                            onClick={() => {
+                                                navigate(`/topic-view/${subjectId}/${t}`);
+                                                setTopicDropdownOpen(false);
+                                            }}
+                                        >
+                                            <span className="topic-dot"></span>
+                                            {t}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+
                         <button
                             className="nav-code-btn"
                             onClick={() => navigate(`/code-editor/${subjectId}/${topicParam}`)}
@@ -486,105 +527,104 @@ const TopicView = () => {
                             </svg>
                             Code
                         </button>
-                    </nav>
 
-                    <div className="header-actions">
-                        <button className="history-toggle" onClick={() => setShowHistory(!showHistory)}>
-                            {showHistory ? "Hide History" : "Chat History"}
-                        </button>
-                    </div>
-                </header>
-
-                <div className="topic-view-container split-view">
-                    {/* Left Panel: Notes */}
-                    <div className="notes-panel" style={{ width: `${notesWidth}%`, flex: "none" }}>
-                        <div className="panel-header">
-                            <h2>Notes</h2>
-                        </div>
-                        <div className="notes-content markdown-body">
-                            {loadingNotes ? (
-                                <div className="loading-container">
-                                    <div className="spinner"></div>
-                                    <p>Preparing study material for {topic}...</p>
-                                </div>
-                            ) : (
-                                <ReactMarkdown>{notes}</ReactMarkdown>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Resizer Handle */}
-                    <div className="resizer-handle" onMouseDown={handleMouseDown}></div>
-
-                    {/* Right Panel: Chat */}
-                    <div className="chat-panel" style={{ width: `${100 - notesWidth}%`, flex: "none" }}>
-                        <div className="panel-header">
-                            <h2>AI Tutor</h2>
-                            <button
-                                className={`history-toggle ${showHistory ? "active" : ""}`}
-                                onClick={() => setShowHistory(!showHistory)}
-                                title="Past Conversations"
-                            >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="clock-icon">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
+                        <div className="header-actions">
+                            <button className="history-toggle" onClick={() => setShowHistory(!showHistory)}>
+                                {showHistory ? "Hide History" : "Chat History"}
                             </button>
                         </div>
+                    </header>
 
-                        <div className="chat-body-container">
-                            {showHistory && (
-                                <ChatSidebar
-                                    sessions={isSearching ? searchResults : sessions}
-                                    activeChatId={chatId}
-                                    onSelectChat={handleSelectChat}
-                                    onNewChat={handleNewChat}
-                                    onSearch={handleSearch}
-                                />
-                            )}
+                    <div className="topic-view-container split-view">
+                        {/* Left Panel: Notes */}
+                        <div className="notes-panel" style={{ width: `${notesWidth}%`, flex: "none" }}>
+                            <div className="panel-header">
+                                <h2>Notes</h2>
+                            </div>
+                            <div className="notes-content markdown-body">
+                                {loadingNotes ? (
+                                    <div className="loading-container">
+                                        <div className="spinner"></div>
+                                        <p>Preparing study material for {topic}...</p>
+                                    </div>
+                                ) : (
+                                    <ReactMarkdown>{notes}</ReactMarkdown>
+                                )}
+                            </div>
+                        </div>
 
-                            <div className="chat-interaction-area">
-                                <div className="chat-messages">
-                                    {messages.length === 0 ? (
-                                        <div className="chat-empty">
-                                            Ask anything about <strong>{topic}</strong> to start learning!
-                                        </div>
-                                    ) : (
-                                        messages
-                                            .filter(msg => !msg.text.startsWith("[SYSTEM:"))
-                                            .map((msg, i) => (
-                                                <div key={i} className={`message ${msg.sender}`}>
-                                                    <div className="message-content">
-                                                        <ReactMarkdown>{msg.text}</ReactMarkdown>
-                                                    </div>
-                                                </div>
-                                            ))
-                                    )}
-                                    {loading && (
-                                        <div className="message ai typing">
-                                            <span className="dot">.</span>
-                                            <span className="dot">.</span>
-                                            <span className="dot">.</span>
-                                        </div>
-                                    )}
-                                    <div ref={messagesEndRef} />
-                                </div>
-                                <form className="chat-input-area" onSubmit={handleSendMessage}>
-                                    <input
-                                        type="text"
-                                        placeholder={quizActive ? "Please submit the quiz to continue chatting..." : "Ask a question..."}
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        disabled={loading || quizActive}
+                        {/* Resizer Handle */}
+                        <div className="resizer-handle" onMouseDown={handleMouseDown}></div>
+
+                        {/* Right Panel: Chat */}
+                        <div className="chat-panel" style={{ width: `${100 - notesWidth}%`, flex: "none" }}>
+                            <div className="panel-header">
+                                <h2>AI Tutor</h2>
+                                <button
+                                    className={`history-toggle ${showHistory ? "active" : ""}`}
+                                    onClick={() => setShowHistory(!showHistory)}
+                                    title="Past Conversations"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="clock-icon">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div className="chat-body-container">
+                                {showHistory && (
+                                    <ChatSidebar
+                                        sessions={isSearching ? searchResults : sessions}
+                                        activeChatId={chatId}
+                                        onSelectChat={handleSelectChat}
+                                        onNewChat={handleNewChat}
+                                        onSearch={handleSearch}
                                     />
-                                    <button type="submit" disabled={loading || !input.trim() || quizActive}>
-                                        Send
-                                    </button>
-                                </form>
+                                )}
+
+                                <div className="chat-interaction-area">
+                                    <div className="chat-messages">
+                                        {messages.length === 0 ? (
+                                            <div className="chat-empty">
+                                                Ask anything about <strong>{topic}</strong> to start learning!
+                                            </div>
+                                        ) : (
+                                            messages
+                                                .filter(msg => !msg.text.startsWith("[SYSTEM:"))
+                                                .map((msg, i) => (
+                                                    <div key={i} className={`message ${msg.sender}`}>
+                                                        <div className="message-content">
+                                                            <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                        )}
+                                        {loading && (
+                                            <div className="message ai typing">
+                                                <span className="dot">.</span>
+                                                <span className="dot">.</span>
+                                                <span className="dot">.</span>
+                                            </div>
+                                        )}
+                                        <div ref={messagesEndRef} />
+                                    </div>
+                                    <form className="chat-input-area" onSubmit={handleSendMessage}>
+                                        <input
+                                            type="text"
+                                            placeholder={quizActive ? "Please submit the quiz to continue chatting..." : "Ask a question..."}
+                                            value={input}
+                                            onChange={(e) => setInput(e.target.value)}
+                                            disabled={loading || quizActive}
+                                        />
+                                        <button type="submit" disabled={loading || !input.trim() || quizActive}>
+                                            Send
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 </div>
             </div>
             {quizActive && quizData.length > 0 && renderQuizOverlay()}

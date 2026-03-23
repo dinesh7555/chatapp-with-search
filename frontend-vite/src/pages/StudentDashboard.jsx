@@ -14,6 +14,7 @@ const SUBJECT_ICONS = {
     history: "🏛️",
     geography: "🌍",
     social: "🗺️",
+    javascript: "📜",
     default: "📚",
 };
 

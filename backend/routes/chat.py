@@ -13,7 +13,10 @@ from services.chat_service import (
     find_empty_chat_session,
     set_chat_quiz,
     get_chat_quiz,
-    clear_chat_quiz
+    clear_chat_quiz,
+    set_chat_code_problem,
+    get_chat_code_problem,
+    clear_chat_code_problem
 )
 from services.metrics_service import (
     calculate_metrics,
@@ -26,7 +29,13 @@ from services.vector_service import store_embedding, search_similar
 # from services.topic_service import extract_topics_llm
 from services.title_service import generate_title_from_messages
 from fastapi.responses import StreamingResponse
-from services.llm_service import generate_quiz_from_history, evaluate_quiz_answers, detect_topic_shift
+from services.llm_service import (
+    generate_quiz_from_history, 
+    evaluate_quiz_answers, 
+    detect_topic_shift,
+    generate_code_problem_from_history,
+    evaluate_code_solution
+)
 import json
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -364,6 +373,10 @@ async def send_message_stream(
     quiz_data_db = get_chat_quiz(chat_id)
     if quiz_data_db["quiz_status"] == "pending":
         raise HTTPException(status_code=403, detail="Please complete the pending quiz to continue.")
+    
+    code_data_db = get_chat_code_problem(chat_id)
+    if code_data_db["code_problem_status"] == "pending":
+        raise HTTPException(status_code=403, detail="Please complete the pending code problem to continue.")
 
     # 2️⃣ Semantic memory
     semantic_memory = await search_similar(
@@ -395,18 +408,31 @@ async def send_message_stream(
     if len(history) >= 4:
         is_shift = await detect_topic_shift(history, payload.message)
         if is_shift:
-            # Trigger quiz generation for the PREVIOUS history only (exclude current message)
+            # Trigger generation for the PREVIOUS history only (exclude current message)
             recent_history = history[-20:]
-            quiz_data = await generate_quiz_from_history(recent_history, subject_id)
-            if quiz_data:
-                quiz_json_str = json.dumps(quiz_data)
-                set_chat_quiz(chat_id, quiz_json_str)
-                
-                # Intercept stream and return quiz notification
-                return StreamingResponse(
-                    iter(["[SYSTEM:QUIZ_TRIGGER] I see you're ready to move on. Before we continue, let's review what we've learned so far!"]),
-                    media_type="text/plain"
-                )
+
+            if subject_id == "javascript":
+                code_problem = await generate_code_problem_from_history(recent_history, subject_id)
+                if code_problem:
+                    set_chat_code_problem(chat_id, json.dumps(code_problem))
+                    return StreamingResponse(
+                        iter(["[SYSTEM:CODE_PROBLEM_TRIGGER] I see you're shifting topics. Let's test your JavaScript skills with a quick coding challenge!"]),
+                        media_type="text/plain"
+                    )
+                else:
+                    # If code generation fails, we don't fall back to quiz for JS
+                    pass
+            else:
+                quiz_data = await generate_quiz_from_history(recent_history, subject_id)
+                if quiz_data:
+                    quiz_json_str = json.dumps(quiz_data)
+                    set_chat_quiz(chat_id, quiz_json_str)
+                    
+                    # Intercept stream and return quiz notification
+                    return StreamingResponse(
+                        iter(["[SYSTEM:QUIZ_TRIGGER] I see you're ready to move on. Before we continue, let's review what we've learned so far!"]),
+                        media_type="text/plain"
+                    )
 
     # 4️⃣ Store USER message immediately (if no quiz triggered)
     try:
@@ -497,12 +523,20 @@ async def generate_chat_questions(
 
     recent_history = history[-20:]
     
+    if subject_id == "javascript":
+        code_problem = await generate_code_problem_from_history(recent_history, subject_id)
+        if code_problem:
+            set_chat_code_problem(chat_id, json.dumps(code_problem))
+            return {"status": "success", "message": "Code challenge generated.", "type": "code"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate code challenge.")
+    
     quiz_data = await generate_quiz_from_history(recent_history, subject_id)
     
     if quiz_data:
         quiz_json_str = json.dumps(quiz_data)
         set_chat_quiz(chat_id, quiz_json_str)
-        return {"status": "success", "message": "Quiz generated."}
+        return {"status": "success", "message": "Quiz generated.", "type": "quiz"}
     else:
         raise HTTPException(status_code=500, detail="Failed to generate quiz.")
 
@@ -584,4 +618,51 @@ def get_student_topic_state(
 
     state = get_user_topic_state(target_user_id, topic, subject_id)
     return state
+
+@router.get("/{chat_id}/code-problem")
+async def get_code_problem(
+    chat_id: str,
+    subject_id: str = Query(...),
+    current_user = Depends(require_student)
+):
+    if subject_id != "javascript":
+        raise HTTPException(status_code=400, detail="Code problems are only available for JavaScript.")
+    
+    code_data_db = get_chat_code_problem(chat_id)
+    if code_data_db["code_problem_status"] != "pending" or not code_data_db["pending_code_problem"]:
+        return {"problem": None}
+    
+    problem_json = json.loads(code_data_db["pending_code_problem"])
+    return {"problem": problem_json}
+
+@router.post("/{chat_id}/submit-code")
+async def submit_code(
+    chat_id: str,
+    payload: dict, # Expecting {"code": "..."}
+    subject_id: str = Query(...),
+    current_user = Depends(require_student)
+):
+    if subject_id != "javascript":
+        raise HTTPException(status_code=400, detail="Code problems are only available for JavaScript.")
+
+    code_data_db = get_chat_code_problem(chat_id)
+    if code_data_db["code_problem_status"] != "pending":
+        raise HTTPException(status_code=400, detail="No pending code problem to submit.")
+
+    problem = json.loads(code_data_db["pending_code_problem"])
+    feedback = await evaluate_code_solution(problem, payload.get("code", ""), subject_id)
+
+    # Store AI feedback in chat
+    try:
+        store_message(
+            chat_id=chat_id,
+            user_id=current_user.id,
+            subject_id=subject_id,
+            sender="ai",
+            text=f"### Coding Challenge Feedback\n\n{feedback}"
+        )
+        clear_chat_code_problem(chat_id)
+        return {"status": "success", "message": "Code evaluated and saved.", "feedback": feedback}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 

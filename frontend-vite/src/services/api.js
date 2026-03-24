@@ -371,3 +371,26 @@ export async function submitQuiz(chatId, payload, token) {
   });
   return res.json();
 }
+
+export async function getCodeProblem(chatId, token) {
+  const subject = getSubject();
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/code-problem?subject_id=${subject}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function submitCode(chatId, payload, token) {
+  const subject = getSubject();
+  const res = await fetch(`${BASE_URL}/chat/${chatId}/submit-code?subject_id=${subject}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}

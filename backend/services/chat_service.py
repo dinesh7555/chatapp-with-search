@@ -365,3 +365,36 @@ def clear_chat_quiz(chat_id: str):
     """
     with get_neo4j_session() as session:
         session.run(query, chat_id=chat_id)
+
+def set_chat_code_problem(chat_id: str, problem_json_str: str):
+    query = """
+    MATCH (c:ChatSession {chat_id: $chat_id})
+    SET c.code_problem_status = 'pending',
+        c.pending_code_problem = $problem_json_str
+    """
+    with get_neo4j_session() as session:
+        session.run(query, chat_id=chat_id, problem_json_str=problem_json_str)
+
+def get_chat_code_problem(chat_id: str):
+    query = """
+    MATCH (c:ChatSession {chat_id: $chat_id})
+    RETURN c.code_problem_status as code_problem_status, c.pending_code_problem as pending_code_problem
+    """
+    with get_neo4j_session() as session:
+        result = session.run(query, chat_id=chat_id)
+        record = result.single()
+        if record:
+            return {
+                "code_problem_status": record.get("code_problem_status", "none"),
+                "pending_code_problem": record.get("pending_code_problem")
+            }
+    return {"code_problem_status": "none", "pending_code_problem": None}
+
+def clear_chat_code_problem(chat_id: str):
+    query = """
+    MATCH (c:ChatSession {chat_id: $chat_id})
+    SET c.code_problem_status = 'none'
+    REMOVE c.pending_code_problem
+    """
+    with get_neo4j_session() as session:
+        session.run(query, chat_id=chat_id)

@@ -1,0 +1,199 @@
+.code-problem-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.code-problem-card {
+    background: #1e1e1e;
+    width: 100%;
+    max-width: 1100px;
+    height: 85vh;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.code-problem-header {
+    background: #252526;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.code-problem-header h3 {
+    margin: 0;
+    color: #ffd700;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.code-problem-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+.problem-statement-panel {
+    width: 35%;
+    background: #252526;
+    padding: 1.5rem;
+    overflow-y: auto;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+.problem-statement-panel h4 {
+    margin-top: 0;
+    color: #fff;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.editor-workspace {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #1e1e1e;
+}
+
+.editor-main {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.editor-label {
+    background: #2d2d2d;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    color: #aaa;
+    display: flex;
+    justify-content: space-between;
+}
+
+.code-textarea-overlay {
+    flex: 1;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border: none;
+    padding: 1rem;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+}
+
+.output-panel-overlay {
+    height: 30%;
+    background: #111;
+    border-top: 2px solid #333;
+    display: flex;
+    flex-direction: column;
+}
+
+.output-header {
+    background: #252526;
+    padding: 0.4rem 1rem;
+    font-size: 0.75rem;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.output-content-overlay {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.output-line {
+    margin-bottom: 0.25rem;
+    word-break: break-all;
+}
+
+.output-line.system { color: #569cd6; }
+.output-line.log { color: #d4d4d4; }
+.output-line.error { color: #f48771; }
+
+.code-problem-footer {
+    padding: 1rem 1.5rem;
+    background: #252526;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.run-btn-overlay, .submit-btn-overlay {
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.run-btn-overlay {
+    background: #333;
+    color: #fff;
+}
+
+.run-btn-overlay:hover {
+    background: #444;
+}
+
+.submit-btn-overlay {
+    background: #ffd700;
+    color: #000;
+}
+
+.submit-btn-overlay:hover {
+    background: #ffea00;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.submit-btn-overlay:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.markdown-problem-body {
+    line-height: 1.6;
+}
+
+.markdown-problem-body code {
+    background: #333;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}

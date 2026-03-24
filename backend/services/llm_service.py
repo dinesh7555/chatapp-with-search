@@ -209,3 +209,77 @@ async def detect_topic_shift(history: list, current_message: str) -> bool:
     except Exception as e:
         print(f"Error detecting topic shift: {e}")
         return False
+
+async def generate_code_problem_from_history(history: list, subject: str):
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                f"You are a strict JSON coding problem generator for the subject: {subject}. "
+                "Based on the conversation history provided, generate ONE programming problem "
+                "that tests the user's understanding of the concepts ALREADY DISCUSSED AND EXPLAINED. "
+                "The problem should be practical and require the student to write code. "
+                "Respond ONLY with a valid JSON object. Do not include markdown code blocks. "
+                "The object MUST have the following format: "
+                "{"
+                '"problem_statement": "Detailed markdown description of the problem", '
+                '"initial_code": "Boilerplate code for the student to start with", '
+                '"hidden_criteria": "Description of what the code must achieve (for AI evaluation)"'
+                "}"
+            )
+        }
+    ]
+
+    history_text = "\n".join([f"{msg['sender'].upper()}: {msg['text']}" for msg in history])
+    messages.append({
+        "role": "user",
+        "content": f"Conversation history:\n{history_text}\n\nGenerate the JSON coding problem now."
+    })
+
+    try:
+        response_text = await get_ai_response_with_context(messages)
+        if isinstance(response_text, str):
+            clean_text = response_text.strip()
+            if clean_text.startswith("```json"):
+                clean_text = clean_text.replace("```json", "", 1).strip()
+            if clean_text.startswith("```"):
+                clean_text = clean_text.replace("```", "", 1).strip()
+            if clean_text.endswith("```"):
+                clean_text = clean_text[:-3].strip()
+            
+            problem_data = json.loads(clean_text)
+            return problem_data
+    except Exception as e:
+        print(f"Failed to generate code problem: {e}")
+        return None
+
+async def evaluate_code_solution(problem: dict, student_code: str, subject: str) -> str:
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                f"You are a helpful {subject} tutor. You need to evaluate a student's code submission "
+                "against a specific problem statement and criteria. "
+                "Identify any syntax errors, logic flaws, or missed requirements. "
+                "Provide constructive feedback and an encouraging summary. "
+                "Format your response neatly in Markdown."
+            )
+        }
+    ]
+
+    content = (
+        f"Problem Statement: {problem.get('problem_statement')}\n\n"
+        f"Expected Criteria: {problem.get('hidden_criteria')}\n\n"
+        f"Student's Code:\n```javascript\n{student_code}\n```"
+    )
+
+    messages.append({
+        "role": "user",
+        "content": f"Please evaluate this code submission:\n\n{content}"
+    })
+
+    try:
+        return await get_ai_response_with_context(messages)
+    except Exception as e:
+        print(f"Failed to evaluate code: {e}")
+        return "I received your code, but I had trouble evaluating it right now. Good effort!"

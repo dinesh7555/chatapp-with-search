@@ -10,9 +10,12 @@ import {
     sendMessageStream,
     generateQuestions,
     getQuestions,
-    submitQuiz
+    submitQuiz,
+    getCodeProblem,
+    submitCode
 } from "../services/api";
 import ChatSidebar from "./ChatSidebar";
+import CodeProblemOverlay from "../components/CodeProblemOverlay";
 import "./TopicView.css";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -42,6 +45,11 @@ const TopicView = () => {
     const [quizAnswers, setQuizAnswers] = useState({});
     const [generatingQuiz, setGeneratingQuiz] = useState(false);
     const [submittingQuiz, setSubmittingQuiz] = useState(false);
+    
+    // Code Problem states
+    const [codeProblemActive, setCodeProblemActive] = useState(false);
+    const [codeProblemData, setCodeProblemData] = useState(null);
+    const [submittingCode, setSubmittingCode] = useState(false);
 
     // Track previous chatId and topic to detect transitions
     const prevChatIdRef = useRef(null);
@@ -244,13 +252,20 @@ const TopicView = () => {
             }));
             setMessages(normalized);
 
-            if (history.quiz_status === "pending") {
+            if (history.quiz_status === "pending" && subjectId !== "javascript") {
                 setQuizActive(true);
                 fetchActiveQuiz(id);
             } else {
                 setQuizActive(false);
                 setQuizData([]);
                 setQuizAnswers({});
+            }
+
+            if (history.code_problem_status === "pending" && subjectId === "javascript") {
+                fetchActiveCodeProblem(id);
+            } else {
+                setCodeProblemActive(false);
+                setCodeProblemData(null);
             }
 
             const chat = sessions.find(s => s.chat_id === id);
@@ -332,6 +347,16 @@ const TopicView = () => {
                     await fetchActiveQuiz(chatId);
                     // We can stop here or let it finish, but usually it's a short system message
                     if (done) break;
+                } else if (aiText.startsWith("[SYSTEM:CODE_PROBLEM_TRIGGER]")) {
+                    const cleanText = aiText.replace("[SYSTEM:CODE_PROBLEM_TRIGGER]", "").trim();
+                    setMessages((prev) => {
+                        const updated = [...prev];
+                        updated[updated.length - 1] = { sender: "ai", text: cleanText || "Let's test your skills with a quick coding challenge!" };
+                        return updated;
+                    });
+                    // Trigger code problem fetch
+                    await fetchActiveCodeProblem(chatId);
+                    if (done) break;
                 } else {
                     setMessages((prev) => {
                         const updated = [...prev];
@@ -375,7 +400,11 @@ const TopicView = () => {
         try {
             const res = await generateQuestions(chatId, token);
             if (res.status === "success" || res.status === "pending") {
-                await fetchActiveQuiz(chatId);
+                if (res.type === "code" || (subjectId === "javascript" && res.status === "pending")) {
+                    await fetchActiveCodeProblem(chatId);
+                } else {
+                    await fetchActiveQuiz(chatId);
+                }
             } else {
                 alert(res.detail || "Failed to generate questions. Try chatting more first.");
             }
@@ -470,6 +499,40 @@ const TopicView = () => {
                 </div>
             </div>
         );
+    };
+
+    const fetchActiveCodeProblem = async (id = chatId) => {
+        try {
+            const res = await getCodeProblem(id, token);
+            if (res.problem) {
+                setCodeProblemData(res.problem);
+                setCodeProblemActive(true);
+            }
+        } catch (err) {
+            console.error("Failed to fetch code problem", err);
+        }
+    };
+
+    const handleSubmitCode = async (studentCode) => {
+        setSubmittingCode(true);
+        try {
+            const res = await submitCode(chatId, { code: studentCode }, token);
+            if (res.status === "success") {
+                setCodeProblemActive(false);
+                setCodeProblemData(null);
+
+                // Add feedback to chat
+                setMessages(prev => [
+                    ...prev,
+                    { sender: "ai", text: `### Coding Challenge Feedback\n\n${res.feedback}` }
+                ]);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Failed to submit code.");
+        } finally {
+            setSubmittingCode(false);
+        }
     };
 
     return (
@@ -612,12 +675,12 @@ const TopicView = () => {
                                     <form className="chat-input-area" onSubmit={handleSendMessage}>
                                         <input
                                             type="text"
-                                            placeholder={quizActive ? "Please submit the quiz to continue chatting..." : "Ask a question..."}
+                                            placeholder={quizActive || codeProblemActive ? "Please complete the challenge to continue chatting..." : "Ask a question..."}
                                             value={input}
                                             onChange={(e) => setInput(e.target.value)}
-                                            disabled={loading || quizActive}
+                                            disabled={loading || quizActive || codeProblemActive}
                                         />
-                                        <button type="submit" disabled={loading || !input.trim() || quizActive}>
+                                        <button type="submit" disabled={loading || !input.trim() || quizActive || codeProblemActive}>
                                             Send
                                         </button>
                                     </form>
@@ -628,6 +691,13 @@ const TopicView = () => {
                 </div>
             </div>
             {quizActive && quizData.length > 0 && renderQuizOverlay()}
+            {codeProblemActive && codeProblemData && (
+                <CodeProblemOverlay 
+                    problem={codeProblemData} 
+                    onSubmit={handleSubmitCode}
+                    submitting={submittingCode}
+                />
+            )}
         </>
     );
 };

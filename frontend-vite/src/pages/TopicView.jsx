@@ -230,6 +230,9 @@ const TopicView = () => {
                     text: m.content || m.text || ""
                 }));
                 setMessages(normalized);
+                if (history.code_problem_status === "pending" && (sId.toLowerCase() === "javascript" || sId.toLowerCase() === "java")) {
+                    fetchActiveCodeProblem(data.chat_id);
+                }
             } else {
                 setMessages([]);
             }
@@ -261,7 +264,7 @@ const TopicView = () => {
                 setQuizAnswers({});
             }
 
-            if (history.code_problem_status === "pending" && subjectId === "javascript") {
+            if (history.code_problem_status === "pending" && (subjectId === "javascript" || subjectId === "java")) {
                 fetchActiveCodeProblem(id);
             } else {
                 setCodeProblemActive(false);

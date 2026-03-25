@@ -1,41 +1,78 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { runCode as apiRunCode } from "../services/api";
 import "./CodeProblemOverlay.css";
 
 const CodeProblemOverlay = ({ problem, onSubmit, submitting }) => {
     const [code, setCode] = useState(problem.initial_code || "");
+    const [isRunning, setIsRunning] = useState(false);
     const [output, setOutput] = useState([
         { type: "system", text: "Ready for execution." }
     ]);
+    
+    const subjectId = problem.subject_id || "javascript";
+    const token = localStorage.getItem("token");
 
-    const runCode = () => {
+    const runCode = async () => {
+        setIsRunning(true);
         const newOutput = [];
-        const originalConsoleLog = console.log;
-        const originalConsoleError = console.error;
 
-        console.log = (...args) => {
-            newOutput.push({
-                type: "log",
-                text: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ")
-            });
-        };
+        if (subjectId === "javascript") {
+            const originalConsoleLog = console.log;
+            const originalConsoleError = console.error;
 
-        console.error = (...args) => {
-            newOutput.push({
-                type: "error",
-                text: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ")
-            });
-        };
+            console.log = (...args) => {
+                newOutput.push({
+                    type: "log",
+                    text: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ")
+                });
+            };
 
-        try {
-            // eslint-disable-next-line no-eval
-            eval(code);
-            setOutput([{ type: "system", text: `--- Ran at ${new Date().toLocaleTimeString()} ---` }, ...newOutput]);
-        } catch (err) {
-            setOutput([{ type: "error", text: `Runtime Error: ${err.message}` }]);
-        } finally {
-            console.log = originalConsoleLog;
-            console.error = originalConsoleError;
+            console.error = (...args) => {
+                newOutput.push({
+                    type: "error",
+                    text: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ")
+                });
+            };
+
+            try {
+                // eslint-disable-next-line no-eval
+                eval(code);
+                setOutput([{ type: "system", text: `--- Ran at ${new Date().toLocaleTimeString()} ---` }, ...newOutput]);
+            } catch (err) {
+                setOutput([{ type: "error", text: `Runtime Error: ${err.message}` }]);
+            } finally {
+                console.log = originalConsoleLog;
+                console.error = originalConsoleError;
+                setIsRunning(false);
+            }
+        } else if (subjectId === "java") {
+            try {
+                const response = await apiRunCode({
+                    code: code,
+                    language: "java",
+                    stdin: ""
+                }, token);
+
+                if (response.error) {
+                    setOutput([{ type: "error", text: `Error: ${response.error}` }]);
+                } else {
+                    if (response.output) {
+                        newOutput.push({ type: "log", text: response.output });
+                    }
+                    if (response.error && response.error.trim() !== "") {
+                        newOutput.push({ type: "error", text: response.error });
+                    }
+                    setOutput([
+                        { type: "system", text: `--- Ran (Backend) at ${new Date().toLocaleTimeString()} ---` },
+                        ...newOutput
+                    ]);
+                }
+            } catch (err) {
+                setOutput([{ type: "error", text: `Connection Error: ${err.message}` }]);
+            } finally {
+                setIsRunning(false);
+            }
         }
     };
 
@@ -58,7 +95,7 @@ const CodeProblemOverlay = ({ problem, onSubmit, submitting }) => {
                 <header className="code-problem-header">
                     <h3>
                         <span className="icon">⚡</span>
-                        Coding Challenge: JavaScript
+                        Coding Challenge: {subjectId === "java" ? "Java" : "JavaScript"}
                     </h3>
                 </header>
 
@@ -73,8 +110,8 @@ const CodeProblemOverlay = ({ problem, onSubmit, submitting }) => {
                     <div className="editor-workspace">
                         <div className="editor-main">
                             <div className="editor-label">
-                                <span>main.js</span>
-                                <span>JavaScript</span>
+                                <span>{subjectId === "java" ? "Main.java" : "main.js"}</span>
+                                <span>{subjectId === "java" ? "Java" : "JavaScript"}</span>
                             </div>
                             <textarea
                                 className="code-textarea-overlay"
@@ -102,13 +139,13 @@ const CodeProblemOverlay = ({ problem, onSubmit, submitting }) => {
                 </div>
 
                 <footer className="code-problem-footer">
-                    <button className="run-btn-overlay" onClick={runCode}>
-                        Run Code
+                    <button className="run-btn-overlay" onClick={runCode} disabled={isRunning}>
+                        {isRunning ? "Running..." : "Run Code"}
                     </button>
                     <button 
                         className="submit-btn-overlay" 
                         onClick={() => onSubmit(code)}
-                        disabled={submitting}
+                        disabled={submitting || isRunning}
                     >
                         {submitting ? "Evaluating..." : "Submit Solution"}
                     </button>

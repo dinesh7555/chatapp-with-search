@@ -101,13 +101,13 @@ async def process_message_background(
         print(f"Metrics for topic '{topic}': {scores}")
         update_user_topic_state(user_id, topic,subject_id,scores)
 
-
 ALLOWED_SUBJECTS = {
     "chemistry",
     "physics",
     "english",
     "social",
-    "javascript"
+    "javascript",
+    "java"
 }
 # 🔹 Hardcoded topics per subject
 SUBJECT_TOPICS = {
@@ -115,7 +115,8 @@ SUBJECT_TOPICS = {
     "chemistry": ["organic", "inorganic"],
     "english": ["grammar", "literature"],
     "social": ["history", "geography"],
-    "javascript": ["basics", "dom-manipulation", "async-js"]
+    "javascript": ["basics", "dom-manipulation", "async-js"],
+    "java": ["basics", "oops"]
 }
 
 # @router.get("/topics")
@@ -254,6 +255,19 @@ If the user asks anything outside JavaScript,
 you MUST refuse by saying:
 
 "I am the JavaScript assistant and can only answer JavaScript-related questions."
+
+Do not explain further.
+Do not answer outside subject.
+""",
+
+    "java": """
+You are a Java tutor.
+You must ONLY answer Java-related questions such as syntax, OOPs concepts (Inheritance, Polymorphism, Encapsulation, Abstraction), collections, exception handling, etc.
+
+If the user asks anything outside Java,
+you MUST refuse by saying:
+
+"I am the Java assistant and can only answer Java-related questions."
 
 Do not explain further.
 Do not answer outside subject.
@@ -410,7 +424,6 @@ async def send_message_stream(
         if is_shift:
             # Trigger generation for the PREVIOUS history only (exclude current message)
             recent_history = history[-20:]
-
             if subject_id == "javascript":
                 code_problem = await generate_code_problem_from_history(recent_history, subject_id)
                 if code_problem:
@@ -421,6 +434,16 @@ async def send_message_stream(
                     )
                 else:
                     # If code generation fails, we don't fall back to quiz for JS
+                    pass
+            elif subject_id == "java":
+                code_problem = await generate_code_problem_from_history(recent_history, subject_id)
+                if code_problem:
+                    set_chat_code_problem(chat_id, json.dumps(code_problem))
+                    return StreamingResponse(
+                        iter(["[SYSTEM:CODE_PROBLEM_TRIGGER] I see you're shifting topics. Let's test your Java skills with a quick coding challenge!"]),
+                        media_type="text/plain"
+                    )
+                else:
                     pass
             else:
                 quiz_data = await generate_quiz_from_history(recent_history, subject_id)
@@ -495,11 +518,13 @@ def chat_history(
 
     history = get_chat_history(chat_id, current_user.id, subject_id)
     quiz_data = get_chat_quiz(chat_id)
+    code_data = get_chat_code_problem(chat_id)
     return {
         "chat_id": chat_id,
         "subject_id": subject_id,
         "messages": history,
-        "quiz_status": quiz_data["quiz_status"]
+        "quiz_status": quiz_data["quiz_status"],
+        "code_problem_status": code_data["code_problem_status"]
     }
 
 @router.post("/{chat_id}/generate-questions")
@@ -522,7 +547,6 @@ async def generate_chat_questions(
         raise HTTPException(status_code=400, detail="Not enough context to generate questions.")
 
     recent_history = history[-20:]
-    
     if subject_id == "javascript":
         code_problem = await generate_code_problem_from_history(recent_history, subject_id)
         if code_problem:
@@ -531,6 +555,14 @@ async def generate_chat_questions(
         else:
             raise HTTPException(status_code=500, detail="Failed to generate code challenge.")
     
+    if subject_id == "java":
+        code_problem = await generate_code_problem_from_history(recent_history, subject_id)
+        if code_problem:
+            set_chat_code_problem(chat_id, json.dumps(code_problem))
+            return {"status": "success", "message": "Code challenge generated.", "type": "code"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to generate code challenge.")
+
     quiz_data = await generate_quiz_from_history(recent_history, subject_id)
     
     if quiz_data:
@@ -625,8 +657,8 @@ async def get_code_problem(
     subject_id: str = Query(...),
     current_user = Depends(require_student)
 ):
-    if subject_id != "javascript":
-        raise HTTPException(status_code=400, detail="Code problems are only available for JavaScript.")
+    if subject_id not in ["javascript", "java"]:
+        raise HTTPException(status_code=400, detail="Code problems are only available for JavaScript and Java.")
     
     code_data_db = get_chat_code_problem(chat_id)
     if code_data_db["code_problem_status"] != "pending" or not code_data_db["pending_code_problem"]:
@@ -642,8 +674,8 @@ async def submit_code(
     subject_id: str = Query(...),
     current_user = Depends(require_student)
 ):
-    if subject_id != "javascript":
-        raise HTTPException(status_code=400, detail="Code problems are only available for JavaScript.")
+    if subject_id not in ["javascript", "java"]:
+        raise HTTPException(status_code=400, detail="Code problems are only available for JavaScript and Java.")
 
     code_data_db = get_chat_code_problem(chat_id)
     if code_data_db["code_problem_status"] != "pending":

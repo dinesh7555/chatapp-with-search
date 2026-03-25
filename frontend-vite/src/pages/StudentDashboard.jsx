@@ -15,6 +15,7 @@ const SUBJECT_ICONS = {
     geography: "🌍",
     social: "🗺️",
     javascript: "📜",
+    java: "☕",
     default: "📚",
 };
 
@@ -303,6 +304,14 @@ const StudentDashboard = () => {
 
                     {/* ── SUBJECTS NAV ITEM ── */}
                     <SubjectsNavDropdown />
+
+                    <button
+                        className="nav-subjects-btn"
+                        onClick={() => navigate("/mindmap")}
+                    >
+                        <span className="nav-subjects-icon">🧠</span>
+                        Mindmap
+                    </button>
 
                     <button
                         className="logout-btn"

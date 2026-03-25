@@ -279,6 +279,19 @@ export async function getNotes(subjectId, topic, refresh = false) {
   }
   return res.json();
 }
+
+export async function getMindmap(subjectId, token) {
+  const res = await fetch(`${BASE_URL}/subjects/${subjectId.toLowerCase()}/mindmap`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(errorData.detail || "Failed to fetch mindmap");
+  }
+  return res.json();
+}
 /* ---------- RESOURCE FUNCTIONS ---------- */
 
 export async function uploadResource(data, token) {
@@ -385,6 +398,18 @@ export async function getCodeProblem(chatId, token) {
 export async function submitCode(chatId, payload, token) {
   const subject = getSubject();
   const res = await fetch(`${BASE_URL}/chat/${chatId}/submit-code?subject_id=${subject}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+export async function runCode(payload, token) {
+  const res = await fetch(`${BASE_URL}/compiler/run`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

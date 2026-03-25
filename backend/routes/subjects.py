@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from routes.chat import ALLOWED_SUBJECTS, SUBJECT_TOPICS
 from auth import require_student
 from services.note_service import fetch_or_generate_notes
+from services.mindmap_service import fetch_or_generate_mindmap
 
 router = APIRouter(prefix="/subjects", tags=["Subjects"])
 
@@ -51,3 +52,22 @@ async def get_topic_notes(
         return {"notes": notes}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate notes: {str(e)}")
+
+@router.get("/{subject_id}/mindmap")
+async def get_subject_mindmap(
+    subject_id: str,
+    current_user = Depends(require_student)
+):
+    """
+    Get a detailed hierarchical mindmap for a subject.
+    """
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail="Invalid subject")
+    
+    try:
+        mindmap = await fetch_or_generate_mindmap(subject_id)
+        if not mindmap:
+            raise HTTPException(status_code=500, detail="Failed to generate mindmap")
+        return mindmap
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get mindmap: {str(e)}")

@@ -1,12 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { runCode as apiRunCode } from "../services/api";
 import "./CodeEditor.css";
 
 const CodeEditor = () => {
     const { subjectId, topic } = useParams();
     const navigate = useNavigate();
+    const token = localStorage.getItem("token");
 
-    const [code, setCode] = useState(`// Welcome to the Coding Playground!
+    const getInitialCode = () => {
+        if (subjectId === "java") {
+            return `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Welcome to Java Playground!");
+        System.out.println("Topic: ${topic}");
+        
+        int result = 0;
+        for (int i = 1; i <= 10; i++) {
+            result += i;
+        }
+        System.out.println("Sum of 1 to 10 is: " + result);
+    }
+}`;
+        }
+        return `// Welcome to the Coding Playground!
 // Topic: ${topic}
 // Subject: ${subjectId}
 
@@ -20,46 +37,117 @@ function solution() {
     return "Done!";
 }
 
-solution();`);
+solution();`;
+    };
+
+    const [code, setCode] = useState(getInitialCode());
+    const [isRunning, setIsRunning] = useState(false);
+    const [terminalHeight, setTerminalHeight] = useState(250); // Initial height in px
+    const isResizing = useRef(false);
 
     const [output, setOutput] = useState([
         { type: "system", text: "Welcome to the coding environment." },
         { type: "system", text: "Console output will appear here." }
     ]);
 
-    const runCode = () => {
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (!isResizing.current) return;
+            const container = document.querySelector(".editor-workspace");
+            if (!container) return;
+            const containerRect = container.getBoundingClientRect();
+            const newHeight = containerRect.bottom - e.clientY;
+            if (newHeight > 60 && newHeight < containerRect.height - 100) {
+                setTerminalHeight(newHeight);
+            }
+        };
+
+        const handleMouseUp = () => {
+            isResizing.current = false;
+            document.body.style.cursor = "default";
+            document.body.style.userSelect = "auto";
+        };
+
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+        return () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
+    }, []);
+
+    const handleResizerMouseDown = (e) => {
+        isResizing.current = true;
+        document.body.style.cursor = "row-resize";
+        document.body.style.userSelect = "none";
+    };
+
+    const runCode = async () => {
+        if (setIsRunning) setIsRunning(true);
         const newOutput = [];
-        const originalConsoleLog = console.log;
-        const originalConsoleError = console.error;
 
-        // Redirect console.log
-        console.log = (...args) => {
-            newOutput.push({
-                type: "log",
-                text: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ")
-            });
-            originalConsoleLog.apply(console, args);
-        };
+        if (subjectId === "javascript") {
+            const originalConsoleLog = console.log;
+            const originalConsoleError = console.error;
 
-        // Redirect console.error
-        console.error = (...args) => {
-            newOutput.push({
-                type: "error",
-                text: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ")
-            });
-            originalConsoleError.apply(console, args);
-        };
+            // Redirect console.log
+            console.log = (...args) => {
+                newOutput.push({
+                    type: "log",
+                    text: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ")
+                });
+                originalConsoleLog.apply(console, args);
+            };
 
-        try {
-            // eslint-disable-next-line no-eval
-            eval(code);
-            setOutput(prev => [...prev, { type: "system", text: `--- Execution Finished at ${new Date().toLocaleTimeString()} ---` }, ...newOutput]);
-        } catch (err) {
-            setOutput(prev => [...prev, { type: "error", text: `Runtime Error: ${err.message}` }]);
-        } finally {
-            // Restore console
-            console.log = originalConsoleLog;
-            console.error = originalConsoleError;
+            // Redirect console.error
+            console.error = (...args) => {
+                newOutput.push({
+                    type: "error",
+                    text: args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(" ")
+                });
+                originalConsoleError.apply(console, args);
+            };
+
+            try {
+                // eslint-disable-next-line no-eval
+                eval(code);
+                setOutput(prev => [...prev, { type: "system", text: `--- Execution Finished at ${new Date().toLocaleTimeString()} ---` }, ...newOutput]);
+            } catch (err) {
+                setOutput(prev => [...prev, { type: "error", text: `Runtime Error: ${err.message}` }]);
+            } finally {
+                // Restore console
+                console.log = originalConsoleLog;
+                console.error = originalConsoleError;
+                setIsRunning(false);
+            }
+        } else if (subjectId === "java") {
+            try {
+                const response = await apiRunCode({
+                    code: code,
+                    language: "java",
+                    stdin: ""
+                }, token);
+
+                if (response.error) {
+                    setOutput(prev => [...prev, { type: "error", text: `Error: ${response.error}` }]);
+                } else {
+                    if (response.output) {
+                        newOutput.push({ type: "log", text: response.output });
+                    }
+                    if (response.error && response.error.trim() !== "") {
+                        newOutput.push({ type: "error", text: response.error });
+                    }
+                    setOutput(prev => [
+                        ...prev,
+                        { type: "system", text: `--- Execution Finished (Backend) at ${new Date().toLocaleTimeString()} ---` },
+                        ...newOutput
+                    ]);
+                }
+            } catch (err) {
+                setOutput(prev => [...prev, { type: "error", text: `Connection Error: ${err.message}` }]);
+            } finally {
+                setIsRunning(false);
+            }
         }
     };
 
@@ -96,11 +184,11 @@ solution();`);
                     </div>
 
                     <div className="header-actions">
-                        <button className="run-btn" onClick={runCode}>
+                        <button className="run-btn" onClick={runCode} disabled={isRunning}>
                             <svg className="play-icon" viewBox="0 0 24 24">
                                 <path d="M8 5v14l11-7z" />
                             </svg>
-                            Run Code
+                            {isRunning ? "Running..." : "Run Code"}
                         </button>
                     </div>
                 </header>
@@ -108,8 +196,8 @@ solution();`);
                 <div className="editor-workspace">
                     <div className="editor-panel">
                         <div className="panel-label">
-                            <span>Editor</span>
-                            <span className="language-badge">JavaScript</span>
+                            <span>EDITOR</span>
+                            <span className="language-badge">{subjectId === "java" ? "Java" : "JavaScript"}</span>
                         </div>
                         <textarea
                             className="code-textarea"
@@ -120,9 +208,11 @@ solution();`);
                         />
                     </div>
 
-                    <div className="output-panel">
+                    <div className="resizer-h" onMouseDown={handleResizerMouseDown} />
+
+                    <div className="output-panel" style={{ height: `${terminalHeight}px` }}>
                         <div className="panel-label">
-                            <span>Console Output</span>
+                            <span>CONSOLE OUTPUT</span>
                             <button className="clear-btn" onClick={clearOutput}>Clear</button>
                         </div>
                         <div className="output-content">

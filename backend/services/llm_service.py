@@ -218,13 +218,15 @@ async def generate_code_problem_from_history(history: list, subject: str):
                 f"You are a strict JSON coding problem generator for the subject: {subject}. "
                 "Based on the conversation history provided, generate ONE programming problem "
                 "that tests the user's understanding of the concepts ALREADY DISCUSSED AND EXPLAINED. "
-                "The problem should be practical and require the student to write code. "
+                "CRITICAL: Keep the problem simple, concise, and beginner-friendly. "
+                "Avoid overly complex logic or multiple nested requirements. Focus ONLY on the core concept "
+                "that was just discussed. Provide a clear initial boilerplate to help the student start. "
                 "Respond ONLY with a valid JSON object. Do not include markdown code blocks. "
                 "The object MUST have the following format: "
                 "{"
-                '"problem_statement": "Detailed markdown description of the problem", '
+                '"problem_statement": "Short markdown description of the problem", '
                 '"initial_code": "Boilerplate code for the student to start with", '
-                '"hidden_criteria": "Description of what the code must achieve (for AI evaluation)"'
+                '"hidden_criteria": "Simple description of what the code must achieve"'
                 "}"
             )
         }
@@ -248,6 +250,7 @@ async def generate_code_problem_from_history(history: list, subject: str):
                 clean_text = clean_text[:-3].strip()
             
             problem_data = json.loads(clean_text)
+            problem_data["subject_id"] = subject
             return problem_data
     except Exception as e:
         print(f"Failed to generate code problem: {e}")
@@ -270,7 +273,7 @@ async def evaluate_code_solution(problem: dict, student_code: str, subject: str)
     content = (
         f"Problem Statement: {problem.get('problem_statement')}\n\n"
         f"Expected Criteria: {problem.get('hidden_criteria')}\n\n"
-        f"Student's Code:\n```javascript\n{student_code}\n```"
+        f"Student's Code:\n```{subject}\n{student_code}\n```"
     )
 
     messages.append({

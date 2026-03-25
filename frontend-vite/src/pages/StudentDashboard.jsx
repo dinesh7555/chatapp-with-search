@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout, getAllChatSessions, getResources, downloadResource } from "../services/api";
 import SkillProficiency from "./SkillProficiency";
+import QuickStats from "./QuickStats";
 import "./StudentDashboard.css";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -25,6 +26,22 @@ const MOTIVATIONAL_QUOTES = [
     "The more that you read, the more things you will know.",
     "Live as if you were to die tomorrow. Learn as if you were to live forever.",
 ];
+
+// 🏆 MOCK DATA FOR STUDENT JOURNEY
+const MOCK_JOURNEY_TOPICS = [
+    { id: 1, name: "Intro to Physics", status: "completed", score: 95 },
+    { id: 2, name: "Kinematics", status: "completed", score: 88 },
+    { id: 3, name: "Newton's Laws", status: "current", score: 45 },
+    { id: 4, name: "Work & Energy", status: "locked", score: 0 },
+    { id: 5, name: "Rotation", status: "locked", score: 0 },
+];
+
+const MOCK_STATS = {
+    consistency: 85,
+    curiosity: 72,
+    totalTopics: 24,
+    completedTopics: 12
+};
 
 /* ─────────────────────────────────────────────
    SubjectsNavDropdown — self-contained navbar widget
@@ -123,7 +140,7 @@ const SubjectsNavDropdown = () => {
                         <div className="nav-dropdown-empty">No subjects found</div>
                     ) : (
                         <ul className="nav-subject-list">
-                            {subjects.map((subject) => (
+                            {(subjects || []).map((subject) => (
                                 <li
                                     key={subject.name}
                                     className={`nav-subject-item ${selectedSubject?.name === subject.name ? "highlighted" : ""
@@ -157,7 +174,7 @@ const SubjectsNavDropdown = () => {
                         {selectedSubject.name}
                     </div>
                     <ul className="nav-topic-list">
-                        {selectedSubject.topics.map((topic) => (
+                        {(selectedSubject?.topics || []).map((topic) => (
                             <li
                                 key={topic}
                                 className="nav-topic-item"
@@ -348,6 +365,51 @@ const StudentDashboard = () => {
                 {/* ── SKILL PROFICIENCY ── */}
                 <SkillProficiency />
 
+                {/* ── MY LEARNING JOURNEY (MOCK) ── */}
+                <section className="section-block journey-section">
+                    <div className="section-header-row">
+                        <h2 className="section-title">My Learning Journey 🚀</h2>
+                        <div className="journey-summary-badges">
+                            <div className="journey-badge">
+                                <span className="badge-label">Mastery Growth</span>
+                                <span className="badge-value">+12%</span>
+                            </div>
+                            <div className="journey-badge">
+                                <span className="badge-label">Curiosity Index</span>
+                                <span className="badge-value">{MOCK_STATS.curiosity}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="journey-layout-grid">
+                        {/* Skill Tree / Path */}
+                        <div className="skill-tree-container">
+                            <h3>Topic Progress Path</h3>
+                            <div className="skill-path">
+                                {MOCK_JOURNEY_TOPICS.map((topic, index) => (
+                                    <div key={topic.id} className={`path-node ${topic.status}`}>
+                                        <div className="node-circle">
+                                            {topic.status === 'completed' ? '✓' : topic.status === 'current' ? '⭐️' : '🔒'}
+                                        </div>
+                                        <div className="node-info">
+                                            <span className="node-name">{topic.name}</span>
+                                            {topic.status !== 'locked' && (
+                                                <span className="node-score">{topic.score}% Mastery</span>
+                                            )}
+                                        </div>
+                                        {index < MOCK_JOURNEY_TOPICS.length - 1 && <div className="node-connector" />}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Gauges / Stats */}
+                        <div className="journey-stats-aside">
+                            <QuickStats />
+                        </div>
+                    </div>
+                </section>
+
                 {/* ── QUICK ACTIONS ── */}
                 <section className="section-block">
                     <h2 className="section-title">Quick Actions</h2>
@@ -398,7 +460,7 @@ const StudentDashboard = () => {
                         </div>
                     ) : (
                         <div className="sessions-grid">
-                            {recentSessions.map((session, i) => {
+                            {(recentSessions || []).map((session, i) => {
                                 const sub = getSubjectFromSession(session);
                                 return (
                                     <div
@@ -444,7 +506,7 @@ const StudentDashboard = () => {
                         </div>
                     ) : (
                         <div className="sessions-grid">
-                            {resources.map((res, i) => (
+                            {(resources || []).map((res, i) => (
                                 <div
                                     key={res.id}
                                     className="session-card"

@@ -12,6 +12,28 @@ import {
 } from "../services/api";
 import "./TeacherDashboard.css";
 
+// 🏆 MOCK DATA FOR PROTOTYPE PRESENTATION
+const MOCK_TOPICS = ["Mechanics", "Optics", "Thermodynamics", "Electromagnetism", "Quantum"];
+const MOCK_HEATMAP_DATA = [
+    { id: 101, name: "Alice Smith", scores: [85, 92, 45, 78, 60] },
+    { id: 102, name: "Bob Johnson", scores: [40, 30, 20, 55, 10] },
+    { id: 103, name: "Charlie Brown", scores: [95, 98, 92, 88, 90] },
+    { id: 104, name: "David Wilson", scores: [65, 70, 75, 40, 55] },
+    { id: 105, name: "Eva Garcia", scores: [25, 45, 30, 20, 15] },
+];
+
+const MOCK_AT_RISK = [
+    { id: 102, name: "Bob Johnson", reason: "Critical Confusion in Mechanics & Optics", stress: 85 },
+    { id: 105, name: "Eva Garcia", reason: "Declining Engagement & High Stress", stress: 92 },
+];
+
+const MOCK_CLASS_STATS = {
+    avgMastery: 62,
+    totalSessions: 148,
+    activeStudents: 24,
+    unresolvedMisconceptions: 12
+};
+
 export default function TeacherDashboard({ onLogout }) {
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username") || "Teacher";
@@ -324,6 +346,12 @@ export default function TeacherDashboard({ onLogout }) {
                     onClick={() => setActiveTab("resources")}
                 >
                     Resources
+                </button>
+                <button
+                    className={`tab-btn ${activeTab === "performance" ? "active" : ""}`}
+                    onClick={() => setActiveTab("performance")}
+                >
+                    Class Performance 📈
                 </button>
             </nav>
 
@@ -668,6 +696,104 @@ export default function TeacherDashboard({ onLogout }) {
                             )}
                         </section>
                     </>
+                )}
+                {activeTab === "performance" && (
+                    <div className="performance-container">
+                        {/* Stats Overview */}
+                        <div className="stats-overview-grid">
+                            <div className="stat-card-premium">
+                                <div className="stat-icon">📊</div>
+                                <div className="stat-content">
+                                    <span className="stat-label">Avg Class Mastery</span>
+                                    <span className="stat-value-big">{MOCK_CLASS_STATS.avgMastery}%</span>
+                                </div>
+                            </div>
+                            <div className="stat-card-premium">
+                                <div className="stat-icon">🔥</div>
+                                <div className="stat-content">
+                                    <span className="stat-label">Total Sessions</span>
+                                    <span className="stat-value-big">{MOCK_CLASS_STATS.totalSessions}</span>
+                                </div>
+                            </div>
+                            <div className="stat-card-premium">
+                                <div className="stat-icon">👥</div>
+                                <div className="stat-content">
+                                    <span className="stat-label">Active Students</span>
+                                    <span className="stat-value-big">{MOCK_CLASS_STATS.activeStudents}</span>
+                                </div>
+                            </div>
+                            <div className="stat-card-premium highlight">
+                                <div className="stat-icon">🚫</div>
+                                <div className="stat-content">
+                                    <span className="stat-label">Misconceptions</span>
+                                    <span className="stat-value-big">{MOCK_CLASS_STATS.unresolvedMisconceptions}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="performance-main-grid">
+                            {/* Heatmap Section */}
+                            <section className="teacher-section heatmap-section">
+                                <div className="section-header">
+                                    <h3>Class Mastery Heatmap</h3>
+                                    <p className="section-subtitle">Student Understanding across Current Topics</p>
+                                </div>
+                                <div className="heatmap-wrapper">
+                                    <table className="heatmap-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Student</th>
+                                                {MOCK_TOPICS.map(t => <th key={t}>{t}</th>)}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {MOCK_HEATMAP_DATA.map(student => (
+                                                <tr key={student.id}>
+                                                    <td className="student-name-cell">{student.name}</td>
+                                                    {student.scores.map((score, i) => (
+                                                        <td
+                                                            key={i}
+                                                            className="heatmap-cell"
+                                                            style={{
+                                                                backgroundColor: score > 80 ? 'rgba(74, 222, 128, 0.8)' :
+                                                                    score > 50 ? 'rgba(250, 204, 21, 0.8)' :
+                                                                        'rgba(248, 113, 113, 0.8)'
+                                                            }}
+                                                        >
+                                                            {score}%
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
+
+                            {/* At Risk Section */}
+                            <section className="teacher-section at-risk-section">
+                                <div className="section-header">
+                                    <h3>⚠️ Students At Risk</h3>
+                                    <p className="section-subtitle">Urgent intervention recommended</p>
+                                </div>
+                                <div className="at-risk-list">
+                                    {MOCK_AT_RISK.map(student => (
+                                        <div key={student.id} className="at-risk-card">
+                                            <div className="risk-header">
+                                                <span className="risk-name">{student.name}</span>
+                                                <span className="risk-level">Stress: {student.stress}%</span>
+                                            </div>
+                                            <p className="risk-reason">{student.reason}</p>
+                                            <div className="risk-actions">
+                                                <button className="risk-btn contact">Contact</button>
+                                                <button className="risk-btn assign">Assign Help</button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
                 )}
             </main>
 

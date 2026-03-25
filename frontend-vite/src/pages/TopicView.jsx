@@ -16,6 +16,7 @@ import {
 } from "../services/api";
 import ChatSidebar from "./ChatSidebar";
 import CodeProblemOverlay from "../components/CodeProblemOverlay";
+import CodeBlock from "../components/CodeBlock";
 import "./TopicView.css";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -611,7 +612,13 @@ const TopicView = () => {
                                         <p>Preparing study material for {topic}...</p>
                                     </div>
                                 ) : (
-                                    <ReactMarkdown>{notes}</ReactMarkdown>
+                                    <ReactMarkdown 
+                                        components={{
+                                            code: CodeBlock
+                                        }}
+                                    >
+                                        {notes}
+                                    </ReactMarkdown>
                                 )}
                             </div>
                         </div>
@@ -658,7 +665,13 @@ const TopicView = () => {
                                                 .map((msg, i) => (
                                                     <div key={i} className={`message ${msg.sender}`}>
                                                         <div className="message-content">
-                                                            <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                                            <ReactMarkdown 
+                                                                components={{
+                                                                    code: CodeBlock
+                                                                }}
+                                                            >
+                                                                {msg.text}
+                                                            </ReactMarkdown>
                                                         </div>
                                                     </div>
                                                 ))

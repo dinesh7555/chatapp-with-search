@@ -793,3 +793,217 @@
   .teacher-section { padding: var(--space-4); }
   .teacher-table th, .teacher-table td { padding: var(--space-2) var(--space-3); font-size: 12px; }
 }
+
+/* ══════════════════════════════════════
+   PERFORMANCE TAB STYLES
+   ══════════════════════════════════════ */
+.performance-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ── Stats Overview Grid ── */
+.stats-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-6);
+}
+
+.stat-card-premium {
+  background: var(--surface);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+.stat-card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-mid);
+}
+
+.stat-card-premium.highlight {
+  background: var(--sepia-100);
+  border-left: 4px solid var(--warning);
+}
+
+.stat-icon {
+  font-size: 32px;
+  background: var(--accent-light);
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value-big {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--ink);
+}
+
+/* ── Main Layout Grid ── */
+.performance-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-8);
+}
+
+@media (max-width: 1100px) {
+  .performance-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Heatmap Section ── */
+.heatmap-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+}
+
+.heatmap-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+
+.heatmap-table th {
+  background: var(--sepia-100);
+  padding: var(--space-4);
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.heatmap-table td {
+  padding: var(--space-4);
+  text-align: center;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.student-name-cell {
+  text-align: left !important;
+  background: var(--surface);
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  font-weight: 700 !important;
+  color: var(--ink-soft);
+  border-right: 2px solid var(--border);
+}
+
+.heatmap-cell {
+  color: var(--ink);
+  transition: transform 0.2s ease;
+  border-radius: 4px;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+/* ── At Risk Section ── */
+.at-risk-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.at-risk-card {
+  background: var(--surface);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(185, 28, 28, 0.2);
+  border-left: 4px solid var(--danger);
+  box-shadow: var(--shadow-sm);
+}
+
+.risk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.risk-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.risk-level {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--danger);
+  background: var(--danger-bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.risk-reason {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: var(--space-4);
+  font-style: italic;
+}
+
+.risk-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.risk-btn {
+  flex: 1;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.risk-btn.contact {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.risk-btn.assign {
+  background: var(--sepia-100);
+  color: var(--ink-soft);
+}
+
+.risk-btn:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}

@@ -183,7 +183,7 @@ const Mindmap = ({ data, onTopicClick }) => {
                     </radialGradient>
                 </defs>
 
-                <g transform={`translate(${offset.x}, ${offset.y}) scale(${zoom})`} transform-origin="center">
+                <g transform={`translate(${offset.x}, ${offset.y}) scale(${zoom})`}>
                     <circle cx={positionedNodes.width/2} cy={positionedNodes.height/2} r="450" fill="url(#meshGradient)" />
 
                     {positionedNodes.connections.map((conn, i) => (

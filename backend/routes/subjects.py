@@ -5,6 +5,7 @@ from routes.chat import ALLOWED_SUBJECTS, SUBJECT_TOPICS
 from auth import require_student
 from services.note_service import fetch_or_generate_notes
 from services.mindmap_service import fetch_or_generate_mindmap
+from services.flashcard_service import fetch_or_generate_flashcards
 
 router = APIRouter(prefix="/subjects", tags=["Subjects"])
 
@@ -71,3 +72,22 @@ async def get_subject_mindmap(
         return mindmap
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get mindmap: {str(e)}")
+
+@router.get("/{subject_id}/flashcards")
+async def get_subject_flashcards(
+    subject_id: str,
+    current_user = Depends(require_student)
+):
+    """
+    Get or generate study flashcards for a subject.
+    """
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail="Invalid subject")
+    
+    try:
+        flashcards = await fetch_or_generate_flashcards(subject_id)
+        if not flashcards:
+            raise HTTPException(status_code=500, detail="Failed to generate flashcards")
+        return {"flashcards": flashcards}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get flashcards: {str(e)}")

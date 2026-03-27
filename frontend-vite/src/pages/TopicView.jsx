@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import {
     getNotes,
@@ -545,9 +545,14 @@ const TopicView = () => {
                 <div className="topic-view-main">
                     <header className="topic-view-header">
                         <div className="header-left">
-                            <button className="back-link" onClick={() => navigate("/my-subjects")}>
-                                <span className="back-icon">‹</span> Subjects
-                            </button>
+                            <Link 
+                                to="/my-subjects" 
+                                className="back-link" 
+                                style={{ textDecoration: 'none', zIndex: 9999, position: 'relative' }}
+                                onClick={() => { window.location.href = "/my-subjects"; }}
+                            >
+                                <span className="back-icon">&lsaquo;</span> Subjects
+                            </Link>
                             <div className="topic-info">
                                 <span className="subject-label">{subjectId?.toUpperCase()}</span>
                                 <h1>{topicParam}</h1>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { getMindmap } from "../services/api";
 import Mindmap from "../components/Mindmap";
 import "./MindmapPage.css";
@@ -76,9 +76,14 @@ const MindmapPage = () => {
     return (
         <div className="mindmap-page">
             <div className="page-header">
-                <button className="back-btn" onClick={() => navigate("/student-dashboard")}>
-                    ← Dashboard
-                </button>
+                <Link 
+                    to="/" 
+                    className="back-btn" 
+                    style={{ textDecoration: 'none', zIndex: 9999, position: 'relative' }}
+                    onClick={() => { window.location.href = "/"; }}
+                >
+                    &lsaquo; Dashboard
+                </Link>
                 <h1>Subject Overviews</h1>
                 <p>Visualize your learning path with interactive mindmaps</p>
             </div>

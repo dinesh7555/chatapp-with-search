@@ -119,40 +119,6 @@ SUBJECT_TOPICS = {
     "java": ["basics", "oops"]
 }
 
-# @router.get("/topics")
-# def get_topics(subject_id: str = Query(...), current_user = Depends(require_student)):
-#     if subject_id not in ALLOWED_SUBJECTS:
-#         raise HTTPException(status_code=400, detail="Invalid subject")
-    
-#     return {
-#         "topics": get_topics_for_subject(subject_id)
-#     }
-
-# 🔹 STEP 3: Start a new chat session
-# @router.post("/start")
-# def start_chat(
-#     subject_id: str = Query(...), 
-#     topic: str = Query(None),
-#     current_user = Depends(require_student)
-# ):
-#     if subject_id not in ALLOWED_SUBJECTS:
-#         raise HTTPException(status_code=400, detail="Invalid subject")
-
-#     # If topic is provided, validate it belongs to the subject
-#     if topic:
-#         valid_topics = get_topics_for_subject(subject_id)
-#         if topic not in valid_topics:
-#             raise HTTPException(status_code=400, detail=f"Invalid topic for {subject_id}")
-
-#     chat_id = create_chat_session(
-#         user_id=current_user.id, 
-#         subject_id=subject_id, 
-#         topic=topic
-#     )
-#     return {
-#         "chat_id": chat_id,
-#         "topic": topic
-#     }
 @router.post("/start")
 def start_chat(
     subject_id: str = Query(...),

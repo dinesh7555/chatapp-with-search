@@ -82,6 +82,18 @@ export default function TeacherDashboard({ onLogout }) {
         setFilterTopic("all");
     }, [filterSubject]);
 
+    // Clear student registration form when switching tabs
+    useEffect(() => {
+        setNewUsername("");
+        setNewEmail("");
+        setNewPassword("");
+        setNewRollNo("");
+        setNewCourseId("");
+        setNewYear("");
+        setNewBranch("");
+        setNewStatus("active");
+    }, [activeTab]);
+
     async function loadStudents() {
         try {
             const data = await getStudents(token, {
@@ -367,12 +379,14 @@ export default function TeacherDashboard({ onLogout }) {
                                     placeholder="Username"
                                     value={newUsername}
                                     onChange={(e) => setNewUsername(e.target.value)}
+                                    autoComplete="off"
                                 />
                                 <input
                                     className="teacher-input"
                                     placeholder="Email"
                                     value={newEmail}
                                     onChange={(e) => setNewEmail(e.target.value)}
+                                    autoComplete="off"
                                 />
                                 <input
                                     className="teacher-input"
@@ -380,6 +394,7 @@ export default function TeacherDashboard({ onLogout }) {
                                     placeholder="Password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
+                                    autoComplete="new-password"
                                 />
                                 <input
                                     className="teacher-input"

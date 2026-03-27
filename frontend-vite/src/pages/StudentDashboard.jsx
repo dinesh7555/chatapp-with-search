@@ -341,6 +341,14 @@ const StudentDashboard = () => {
                     </button>
 
                     <button
+                        className="nav-subjects-btn"
+                        onClick={() => navigate("/flashcards")}
+                    >
+                        <span className="nav-subjects-icon">🗂️</span>
+                        Flash Cards
+                    </button>
+
+                    <button
                         className="logout-btn"
                         onClick={() => setShowLogoutModal(true)}
                     >
@@ -598,11 +606,11 @@ const StudentDashboard = () => {
                     </div>
                 </div>
             )}
-            
-            <MyNotesPanel 
-                isOpen={isNotesPanelOpen} 
-                onClose={() => setIsNotesPanelOpen(false)} 
-                subjectId={lastSubject || "physics"} 
+
+            <MyNotesPanel
+                isOpen={isNotesPanelOpen}
+                onClose={() => setIsNotesPanelOpen(false)}
+                subjectId={lastSubject || "physics"}
             />
         </div>
     );

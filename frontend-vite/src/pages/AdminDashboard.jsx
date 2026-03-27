@@ -67,6 +67,32 @@ export default function AdminDashboard({ onLogout }) {
     setFilterTopic("all");
   }, [filterSubject]);
 
+  // Clear registration forms when switching tabs
+  useEffect(() => {
+    // Clear student form
+    setNewStudentUsername("");
+    setNewStudentEmail("");
+    setNewStudentPassword("");
+    setNewStudentRollNo("");
+    setNewStudentCourseId("");
+    setNewStudentYear("");
+    setNewStudentBranch("");
+    setNewStudentStatus("active");
+
+    // Clear admin form
+    setAdminUsername("");
+    setAdminEmail("");
+    setAdminPassword("");
+
+    // Clear teacher form
+    setTeacherUsername("");
+    setTeacherEmail("");
+    setTeacherPassword("");
+    setTeacherSubject("");
+    setTeacherDepartment("");
+    setTeacherDesignation("");
+  }, [activeTab]);
+
   async function loadAllData() {
     try {
       const [studentData, adminData, teacherData] = await Promise.all([
@@ -378,12 +404,14 @@ export default function AdminDashboard({ onLogout }) {
                   placeholder="Username"
                   value={adminUsername}
                   onChange={(e) => setAdminUsername(e.target.value)}
+                  autoComplete="off"
                 />
                 <input
                   className="admin-input"
                   placeholder="Email"
                   value={adminEmail}
                   onChange={(e) => setAdminEmail(e.target.value)}
+                  autoComplete="off"
                 />
                 <input
                   className="admin-input"
@@ -391,6 +419,7 @@ export default function AdminDashboard({ onLogout }) {
                   placeholder="Password"
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
+                  autoComplete="new-password"
                 />
                 <button className="admin-btn-primary" onClick={handleCreateAdmin}>
                   Create Admin
@@ -440,12 +469,14 @@ export default function AdminDashboard({ onLogout }) {
                   placeholder="Username"
                   value={teacherUsername}
                   onChange={(e) => setTeacherUsername(e.target.value)}
+                  autoComplete="off"
                 />
                 <input
                   className="admin-input"
                   placeholder="Email"
                   value={teacherEmail}
                   onChange={(e) => setTeacherEmail(e.target.value)}
+                  autoComplete="off"
                 />
                 <input
                   className="admin-input"
@@ -453,6 +484,7 @@ export default function AdminDashboard({ onLogout }) {
                   placeholder="Password"
                   value={teacherPassword}
                   onChange={(e) => setTeacherPassword(e.target.value)}
+                  autoComplete="new-password"
                 />
                 <input
                   className="admin-input"
@@ -533,12 +565,14 @@ export default function AdminDashboard({ onLogout }) {
                   placeholder="Username"
                   value={newStudentUsername}
                   onChange={(e) => setNewStudentUsername(e.target.value)}
+                  autoComplete="off"
                 />
                 <input
                   className="admin-input"
                   placeholder="Email"
                   value={newStudentEmail}
                   onChange={(e) => setNewStudentEmail(e.target.value)}
+                  autoComplete="off"
                 />
                 <input
                   className="admin-input"
@@ -546,6 +580,7 @@ export default function AdminDashboard({ onLogout }) {
                   placeholder="Password"
                   value={newStudentPassword}
                   onChange={(e) => setNewStudentPassword(e.target.value)}
+                  autoComplete="new-password"
                 />
                 <input
                   className="admin-input"

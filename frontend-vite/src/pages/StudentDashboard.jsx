@@ -610,7 +610,7 @@ const StudentDashboard = () => {
             <MyNotesPanel
                 isOpen={isNotesPanelOpen}
                 onClose={() => setIsNotesPanelOpen(false)}
-                subjectId={lastSubject || "physics"}
+                subjectId={null}
             />
         </div>
     );

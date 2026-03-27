@@ -1,0 +1,42 @@
+[
+  {
+    "question": "What is the difference between public and protected access modifiers in Java?",
+    "answer": "Public access modifier makes the variable or method accessible from any class, whereas protected access modifier makes it accessible only within the same package and its subclasses."
+  },
+  {
+    "question": "What is the purpose of the finally block in a try-catch-finally statement?",
+    "answer": "The finally block is used to execute code that should always be done, regardless of whether an exception was thrown or not."
+  },
+  {
+    "question": "What is the difference between abstract and interface in Java?",
+    "answer": "Abstract classes can have both abstract and concrete methods, while interfaces can only have abstract methods."
+  },
+  {
+    "question": "How do you override a method in Java?",
+    "answer": "You use the '@Override' annotation to mark the method as overriding a method from a superclass."
+  },
+  {
+    "question": "What is the purpose of the switch statement in Java?",
+    "answer": "The switch statement is used to execute different blocks of code based on the value of an expression."
+  },
+  {
+    "question": "What is the difference between == and equals() in Java?",
+    "answer": "The '==' operator checks for identity, while the 'equals()' method checks for equality of objects."
+  },
+  {
+    "question": "What is the purpose of the FileNotFoundException in Java?",
+    "answer": "The FileNotFoundException is thrown when a file or directory does not exist or cannot be read."
+  },
+  {
+    "question": "How do you create a thread in Java?",
+    "answer": "You create a thread by extending the Thread class or implementing the Runnable interface."
+  },
+  {
+    "question": "What is the difference between a List and an Array in Java?",
+    "answer": "Lists are resizable, while arrays have a fixed size."
+  },
+  {
+    "question": "What is the purpose of the synchronized keyword in Java?",
+    "answer": "The synchronized keyword is used to ensure that only one thread can access a shared resource at a time."
+  }
+]

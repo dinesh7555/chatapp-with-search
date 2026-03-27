@@ -429,7 +429,7 @@ export async function createMyNote(title, subjectId, token) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ title, subject_id: subjectId }),
+    body: JSON.stringify({ title, content: "", subject_id: subjectId }),
   });
   return res.json();
 }
@@ -445,40 +445,20 @@ export async function getMyNotes(subjectId, token) {
   return res.json();
 }
 
-export async function deleteMyNote(noteId, token) {
+export async function updateMyNote(noteId, title, content, token) {
   const res = await fetch(`${BASE_URL}/mynotes/${noteId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return res.json();
-}
-
-export async function createMiniNote(noteId, content, token) {
-  const res = await fetch(`${BASE_URL}/mynotes/${noteId}/mini`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ content }),
-  });
-  return res.json();
-}
-
-export async function updateMiniNote(miniNoteId, content, token) {
-  const res = await fetch(`${BASE_URL}/mynotes/mini/${miniNoteId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ title, content }),
   });
   return res.json();
 }
 
-export async function deleteMiniNote(miniNoteId, token) {
-  const res = await fetch(`${BASE_URL}/mynotes/mini/${miniNoteId}`, {
+export async function deleteMyNote(noteId, token) {
+  const res = await fetch(`${BASE_URL}/mynotes/${noteId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });

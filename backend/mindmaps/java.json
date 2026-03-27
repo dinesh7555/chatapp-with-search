@@ -1,0 +1,56 @@
+{
+  "subject": "Java",
+  "root": {
+    "id": "root",
+    "text": "Java",
+    "children": [
+      {
+        "id": "basics",
+        "text": "Basics",
+        "children": [
+          {
+            "id": "java_syntax",
+            "text": "Java Syntax",
+            "description": "Understanding the basic syntax and structure of Java programming language"
+          },
+          {
+            "id": "data_types",
+            "text": "Data Types",
+            "description": "Understanding the different types of variables and data types in Java"
+          },
+          {
+            "id": "operators",
+            "text": "Operators",
+            "description": "Understanding the various types of operators in Java and their usage"
+          }
+        ]
+      },
+      {
+        "id": "oops",
+        "text": "OOPs",
+        "children": [
+          {
+            "id": "classes_and_objects",
+            "text": "Classes and Objects",
+            "description": "Understanding the concept of classes, objects, and inheritance in Java"
+          },
+          {
+            "id": "encapsulation_dataportion",
+            "text": "Encapsulation and Data Hiding",
+            "description": "Understanding how to encapsulate and hide data in Java classes"
+          },
+          {
+            "id": "polymorphism",
+            "text": "Polymorphism",
+            "description": "Understanding method overriding and method overloading in Java"
+          },
+          {
+            "id": "inheritance",
+            "text": "Inheritance",
+            "description": "Understanding how to use inheritance to create a hierarchy of classes in Java"
+          }
+        ]
+      }
+    ]
+  }
+}

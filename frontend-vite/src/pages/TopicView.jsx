@@ -17,6 +17,7 @@ import {
 import ChatSidebar from "./ChatSidebar";
 import CodeProblemOverlay from "../components/CodeProblemOverlay";
 import CodeBlock from "../components/CodeBlock";
+import MyNotesPanel from "../components/MyNotesPanel";
 import "./TopicView.css";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -64,6 +65,7 @@ const TopicView = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [notesActive, setNotesActive] = useState(true);
     const [chatActive, setChatActive] = useState(true);
+    const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
     const [notesWidth, setNotesWidth] = useState(50); // percentage
     const isResizing = useRef(false);
 
@@ -596,6 +598,9 @@ const TopicView = () => {
                         </button>
 
                         <div className="header-actions">
+                            <button className="nav-code-btn" style={{marginRight: '10px'}} onClick={() => setIsNotesPanelOpen(true)}>
+                                📝 My Notes
+                            </button>
                             <button className="history-toggle" onClick={() => setShowHistory(!showHistory)}>
                                 {showHistory ? "Hide History" : "Chat History"}
                             </button>
@@ -714,6 +719,11 @@ const TopicView = () => {
                     submitting={submittingCode}
                 />
             )}
+            <MyNotesPanel 
+                isOpen={isNotesPanelOpen} 
+                onClose={() => setIsNotesPanelOpen(false)} 
+                subjectId={subjectId} 
+            />
         </>
     );
 };

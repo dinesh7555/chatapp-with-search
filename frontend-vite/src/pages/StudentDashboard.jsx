@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { logout, getAllChatSessions, getResources, downloadResource } from "../services/api";
 import SkillProficiency from "./SkillProficiency";
 import QuickStats from "./QuickStats";
+import MyNotesPanel from "../components/MyNotesPanel";
 import "./StudentDashboard.css";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -203,6 +204,7 @@ const StudentDashboard = () => {
     const [loadingSessions, setLoadingSessions] = useState(true);
     const [resources, setResources] = useState([]);
     const [loadingResources, setLoadingResources] = useState(true);
+    const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
     const [greeting, setGreeting] = useState("Good morning");
     const [quote] = useState(
         MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)]
@@ -328,6 +330,14 @@ const StudentDashboard = () => {
                     >
                         <span className="nav-subjects-icon">🧠</span>
                         Mindmap
+                    </button>
+
+                    <button
+                        className="nav-subjects-btn"
+                        onClick={() => setIsNotesPanelOpen(true)}
+                    >
+                        <span className="nav-subjects-icon">📝</span>
+                        My Notes
                     </button>
 
                     <button
@@ -588,6 +598,12 @@ const StudentDashboard = () => {
                     </div>
                 </div>
             )}
+            
+            <MyNotesPanel 
+                isOpen={isNotesPanelOpen} 
+                onClose={() => setIsNotesPanelOpen(false)} 
+                subjectId={lastSubject || "physics"} 
+            />
         </div>
     );
 };

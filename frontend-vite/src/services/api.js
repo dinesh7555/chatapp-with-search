@@ -419,3 +419,68 @@ export async function runCode(payload, token) {
   });
   return res.json();
 }
+
+/* ---------- MYNOTES FUNCTIONS ---------- */
+
+export async function createMyNote(title, subjectId, token) {
+  const res = await fetch(`${BASE_URL}/mynotes/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ title, subject_id: subjectId }),
+  });
+  return res.json();
+}
+
+export async function getMyNotes(subjectId, token) {
+  let url = `${BASE_URL}/mynotes/`;
+  if (subjectId) {
+    url += `?subject_id=${encodeURIComponent(subjectId)}`;
+  }
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
+export async function deleteMyNote(noteId, token) {
+  const res = await fetch(`${BASE_URL}/mynotes/${noteId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}
+
+export async function createMiniNote(noteId, content, token) {
+  const res = await fetch(`${BASE_URL}/mynotes/${noteId}/mini`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+  return res.json();
+}
+
+export async function updateMiniNote(miniNoteId, content, token) {
+  const res = await fetch(`${BASE_URL}/mynotes/mini/${miniNoteId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ content }),
+  });
+  return res.json();
+}
+
+export async function deleteMiniNote(miniNoteId, token) {
+  const res = await fetch(`${BASE_URL}/mynotes/mini/${miniNoteId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.json();
+}

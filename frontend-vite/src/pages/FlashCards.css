@@ -29,12 +29,15 @@
 
 .flash-nav {
     display: flex;
-    justify-content: space-between;
+    justify-content: center; /* Center the title */
     align-items: center;
     margin-bottom: 40px;
+    position: relative; /* Anchor for back button */
 }
 
 .back-btn {
+    position: absolute;
+    left: 0;
     background: none;
     border: none;
     color: var(--accent);
@@ -47,6 +50,7 @@
     font-size: 28px;
     font-weight: 700;
     margin: 0;
+    text-align: center;
 }
 
 /* Subject Selection */

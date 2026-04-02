@@ -666,10 +666,12 @@ export default function AdminDashboard({ onLogout }) {
                     onChange={(e) => setFilterSubject(e.target.value)}
                   >
                     <option value="all">All Subjects</option>
-                    <option value="physics">Physics</option>
-                    <option value="chemistry">Chemistry</option>
-                    <option value="english">English</option>
-                    <option value="social">Social</option>
+                    <option value="operating_systems">Operating Systems</option>
+                    <option value="database_management">Database Management</option>
+                    <option value="computer_networks">Computer Networks</option>
+                    <option value="data_structures">Data Structures</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="java">Java</option>
                   </select>
 
                   <select
@@ -680,11 +682,11 @@ export default function AdminDashboard({ onLogout }) {
                   >
                     <option value="all">All Topics</option>
                     {filterSubject !== "all" &&
-                      (filterSubject === "physics" ? ["mechanics", "optics"] :
-                        filterSubject === "chemistry" ? ["organic", "inorganic"] :
-                          filterSubject === "english" ? ["grammar", "literature"] :
-                            filterSubject === "social" ? ["history", "geography"] : []
-                      ).map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)
+                      (filterSubject === "operating_systems" ? ["process-management", "memory-management"] :
+                        filterSubject === "database_management" ? ["sql-queries", "normalization"] :
+                          filterSubject === "computer_networks" ? ["tcp-ip-model", "http-protocol"] :
+                            filterSubject === "data_structures" ? ["linked-lists", "trees-graphs"] : []
+                      ).map(t => <option key={t} value={t}>{t.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</option>)
                     }
                   </select>
                 </div>

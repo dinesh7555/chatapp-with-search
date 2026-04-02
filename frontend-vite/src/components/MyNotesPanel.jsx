@@ -10,12 +10,11 @@ import './MyNotesPanel.css';
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const SUBJECT_ICONS = {
-  physics: "⚛️",
-  chemistry: "🧪",
-  mathematics: "📐",
-  biology: "🧬",
-  english: "📖",
-  history: "🏛️",
+  operating_systems: "💻",
+  database_management: "🗄️",
+  computer_networks: "🌐",
+  data_structures: "🌲",
+  artificial_intelligence: "🤖",
   javascript: "📜",
   java: "☕"
 };
@@ -149,7 +148,7 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
                   ←
                 </button>
               )}
-              <h2>📝 {selectedSubject.charAt(0).toUpperCase() + selectedSubject.slice(1)} Notes</h2>
+              <h2>📝 {selectedSubject.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Notes</h2>
             </div>
           ) : (
             <div className="mynotes-header-nav">
@@ -179,7 +178,7 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
                   onClick={() => setSelectedSubject(name)}
                 >
                   <span className="subject-icon">{getSubjectIcon(subj)}</span>
-                  <span>{name.charAt(0).toUpperCase() + name.slice(1)}</span>
+                  <span>{name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
                 </button>
                 );
               })}

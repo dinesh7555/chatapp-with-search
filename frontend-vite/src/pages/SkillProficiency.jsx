@@ -3,19 +3,19 @@ import "./SkillProficiency.css";
 
 /* ── Subject mastery scores — replace with real API values ── */
 const MASTERY_DATA = {
-    physics:   { mastery: 35 },
-    english:   { mastery: 60 },
-    social:    { mastery: 20 },
-    chemistry: { mastery: 10 },
+    operating_systems:   { mastery: 35 },
+    computer_networks:   { mastery: 60 },
+    data_structures:    { mastery: 20 },
+    database_management: { mastery: 10 },
 };
 
-const SUBJECTS = ["physics", "english", "social", "chemistry"];
+const SUBJECTS = ["operating_systems", "computer_networks", "data_structures", "database_management"];
 
 const SUBJECT_ICONS = {
-    physics:   "⚛️",
-    english:   "📖",
-    social:    "🗺️",
-    chemistry: "🧪",
+    operating_systems:   "💻",
+    computer_networks:   "🌐",
+    data_structures:    "🌲",
+    database_management: "🗄️",
 };
 
 /* ── Animated counter ── */
@@ -77,7 +77,7 @@ const MasteryRing = ({ mastery, size = 80, stroke = 8 }) => {
 
 /* ── Main Component ── */
 const SkillProficiency = () => {
-    const [selected, setSelected] = useState("physics");
+    const [selected, setSelected] = useState("operating_systems");
     const [open, setOpen] = useState(false);
     const dropRef = useRef(null);
 
@@ -117,7 +117,7 @@ const SkillProficiency = () => {
                     <button className="sp-selector-btn" onClick={() => setOpen(v => !v)}>
                         <span className="sp-sel-icon">{SUBJECT_ICONS[selected]}</span>
                         <span className="sp-sel-name">
-                            {selected.charAt(0).toUpperCase() + selected.slice(1)}
+                            {selected.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                         </span>
                         <span className={`sp-sel-caret ${open ? "open" : ""}`}>▾</span>
                     </button>
@@ -131,7 +131,7 @@ const SkillProficiency = () => {
                                     onClick={() => { setSelected(s); setOpen(false); }}
                                 >
                                     <span>{SUBJECT_ICONS[s]}</span>
-                                    <span>{s.charAt(0).toUpperCase() + s.slice(1)}</span>
+                                    <span>{s.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
                                     {s === selected && <span className="sp-check">✓</span>}
                                 </li>
                             ))}
@@ -149,7 +149,7 @@ const SkillProficiency = () => {
                     <div className="sp-card-meta">
                         <div className="sp-card-subject">
                             {SUBJECT_ICONS[selected]}&nbsp;
-                            {selected.charAt(0).toUpperCase() + selected.slice(1)}
+                            {selected.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                         </div>
                         <div className="sp-card-desc">Overall Mastery Score</div>
                     </div>

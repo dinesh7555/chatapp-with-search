@@ -9,6 +9,7 @@ import TopicView from "./pages/TopicView";
 import CodeEditor from "./pages/CodeEditor";
 import MindmapPage from "./pages/MindmapPage";
 import FlashCards from "./pages/FlashCards";
+import useHeartbeat from "./hooks/useHeartbeat";
 
 function App() {
   const [authenticated, setAuthenticated] = useState(
@@ -16,6 +17,10 @@ function App() {
   );
 
   const role = localStorage.getItem("role");
+  const token = localStorage.getItem("token");
+
+  // Track activity heartbeats globally for students
+  useHeartbeat(token, role);
 
   function handleLogout() {
     localStorage.removeItem("token");

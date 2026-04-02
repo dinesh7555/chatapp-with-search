@@ -2,20 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout, getAllChatSessions, getResources, downloadResource } from "../services/api";
 import SkillProficiency from "./SkillProficiency";
+import CompetencyRadar from "./CompetencyRadar";
 import QuickStats from "./QuickStats";
 import MyNotesPanel from "../components/MyNotesPanel";
 import "./StudentDashboard.css";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const SUBJECT_ICONS = {
-    physics: "⚛️",
-    chemistry: "🧪",
-    mathematics: "📐",
-    biology: "🧬",
-    english: "📖",
-    history: "🏛️",
-    geography: "🌍",
-    social: "🗺️",
+    operating_systems: "💻",
+    database_management: "🗄️",
+    computer_networks: "🌐",
+    data_structures: "🌲",
+    artificial_intelligence: "🤖",
     javascript: "📜",
     java: "☕",
     default: "📚",
@@ -29,20 +27,16 @@ const MOTIVATIONAL_QUOTES = [
     "Live as if you were to die tomorrow. Learn as if you were to live forever.",
 ];
 
-// 🏆 MOCK DATA FOR STUDENT JOURNEY
-const MOCK_JOURNEY_TOPICS = [
-    { id: 1, name: "Intro to Physics", status: "completed", score: 95 },
-    { id: 2, name: "Kinematics", status: "completed", score: 88 },
-    { id: 3, name: "Newton's Laws", status: "current", score: 45 },
-    { id: 4, name: "Work & Energy", status: "locked", score: 0 },
-    { id: 5, name: "Rotation", status: "locked", score: 0 },
-];
 
-const MOCK_STATS = {
-    consistency: 85,
-    curiosity: 72,
-    totalTopics: 24,
-    completedTopics: 12
+const MOCK_STUDENT_INFO = {
+    branch: "AI/ML",
+    year: "III Year",
+    section: "Sec-A",
+    semester: "V",
+    cgpa: 8.42,
+    attendance: 81,
+    creditsEarned: 124,
+    creditsTotal: 160
 };
 
 /* ─────────────────────────────────────────────
@@ -92,6 +86,25 @@ const SubjectsNavDropdown = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const closeTimerRef = useRef(null);
+
+    const handleMouseEnter = () => {
+        if (closeTimerRef.current) {
+            clearTimeout(closeTimerRef.current);
+            closeTimerRef.current = null;
+        }
+        setSubjectMenuOpen(true);
+    };
+
+    const handleMouseLeave = () => {
+        // Small delay before closing to prevent flickering when moving between tiers
+        closeTimerRef.current = setTimeout(() => {
+            setSubjectMenuOpen(false);
+            setSelectedSubject(null);
+            setTopicMenuOpen(false);
+        }, 300); 
+    };
+
     const handleSubjectHover = (subject, e) => {
         setSelectedSubject(subject);
         setTopicMenuOpen(true);
@@ -104,28 +117,28 @@ const SubjectsNavDropdown = () => {
     };
 
     const handleTopicClick = (subject, topic) => {
-        navigate(`/topic-view/${subject.name.toLowerCase()}/${topic}`);
+        navigate(`/topic-view/${subject.id}/${topic}`);
         setSubjectMenuOpen(false);
         setSelectedSubject(null);
         setTopicMenuOpen(false);
     };
 
     return (
-        <div className="nav-subjects-wrapper" ref={containerRef}>
+        <div 
+            className="nav-subjects-wrapper" 
+            ref={containerRef}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
             {/* Trigger button */}
             <button
-                className={`nav-subjects-btn ${subjectMenuOpen ? "active" : ""}`}
+                className={`nav-btn ${subjectMenuOpen ? "active" : ""}`}
                 onClick={() => {
-                    setSubjectMenuOpen((v) => !v);
-                    if (subjectMenuOpen) {
-                        setSelectedSubject(null);
-                        setTopicMenuOpen(false);
-                    }
+                    navigate("/my-subjects");
                 }}
             >
-                <span className="nav-subjects-icon">🎓</span>
-                Subjects
-                <span className={`nav-caret ${subjectMenuOpen ? "open" : ""}`}>▾</span>
+                <span className="nav-btn-icon">🎓</span>
+                <span>Subjects</span>
             </button>
 
             {/* Subject list panel */}
@@ -175,19 +188,121 @@ const SubjectsNavDropdown = () => {
                         {SUBJECT_ICONS[selectedSubject.name.toLowerCase()] || SUBJECT_ICONS.default}{" "}
                         {selectedSubject.name}
                     </div>
-                    <ul className="nav-topic-list">
-                        {(selectedSubject?.topics || []).map((topic) => (
+                    <ul className="nav-unit-list">
+                        {(selectedSubject?.units || []).map((unit) => (
                             <li
-                                key={topic}
-                                className="nav-topic-item"
-                                onClick={() => handleTopicClick(selectedSubject, topic)}
+                                key={unit.id}
+                                className="nav-unit-item"
+                                onClick={() => handleTopicClick(selectedSubject, unit.topics[0])}
                             >
                                 <span className="nav-topic-dot">•</span>
-                                <span className="nav-topic-name">{topic}</span>
+                                <span className="nav-unit-name">{unit.title.replace(/Chapter/g, 'Unit')}</span>
                                 <span className="nav-topic-arrow">→</span>
                             </li>
                         ))}
                     </ul>
+                </div>
+            )}
+        </div>
+    );
+};
+
+/* ─────────────────────────────────────────────
+   Notification Dropdown Component
+───────────────────────────────────────────── */
+const MOCK_NOTIFICATIONS = [
+    {
+        id: 1,
+        title: "5-Day Streak!",
+        message: "You've been studying for 5 days in a row! Keep it up 🔥",
+        time: "10 mins ago",
+        read: false,
+        type: "success"
+    },
+    {
+        id: 2,
+        title: "New Resource Added",
+        message: "A new syllabus PDF has been uploaded for Operating Systems.",
+        time: "2 hours ago",
+        read: false,
+        type: "info"
+    },
+    {
+        id: 3,
+        title: "Mindmap Generated",
+        message: "Your Database Normalization mindmap is ready to view.",
+        time: "1 day ago",
+        read: true,
+        type: "success"
+    }
+];
+
+const NotificationDropdown = () => {
+    const [open, setOpen] = useState(false);
+    const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+    const containerRef = useRef(null);
+
+    // Auto-close when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (containerRef.current && !containerRef.current.contains(event.target)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    const markAllRead = () => {
+        setNotifications(notifications.map(n => ({ ...n, read: true })));
+    };
+
+    const markAsRead = (id) => {
+        setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+    };
+
+    return (
+        <div className="nav-dropdown-wrapper" ref={containerRef}>
+            <button className="nav-icon-btn" onClick={() => setOpen(!open)}>
+                <span className="nav-btn-icon">🔔</span>
+                {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+            </button>
+
+            {open && (
+                <div className="nav-dropdown notification-panel">
+                    <div className="nav-dropdown-header">
+                        <span>Notifications</span>
+                        {unreadCount > 0 && (
+                            <button className="mark-read-btn" onClick={markAllRead}>
+                                Mark all read
+                            </button>
+                        )}
+                    </div>
+                    {notifications.length === 0 ? (
+                        <div className="nav-dropdown-empty">No notifications</div>
+                    ) : (
+                        <ul className="notification-list">
+                            {notifications.map((n) => (
+                                <li
+                                    key={n.id}
+                                    className={`notification-item ${!n.read ? "unread" : ""}`}
+                                    onClick={() => markAsRead(n.id)}
+                                >
+                                    <div className={`notification-icon ${n.type}`}>
+                                        {n.type === 'success' ? '✨' : '📝'}
+                                    </div>
+                                    <div className="notification-content">
+                                        <h4>{n.title}</h4>
+                                        <p>{n.message}</p>
+                                        <span className="notification-time">{n.time}</span>
+                                    </div>
+                                    {!n.read && <div className="unread-dot" />}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
             )}
         </div>
@@ -205,6 +320,8 @@ const StudentDashboard = () => {
     const [resources, setResources] = useState([]);
     const [loadingResources, setLoadingResources] = useState(true);
     const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
+    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+    const profileMenuRef = useRef(null);
     const [greeting, setGreeting] = useState("Good morning");
     const [quote] = useState(
         MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)]
@@ -253,6 +370,17 @@ const StudentDashboard = () => {
         fetchResources();
     }, [token]);
 
+    // Close profile dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+                setProfileMenuOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     const handleDownloadSyllabus = () => {
         const link = document.createElement("a");
         link.href = "/syllabus.pdf";
@@ -269,7 +397,7 @@ const StudentDashboard = () => {
     };
 
     const handleContinueLearning = (session) => {
-        const subject = session.subject_id || "physics";
+        const subject = session.subject_id || "operating_systems";
         const topic = session.topic || session.title || "Introduction";
 
         if (session.subject_id) {
@@ -297,7 +425,7 @@ const StudentDashboard = () => {
     };
 
     const getSubjectFromSession = (session) => {
-        return session.subject_id || "physics";
+        return session.subject_id || "operating_systems";
     };
 
     const lastStudied = recentSessions[0];
@@ -313,48 +441,101 @@ const StudentDashboard = () => {
                 <div className="bg-grid" />
             </div>
 
-            <div className="dashboard-inner">
-                {/* ── TOP NAV ── */}
+            {/* ── TOP NAV ── */}
+            <header className="dash-header">
                 <nav className="dash-topbar">
-                    <div className="brand-mark">
-                        <span className="brand-icon">📚</span>
-                        <span className="brand-name">EduLearn</span>
+                    <div className="nav-left">
+                        <div 
+                            className="brand-mark"
+                            onClick={() => navigate("/")}
+                            style={{ cursor: "pointer" }}
+                        >
+                            <span className="brand-icon">📚</span>
+                            <span className="brand-name">EduLearn</span>
+                        </div>
                     </div>
 
-                    {/* ── SUBJECTS NAV ITEM ── */}
-                    <SubjectsNavDropdown />
+                    <div className="nav-center">
 
-                    <button
-                        className="nav-subjects-btn"
-                        onClick={() => navigate("/mindmap")}
-                    >
-                        <span className="nav-subjects-icon">🧠</span>
-                        Mindmap
-                    </button>
+                        {/* ── SUBJECTS NAV ITEM ── */}
+                        <SubjectsNavDropdown />
 
-                    <button
-                        className="nav-subjects-btn"
-                        onClick={() => setIsNotesPanelOpen(true)}
-                    >
-                        <span className="nav-subjects-icon">📝</span>
-                        My Notes
-                    </button>
+                        <button className="nav-btn" onClick={() => navigate("/mindmap")}>
+                            <span className="nav-btn-icon">🧠</span>
+                            <span>Mindmap</span>
+                        </button>
 
-                    <button
-                        className="nav-subjects-btn"
-                        onClick={() => navigate("/flashcards")}
-                    >
-                        <span className="nav-subjects-icon">🗂️</span>
-                        Flash Cards
-                    </button>
+                        <button className="nav-btn" onClick={() => setIsNotesPanelOpen(true)}>
+                            <span className="nav-btn-icon">📝</span>
+                            <span>My Notes</span>
+                        </button>
 
-                    <button
-                        className="logout-btn"
-                        onClick={() => setShowLogoutModal(true)}
-                    >
-                        Sign out
-                    </button>
+                        <button className="nav-btn" onClick={() => navigate("/flashcards")}>
+                            <span className="nav-btn-icon">🗂️</span>
+                            <span>Flash Cards</span>
+                        </button>
+                    </div>
+
+                    <div className="nav-right">
+                        <NotificationDropdown />
+                        
+                        <div className="nav-profile-wrapper" ref={profileMenuRef}>
+                            <div className="nav-profile-trigger" onClick={() => setProfileMenuOpen(!profileMenuOpen)}>
+                                <div className="profile-avatar">
+                                    {username.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="profile-name">{username}</span>
+                                <span className={`profile-chevron ${profileMenuOpen ? 'open' : ''}`}>▼</span>
+                            </div>
+
+                            {profileMenuOpen && (
+                                <div className="nav-dropdown profile-dropdown">
+                                    <div className="dropdown-item" onClick={() => { /* Settings action here */ setProfileMenuOpen(false); }}>
+                                        <span className="dropdown-icon">⚙️</span>
+                                        <span>Settings</span>
+                                    </div>
+                                    <div className="dropdown-item logout-item" onClick={() => { setShowLogoutModal(true); setProfileMenuOpen(false); }}>
+                                        <span className="dropdown-icon">↪</span>
+                                        <span>Sign out</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </nav>
+            </header>
+
+            <div className="dashboard-inner">
+                {/* ── STUDENT INFO BANNER ── */}
+                <div className="student-info-banner">
+                    <div className="sib-left">
+                        <span className="sib-item">
+                            <span className="sib-icon">🎓</span>
+                            <span>Branch: <strong>{MOCK_STUDENT_INFO.branch} ({MOCK_STUDENT_INFO.year}, {MOCK_STUDENT_INFO.section})</strong></span>
+                        </span>
+                        <span className="sib-item">
+                            <span className="sib-icon">📘</span>
+                            <span>Sem: <strong>{MOCK_STUDENT_INFO.semester}</strong></span>
+                        </span>
+                        <span className="sib-item">
+                            <span className="sib-icon" style={{color: '#facc15'}}>⭐</span>
+                            <span>CGPA: <strong>{MOCK_STUDENT_INFO.cgpa}</strong></span>
+                        </span>
+                    </div>
+                    <div className="sib-right">
+                        <div className="sib-attendance">
+                            <span className="sib-label">ATTENDANCE</span>
+                            <div className="sib-bar-bg">
+                                <div className="sib-bar-fill" style={{width: `${MOCK_STUDENT_INFO.attendance}%`}}></div>
+                            </div>
+                            <span className="sib-value">{MOCK_STUDENT_INFO.attendance}%</span>
+                        </div>
+                        <span className="sib-item">
+                            <span className="sib-icon">🏅</span>
+                            <span>Credits: <strong>{MOCK_STUDENT_INFO.creditsEarned}/{MOCK_STUDENT_INFO.creditsTotal}</strong></span>
+                        </span>
+                    </div>
+                </div>
 
                 {/* ── HERO GREETING ── */}
                 <section className="hero-section">
@@ -367,75 +548,38 @@ const StudentDashboard = () => {
                         <p className="hero-quote">"{quote}"</p>
                     </div>
 
-                    {lastStudied && (
-                        <div
-                            className="continue-card"
-                            onClick={() => handleContinueLearning(lastStudied)}
-                            role="button"
-                            tabIndex={0}
-                        >
-                            <div className="continue-chip">▶ Continue Learning</div>
-                            <div className="continue-subject-icon">
-                                {SUBJECT_ICONS[lastSubject] || SUBJECT_ICONS.default}
-                            </div>
-                            <div className="continue-topic-name">
-                                {lastStudied.title || "Last Session"}
-                            </div>
-                            <div className="continue-subject-label">
-                                {lastSubject?.toUpperCase()}
-                            </div>
-                            <div className="continue-cta">Pick up where you left off →</div>
-                        </div>
-                    )}
-                </section>
+                    <div className="hero-right">
+                        <QuickStats />
 
-                {/* ── SKILL PROFICIENCY ── */}
-                <SkillProficiency />
-
-                {/* ── MY LEARNING JOURNEY (MOCK) ── */}
-                <section className="section-block journey-section">
-                    <div className="section-header-row">
-                        <h2 className="section-title">My Learning Journey 🚀</h2>
-                        <div className="journey-summary-badges">
-                            <div className="journey-badge">
-                                <span className="badge-label">Mastery Growth</span>
-                                <span className="badge-value">+12%</span>
+                        {lastStudied && (
+                            <div
+                                className="continue-card"
+                                onClick={() => handleContinueLearning(lastStudied)}
+                                role="button"
+                                tabIndex={0}
+                            >
+                                <div className="continue-chip">▶ Continue Learning</div>
+                                <div className="continue-subject-icon">
+                                    {SUBJECT_ICONS[lastSubject] || SUBJECT_ICONS.default}
+                                </div>
+                                <div className="continue-topic-name">
+                                    {lastStudied.title || "Last Session"}
+                                </div>
+                                <div className="continue-subject-label">
+                                    {lastSubject?.toUpperCase()}
+                                </div>
+                                <div className="continue-cta">Pick up where you left off →</div>
                             </div>
-                            <div className="journey-badge">
-                                <span className="badge-label">Curiosity Index</span>
-                                <span className="badge-value">{MOCK_STATS.curiosity}%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="journey-layout-grid">
-                        {/* Skill Tree / Path */}
-                        <div className="skill-tree-container">
-                            <h3>Topic Progress Path</h3>
-                            <div className="skill-path">
-                                {MOCK_JOURNEY_TOPICS.map((topic, index) => (
-                                    <div key={topic.id} className={`path-node ${topic.status}`}>
-                                        <div className="node-circle">
-                                            {topic.status === 'completed' ? '✓' : topic.status === 'current' ? '⭐️' : '🔒'}
-                                        </div>
-                                        <div className="node-info">
-                                            <span className="node-name">{topic.name}</span>
-                                            {topic.status !== 'locked' && (
-                                                <span className="node-score">{topic.score}% Mastery</span>
-                                            )}
-                                        </div>
-                                        {index < MOCK_JOURNEY_TOPICS.length - 1 && <div className="node-connector" />}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Gauges / Stats */}
-                        <div className="journey-stats-aside">
-                            <QuickStats />
-                        </div>
+                        )}
                     </div>
                 </section>
+
+                {/* ── SKILLS & COMPETENCIES ── */}
+                <div className="skills-row-grid">
+                    <SkillProficiency />
+                    <CompetencyRadar />
+                </div>
+
 
                 {/* ── QUICK ACTIONS ── */}
                 <section className="section-block">

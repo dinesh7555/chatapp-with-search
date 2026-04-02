@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends ,BackgroundTasks, HTTPException , Query
-from auth import require_student
-from schemas import ChatMessage, QuizSubmit, QuizSubmission
+from schemas import ChatMessage, QuizSubmission
 from services.chat_service import (
     create_chat_session,
     store_message,
@@ -24,7 +23,7 @@ from services.metrics_service import (
     get_user_topic_state
 )
 from auth import require_student, require_roles
-from services.llm_service import get_ai_response_with_context , stream_ai_response
+from services.llm_service import stream_ai_response
 from services.vector_service import store_embedding, search_similar
 # from services.topic_service import extract_topics_llm
 from services.title_service import generate_title_from_messages
@@ -37,6 +36,8 @@ from services.llm_service import (
     evaluate_code_solution
 )
 import json
+from services.activity_service import update_user_activity
+from database import SessionLocal
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -101,22 +102,129 @@ async def process_message_background(
         print(f"Metrics for topic '{topic}': {scores}")
         update_user_topic_state(user_id, topic,subject_id,scores)
 
-ALLOWED_SUBJECTS = {
-    "chemistry",
-    "physics",
-    "english",
-    "social",
-    "javascript",
-    "java"
+SUBJECT_CURRICULUM = {
+    "operating_systems": {
+        "title": "Operating Systems",
+        "units": [
+            {
+                "id": "os_unit_1",
+                "title": "Chapter I: Process Management",
+                "topics": ["what-is-os", "process-management", "cpu-scheduling"],
+                "quiz": {"id": "os_quiz_1", "title": "Quiz 1"}
+            },
+            {
+                "id": "os_unit_2",
+                "title": "Chapter II: Memory Management",
+                "topics": ["memory-management", "paging", "segmentation", "virtual-memory"],
+                "quiz": {"id": "os_quiz_2", "title": "Quiz 2"}
+            },
+            {
+                "id": "os_unit_3",
+                "title": "Chapter III: Deadlocks & Storage",
+                "topics": ["deadlocks", "disk-scheduling", "file-systems"],
+                "quiz": {"id": "os_quiz_3", "title": "Quiz 3"}
+            }
+        ]
+    },
+    "database_management": {
+        "title": "Database Management",
+        "units": [
+            {
+                "id": "db_unit_1",
+                "title": "Chapter I: SQL Fundamentals",
+                "topics": ["sql-queries", "joins-aggregations"],
+                "quiz": {"id": "db_quiz_1", "title": "Quiz 1"}
+            },
+            {
+                "id": "db_unit_2",
+                "title": "Chapter II: Database Design",
+                "topics": ["er-diagrams", "normalization"],
+                "quiz": {"id": "db_quiz_2", "title": "Quiz 2"}
+            },
+            {
+                "id": "db_unit_3",
+                "title": "Chapter III: Transactions",
+                "topics": ["acid-properties", "transactions", "concurrency-control"],
+                "quiz": {"id": "db_quiz_3", "title": "Quiz 3"}
+            }
+        ]
+    },
+    "computer_networks": {
+        "title": "Computer Networks",
+        "units": [
+            {
+                "id": "cn_unit_1",
+                "title": "Chapter I: Network Models",
+                "topics": ["osi-model", "tcp-ip-model"],
+                "quiz": {"id": "cn_quiz_1", "title": "Quiz 1"}
+            },
+            {
+                "id": "cn_unit_2",
+                "title": "Chapter II: Network Layers",
+                "topics": ["ipv4-ipv6", "routing-algorithms", "http-protocol"],
+                "quiz": {"id": "cn_quiz_2", "title": "Quiz 2"}
+            }
+        ]
+    },
+    "data_structures": {
+        "title": "Data Structures",
+        "units": [
+            {
+                "id": "ds_unit_1",
+                "title": "Chapter I: Linear Structures",
+                "topics": ["linked-lists", "stacks-queues"],
+                "quiz": {"id": "ds_quiz_1", "title": "Quiz 1"}
+            },
+            {
+                "id": "ds_unit_2",
+                "title": "Chapter II: Non-Linear Structures",
+                "topics": ["trees-graphs", "sorting-algorithms"],
+                "quiz": {"id": "ds_quiz_2", "title": "Quiz 2"}
+            }
+        ]
+    },
+    "javascript": {
+        "title": "JavaScript",
+        "units": [
+            {
+                "id": "js_unit_1",
+                "title": "Chapter I: Core Concepts",
+                "topics": ["basics", "dom-manipulation"],
+                "quiz": {"id": "js_quiz_1", "title": "Quiz 1"}
+            },
+            {
+                "id": "js_unit_2",
+                "title": "Chapter II: Async & ES6",
+                "topics": ["async-js", "promises-await"],
+                "quiz": {"id": "js_quiz_2", "title": "Quiz 2"}
+            }
+        ]
+    },
+    "java": {
+        "title": "Java Fundamentals",
+        "units": [
+            {
+                "id": "java_unit_1",
+                "title": "Chapter I: OOP Foundations",
+                "topics": ["basics", "oops"],
+                "quiz": {"id": "java_quiz_1", "title": "Quiz 1"}
+            },
+            {
+                "id": "java_unit_2",
+                "title": "Chapter II: Advanced Java",
+                "topics": ["interfaces-abstract", "exception-handling"],
+                "quiz": {"id": "java_quiz_2", "title": "Quiz 2"}
+            }
+        ]
+    }
 }
-# 🔹 Hardcoded topics per subject
+
+ALLOWED_SUBJECTS = set(SUBJECT_CURRICULUM.keys())
+
+# Derive flat SUBJECT_TOPICS for backward compatibility with other routes
 SUBJECT_TOPICS = {
-    "physics": ["mechanics", "optics"],
-    "chemistry": ["organic", "inorganic"],
-    "english": ["grammar", "literature"],
-    "social": ["history", "geography"],
-    "javascript": ["basics", "dom-manipulation", "async-js"],
-    "java": ["basics", "oops"]
+    subject_id: [topic for unit in data["units"] for topic in unit["topics"]]
+    for subject_id, data in SUBJECT_CURRICULUM.items()
 }
 
 @router.post("/start")
@@ -125,8 +233,9 @@ def start_chat(
     topic: str = Query(...),
     current_user = Depends(require_student)
 ):
+    subject_id = subject_id.replace(" ", "_").lower()
     if subject_id not in ALLOWED_SUBJECTS:
-        raise HTTPException(status_code=400, detail="Invalid subject")
+        raise HTTPException(status_code=400, detail=f"Invalid subject: {subject_id}")
 
     allowed_topics = SUBJECT_TOPICS.get(subject_id, [])
     if topic not in allowed_topics:
@@ -161,53 +270,53 @@ def start_chat(
 
 
 SUBJECT_PROMPTS = {
-    "chemistry": """
-You are a Chemistry tutor.
-You must ONLY answer Chemistry-related questions.
+    "database_management": """
+You are a Database Management Systems (DBMS) tutor.
+You must ONLY answer Database-related questions such as SQL, normalization, indexing, transactions, and concurrency control.
 
-If the user asks anything outside Chemistry,
+If the user asks anything outside Database Management,
 you MUST refuse by saying:
 
-"I am the Chemistry assistant and can only answer Chemistry-related questions."
+"I am the Database Management assistant and can only answer Database-related questions."
 
 Do not explain further.
 Do not answer outside subject.
 """,
 
-    "physics": """
-You are a Physics tutor.
-You must ONLY answer Physics-related questions.
+    "operating_systems": """
+You are an Operating Systems (OS) tutor.
+You must ONLY answer OS-related questions such as process management, memory management, file systems, and scheduling algorithms.
 
-If the user asks anything outside Physics,
+If the user asks anything outside Operating Systems,
 you MUST refuse by saying:
 
-"I am the Physics assistant and can only answer Physics-related questions."
+"I am the Operating Systems assistant and can only answer OS-related questions."
 
 Do not explain further.
 Do not answer outside subject.
 """,
 
-    "english": """
-You are an English tutor.
-You must ONLY answer English-related questions such as grammar, literature, writing, comprehension.
+    "computer_networks": """
+You are a Computer Networks tutor.
+You must ONLY answer Networking-related questions such as the OSI model, TCP/IP, routing, switching, and common protocols (HTTP, DNS, etc.).
 
-If the user asks anything outside English,
+If the user asks anything outside Computer Networks,
 you MUST refuse by saying:
 
-"I am the English assistant and can only answer English-related questions."
+"I am the Computer Networks assistant and can only answer networking-related questions."
 
 Do not explain further.
 Do not answer outside subject.
 """,
 
-    "social": """
-You are a Social Studies tutor.
-You must ONLY answer Social Studies related questions such as history, civics, geography, economics.
+    "data_structures": """
+You are a Data Structures and Algorithms (DSA) tutor.
+You must ONLY answer DSA-related questions such as arrays, linked lists, stacks, queues, trees, graphs, and algorithm analysis.
 
-If the user asks anything outside Social Studies,
+If the user asks anything outside Data Structures and Algorithms,
 you MUST refuse by saying:
 
-"I am the Social Studies assistant and can only answer Social Studies-related questions."
+"I am the Data Structures assistant and can only answer DSA-related questions."
 
 Do not explain further.
 Do not answer outside subject.
@@ -432,6 +541,16 @@ async def send_message_stream(
             sender="user",
             text=payload.message
         )
+        
+        # ✅ Trigger Activity/Streak Update
+        db = SessionLocal()
+        try:
+            update_user_activity(db, current_user.id, is_heartbeat=False)
+        except Exception as e:
+            print(f"[Activity Error] Failed to update activity in chat: {e}")
+        finally:
+            db.close()
+
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -581,6 +700,15 @@ async def submit_chat_quiz(
             text=f"### Quiz Evaluation\n\n{feedback}"
         )
         clear_chat_quiz(chat_id)
+        # ✅ Trigger Activity Update
+        db = SessionLocal()
+        try:
+            update_user_activity(db, current_user.id, is_heartbeat=False)
+        except Exception as e:
+            print(f"[Activity Error] Failed to update activity in quiz: {e}")
+        finally:
+            db.close()
+
         return {"status": "success", "message": "Quiz evaluated and saved.", "feedback": feedback}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -660,6 +788,15 @@ async def submit_code(
             text=f"### Coding Challenge Feedback\n\n{feedback}"
         )
         clear_chat_code_problem(chat_id)
+        # ✅ Trigger Activity Update
+        db = SessionLocal()
+        try:
+            update_user_activity(db, current_user.id, is_heartbeat=False)
+        except Exception as e:
+            print(f"[Activity Error] Failed to update activity in code: {e}")
+        finally:
+            db.close()
+
         return {"status": "success", "message": "Code evaluated and saved.", "feedback": feedback}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

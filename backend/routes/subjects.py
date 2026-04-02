@@ -1,7 +1,7 @@
 import os
 
 from fastapi import APIRouter, Depends, Query, HTTPException
-from routes.chat import ALLOWED_SUBJECTS, SUBJECT_TOPICS
+from routes.chat import ALLOWED_SUBJECTS, SUBJECT_TOPICS, SUBJECT_CURRICULUM
 from auth import require_student
 from services.note_service import fetch_or_generate_notes
 from services.mindmap_service import fetch_or_generate_mindmap
@@ -15,10 +15,12 @@ def get_subjects():
     Returns a list of all allowed subjects and their corresponding topics.
     """
     subjects_data = []
-    for subject in ALLOWED_SUBJECTS:
+    for subject_id, data in SUBJECT_CURRICULUM.items():
         subjects_data.append({
-            "name": subject,
-            "topics": SUBJECT_TOPICS.get(subject, [])
+            "id": subject_id,
+            "name": data["title"],
+            "units": data["units"],
+            "topics": SUBJECT_TOPICS.get(subject_id, []) # Keep flat topics for compatibility
         })
     return {"subjects": subjects_data}
 
@@ -32,8 +34,9 @@ async def get_topic_notes(
     """
     Generate and return structured notes for a topic.
     """
+    subject_id = subject_id.replace(" ", "_").lower()
     if subject_id not in ALLOWED_SUBJECTS:
-        raise HTTPException(status_code=400, detail="Invalid subject")
+        raise HTTPException(status_code=400, detail=f"Invalid subject: {subject_id}")
     
     allowed_topics = SUBJECT_TOPICS.get(subject_id, [])
     if topic not in allowed_topics:
@@ -63,7 +66,10 @@ async def get_subject_mindmap(
     Get a detailed hierarchical mindmap for a subject.
     """
     if subject_id not in ALLOWED_SUBJECTS:
-        raise HTTPException(status_code=400, detail="Invalid subject")
+        subject_id = subject_id.replace(" ", "_").lower()
+    
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail=f"Invalid subject: {subject_id}")
     
     try:
         mindmap = await fetch_or_generate_mindmap(subject_id)
@@ -82,7 +88,10 @@ async def get_subject_flashcards(
     Get or generate study flashcards for a subject.
     """
     if subject_id not in ALLOWED_SUBJECTS:
-        raise HTTPException(status_code=400, detail="Invalid subject")
+        subject_id = subject_id.replace(" ", "_").lower()
+    
+    if subject_id not in ALLOWED_SUBJECTS:
+        raise HTTPException(status_code=400, detail=f"Invalid subject: {subject_id}")
     
     try:
         flashcards = await fetch_or_generate_flashcards(subject_id)

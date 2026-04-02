@@ -250,12 +250,43 @@
   font-family: 'DM Sans', system-ui, sans-serif;
 }
 
-/* ── Topic List ── */
+/* ── Chapter Grouping ── */
+.chapters-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.chapter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.chapter-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0.75rem 0 0.5rem 0.75rem;
+    padding-bottom: 4px;
+    border-bottom: 1.5px solid var(--border);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.chapter-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.25rem 0.75rem;
+    opacity: 0.5;
+}
+
 .topics-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
   padding: 0;
   margin: 0;
 }

@@ -13,7 +13,7 @@ import {
 import "./TeacherDashboard.css";
 
 // 🏆 MOCK DATA FOR PROTOTYPE PRESENTATION
-const MOCK_TOPICS = ["Mechanics", "Optics", "Thermodynamics", "Electromagnetism", "Quantum"];
+const MOCK_TOPICS = ["Process Mgmt", "Memory Mgmt", "Deadlocks", "Storage Mgmt", "Protection"];
 const MOCK_HEATMAP_DATA = [
     { id: 101, name: "Alice Smith", scores: [85, 92, 45, 78, 60] },
     { id: 102, name: "Bob Johnson", scores: [40, 30, 20, 55, 10] },
@@ -23,8 +23,8 @@ const MOCK_HEATMAP_DATA = [
 ];
 
 const MOCK_AT_RISK = [
-    { id: 102, name: "Bob Johnson", reason: "Critical Confusion in Mechanics & Optics", stress: 85 },
-    { id: 105, name: "Eva Garcia", reason: "Declining Engagement & High Stress", stress: 92 },
+    { id: 102, name: "Bob Johnson", reason: "Critical Confusion in Memory Management", stress: 85 },
+    { id: 105, name: "Eva Garcia", reason: "Declining Engagement in SQL Queries", stress: 92 },
 ];
 
 const MOCK_CLASS_STATS = {
@@ -483,10 +483,12 @@ export default function TeacherDashboard({ onLogout }) {
                                         onChange={(e) => setFilterSubject(e.target.value)}
                                     >
                                         <option value="all">All Subjects</option>
-                                        <option value="physics">Physics</option>
-                                        <option value="chemistry">Chemistry</option>
-                                        <option value="english">English</option>
-                                        <option value="social">Social</option>
+                                        <option value="operating_systems">Operating Systems</option>
+                                        <option value="database_management">Database Management</option>
+                                        <option value="computer_networks">Computer Networks</option>
+                                        <option value="data_structures">Data Structures</option>
+                                        <option value="javascript">JavaScript</option>
+                                        <option value="java">Java</option>
                                     </select>
 
                                     <select
@@ -497,11 +499,11 @@ export default function TeacherDashboard({ onLogout }) {
                                     >
                                         <option value="all">All Topics</option>
                                         {filterSubject !== "all" &&
-                                            (filterSubject === "physics" ? ["mechanics", "optics"] :
-                                                filterSubject === "chemistry" ? ["organic", "inorganic"] :
-                                                    filterSubject === "english" ? ["grammar", "literature"] :
-                                                        filterSubject === "social" ? ["history", "geography"] : []
-                                            ).map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)
+                                            (filterSubject === "operating_systems" ? ["process-management", "memory-management"] :
+                                                filterSubject === "database_management" ? ["sql-queries", "normalization"] :
+                                                    filterSubject === "computer_networks" ? ["tcp-ip-model", "http-protocol"] :
+                                                        filterSubject === "data_structures" ? ["linked-lists", "trees-graphs"] : []
+                                            ).map(t => <option key={t} value={t}>{t.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</option>)
                                         }
                                     </select>
                                 </div>
@@ -649,10 +651,12 @@ export default function TeacherDashboard({ onLogout }) {
                                     onChange={(e) => setResSubject(e.target.value)}
                                 >
                                     <option value="all">Select Subject</option>
-                                    <option value="physics">Physics</option>
-                                    <option value="chemistry">Chemistry</option>
-                                    <option value="english">English</option>
-                                    <option value="social">Social</option>
+                                    <option value="operating_systems">Operating Systems</option>
+                                    <option value="database_management">Database Management</option>
+                                    <option value="computer_networks">Computer Networks</option>
+                                    <option value="data_structures">Data Structures</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="java">Java</option>
                                 </select>
                                 <input
                                     className="teacher-input"

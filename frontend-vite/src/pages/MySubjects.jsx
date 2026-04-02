@@ -68,18 +68,28 @@ const MySubjects = () => {
                                 {subject.topics.length} topic{subject.topics.length !== 1 ? "s" : ""}
                             </span>
                         </div>
-                        <ul className="topics-list">
-                            {subject.topics.map((topic) => (
-                                <li
-                                    key={topic}
-                                    className="topic-item"
-                                    onClick={() => handleTopicClick(subject.name, topic)}
-                                >
-                                    <span className="topic-name">{topic}</span>
-                                    <span className="topic-arrow">→</span>
-                                </li>
+                        <div className="chapters-container">
+                            {subject.units && subject.units.map((chapter, index) => (
+                                <div key={chapter.id} className="chapter-group">
+                                    <h3 className="chapter-card-title">
+                                        {chapter.title}
+                                    </h3>
+                                    <ul className="topics-list">
+                                        {chapter.topics.map((topic) => (
+                                            <li
+                                                key={topic}
+                                                className="topic-item"
+                                                onClick={() => handleTopicClick(subject.id, topic)}
+                                            >
+                                                <span className="topic-name">{topic.replace(/-/g, ' ')}</span>
+                                                <span className="topic-arrow">→</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    {index < subject.units.length - 1 && <div className="chapter-divider" />}
+                                </div>
                             ))}
-                        </ul>
+                        </div>
                     </div>
                 ))}
             </div>

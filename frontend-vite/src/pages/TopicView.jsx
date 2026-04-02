@@ -15,6 +15,7 @@ import {
     submitCode
 } from "../services/api";
 import ChatSidebar from "./ChatSidebar";
+import CurriculumSidebar from "../components/CurriculumSidebar";
 import CodeProblemOverlay from "../components/CodeProblemOverlay";
 import CodeBlock from "../components/CodeBlock";
 import MyNotesPanel from "../components/MyNotesPanel";
@@ -29,6 +30,7 @@ const TopicView = () => {
 
     const [topic, setTopic] = useState(topicParam);
     const [allTopics, setAllTopics] = useState([]);
+    const [subjectData, setSubjectData] = useState(null);
     const [notes, setNotes] = useState("");
     const [loadingNotes, setLoadingNotes] = useState(true);
 
@@ -52,19 +54,13 @@ const TopicView = () => {
     const [codeProblemActive, setCodeProblemActive] = useState(false);
     const [codeProblemData, setCodeProblemData] = useState(null);
     const [submittingCode, setSubmittingCode] = useState(false);
+    const [isCurriculumOpen, setIsCurriculumOpen] = useState(false);
 
     // Track previous chatId and topic to detect transitions
     const prevChatIdRef = useRef(null);
-    const prevTopicRef = useRef(null);
-    const messagesRef = useRef([]);
 
-    useEffect(() => {
-        messagesRef.current = messages;
-    }, [messages]);
 
     const [showHistory, setShowHistory] = useState(false);
-    const [notesActive, setNotesActive] = useState(true);
-    const [chatActive, setChatActive] = useState(true);
     const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
     const [notesWidth, setNotesWidth] = useState(50); // percentage
     const isResizing = useRef(false);
@@ -76,27 +72,35 @@ const TopicView = () => {
 
     const token = localStorage.getItem("token");
 
+    // 🔹 Load subjects and hierarchy
     useEffect(() => {
-        const fetchAllTopics = async () => {
+        const loadSubjects = async () => {
+            if (!subjectId) return;
             try {
-                const response = await fetch(`${BASE_URL}/subjects/`);
+                const response = await fetch(`${BASE_URL}/subjects/`, {
+                    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+                });
                 if (response.ok) {
                     const data = await response.json();
-                    const currentSubject = data.subjects.find(
-                        (s) => s.name.toLowerCase() === subjectId.toLowerCase()
-                    );
+                    
+                    // Normalize the subjectId from the URL for comparison
+                    const normalizedUrlId = subjectId.replace(/ |%20/g, "_").toLowerCase();
+
+                    const currentSubject = data.subjects.find(s => {
+                        const normalizedId = s.id.replace(/ |%20/g, "_").toLowerCase();
+                        return normalizedId === normalizedUrlId;
+                    });
+
                     if (currentSubject) {
-                        setAllTopics(currentSubject.topics);
+                        setAllTopics(currentSubject.topics || []);
+                        setSubjectData(currentSubject);
                     }
                 }
             } catch (err) {
-                console.error("Failed to fetch topics:", err);
+                console.error("Failed to load subjects:", err);
             }
         };
-
-        if (subjectId) {
-            fetchAllTopics();
-        }
+        loadSubjects();
     }, [subjectId]);
 
     useEffect(() => {
@@ -120,9 +124,6 @@ const TopicView = () => {
             setLoadingNotes(true);
             setMessages([]);
             setChatId(null);
-
-            // Update refs for the new topic
-            prevTopicRef.current = topicParam;
 
             // Auto-load notes on mount as per user request
             fetchNotes(subjectId, topicParam);
@@ -544,9 +545,40 @@ const TopicView = () => {
     return (
         <>
             <div className={`topic-view-layout ${quizActive ? "content-blurred" : ""}`}>
+                <CurriculumSidebar 
+                    subjectData={subjectData} 
+                    currentTopic={topicParam}
+                    isOpen={isCurriculumOpen}
+                    onClose={() => setIsCurriculumOpen(false)}
+                    onTopicSelect={(t) => {
+                        navigate(`/topic-view/${subjectId}/${t}`);
+                        if (window.innerWidth < 1024) setIsCurriculumOpen(false);
+                    }}
+                    onQuizSelect={(qId) => console.log("Quiz select:", qId)}
+                />
+
+                {isCurriculumOpen && (
+                    <div 
+                        className="sidebar-overlay" 
+                        onClick={() => setIsCurriculumOpen(false)}
+                    />
+                )}
                 <div className="topic-view-main">
                     <header className="topic-view-header">
                         <div className="header-left">
+                            <button 
+                                className="curriculum-toggle-btn"
+                                onClick={() => setIsCurriculumOpen(true)}
+                                aria-label="Open Curriculum"
+                            >
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                                </svg>
+                                <span>Chapters</span>
+                            </button>
+                            <div className="header-divider" />
                             <Link 
                                 to="/my-subjects" 
                                 className="back-link" 

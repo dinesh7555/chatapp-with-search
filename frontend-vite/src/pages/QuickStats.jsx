@@ -1,7 +1,40 @@
-import React from "react";
+import { useState, useEffect } from "react";
+import { getActivityStats } from "../services/api";
 import "./QuickStats.css";
 
 const QuickStats = () => {
+  const [stats, setStats] = useState({
+    current_streak: 0,
+    daily_study_time: 0,
+    total_study_time: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!token) return;
+      try {
+        const data = await getActivityStats(token);
+        if (data && !data.detail) {
+          setStats(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch activity stats", err);
+      } finally {
+        setLoading(setLoading(false));
+      }
+    };
+
+    fetchStats();
+    // Refresh stats every 2 minutes to show updated study time
+    const interval = setInterval(fetchStats, 120000);
+    return () => clearInterval(interval);
+  }, [token]);
+
+  if (loading) return <div className="qs-loading">Loading stats...</div>;
+
   return (
     <div className="qs-container">
       <div className="qs-header">
@@ -12,8 +45,8 @@ const QuickStats = () => {
       <div className="qs-streak-card">
         <div className="qs-streak-icon">🔥</div>
         <div className="qs-streak-info">
-          <span className="qs-label">TODAY'S STREAK</span>
-          <span className="qs-value">7 Days</span>
+          <span className="qs-label">STREAK</span>
+          <span className="qs-value">{stats.current_streak} Days</span>
         </div>
       </div>
 
@@ -26,7 +59,6 @@ const QuickStats = () => {
         </div>
         <div className="qs-rank-icon">🏆</div>
       </div>
-
     </div>
   );
 };

@@ -1,94 +1,68 @@
 .qs-container {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 320px; /* Optional, depending on layout container */
-  animation: fadeSlideUp 0.6s var(--ease-spring) both;
+  padding: 24px;
+  background: var(--surface);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
 }
 
 .qs-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .qs-header-icon {
   font-size: 16px;
-  color: #4b6690;
 }
 
 .qs-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  color: #4b6690; /* grayish blue title */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
   margin: 0;
 }
 
-.qs-streak-card {
+.qs-streak-card, .qs-rank-card {
   display: flex;
   align-items: center;
-  background: #fff8eb; /* light orange */
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
   gap: 16px;
-  border: 1px solid #ffedd5;
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.05); /* very soft orange shadow */
+  padding: 16px;
+  background: var(--sepia-50);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
 }
 
-.qs-streak-icon {
+.qs-streak-icon, .qs-rank-icon {
   font-size: 28px;
 }
 
-.qs-streak-info {
+.qs-streak-info, .qs-rank-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 .qs-label {
   font-size: 11px;
   font-weight: 700;
-  color: #a3a3a3;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  font-family: system-ui, sans-serif;
+  color: var(--ink-muted);
 }
 
 .qs-value {
   font-size: 20px;
   font-weight: 700;
-  color: #1e293b;
-  font-family: system-ui, sans-serif;
-}
-
-.qs-rank-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #f0f7ff; /* light blue */
-  border-radius: var(--radius-lg);
-  padding: 16px 20px;
-  border: 1px solid #e0f2fe;
-}
-
-.qs-rank-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  color: var(--ink);
 }
 
 .qs-highlight {
-  color: #3b82f6; /* bright blue */
-}
-
-.qs-rank-card .qs-value {
-  color: #94a3b8; /* gray slash text */
+  color: var(--accent);
 }
 
 .qs-rank-icon {
@@ -103,91 +77,11 @@
   font-size: 20px;
 }
 
-.qs-mini-stats {
+.qs-loading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin: 4px 0;
-}
-
-.qs-mini-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  background: #fafafa;
-  padding: 12px 8px;
-  border-radius: var(--radius-md);
-}
-
-.qs-mini-divider {
-  width: 1px;
-  height: 24px;
-}
-
-.qs-mini-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1e293b;
-  font-family: system-ui, sans-serif;
-}
-
-.qs-mini-label {
-  font-size: 11px;
-  color: #94a3b8;
-  font-family: system-ui, sans-serif;
-}
-
-.qs-milestone-card {
-  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  color: white;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-  margin-top: 4px;
-}
-
-.qs-milestone-label {
-  font-size: 11px;
-  font-weight: 600;
-  opacity: 0.9;
-  font-family: system-ui, sans-serif;
-}
-
-.qs-milestone-title {
-  font-size: 14px;
-  font-weight: 700;
-  margin: 2px 0;
-  font-family: system-ui, sans-serif;
-}
-
-.qs-milestone-subtitle {
-  font-size: 11px;
-  opacity: 0.8;
-  font-family: system-ui, sans-serif;
-}
-
-.qs-milestone-dots {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.qs-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.qs-dot.filled {
-  background: white;
-}
-
-.qs-dot.empty {
-  background: rgba(255, 255, 255, 0.3);
+  justify-content: center;
+  height: 100px;
+  font-style: italic;
+  color: var(--ink-muted);
 }

@@ -26,6 +26,11 @@ class StudentProfile(Base):
     branch = Column(String(50), nullable=True)
     status = Column(String(20), default="active")
     performance = Column(String(50), nullable=True)  # simple column for now
+    
+    current_streak = Column(Integer, default=0)
+    last_active_date = Column(DateTime, nullable=True)
+    daily_study_time = Column(Integer, default=0)  # in minutes
+    total_study_time = Column(Integer, default=0)  # accumulated minutes
 
     user = relationship("User", back_populates="student_profile")
 

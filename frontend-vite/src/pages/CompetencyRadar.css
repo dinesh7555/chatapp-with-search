@@ -1,0 +1,80 @@
+.cr-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    animation: fadeSlideUp 0.6s var(--ease-spring) both;
+}
+
+.cr-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 16px 0;
+}
+
+.cr-chart-container {
+    margin-bottom: 24px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cr-insight {
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+}
+
+.cr-insight-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.cr-insight-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cr-insight-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.cr-insight-text p {
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.cr-improve-btn {
+    margin-top: auto;
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    padding: 8px;
+    border-radius: var(--radius-md);
+    transition: all 0.2s;
+    font-family: system-ui, sans-serif;
+}
+
+.cr-improve-btn:hover {
+    background: var(--accent-light);
+}

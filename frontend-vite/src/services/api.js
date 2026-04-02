@@ -464,3 +464,24 @@ export async function deleteMyNote(noteId, token) {
   });
   return res.json();
 }
+
+/* ---------- ACTIVITY TRACKING ---------- */
+
+export async function sendHeartbeat(token) {
+  const res = await fetch(`${BASE_URL}/activity/heartbeat`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function getActivityStats(token) {
+  const res = await fetch(`${BASE_URL}/activity/stats`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}

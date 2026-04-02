@@ -6,14 +6,11 @@ import "./FlashCards.css";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const SUBJECT_ICONS = {
-    physics: "⚛️",
-    chemistry: "🧪",
-    mathematics: "📐",
-    biology: "🧬",
-    english: "📖",
-    history: "🏛️",
-    geography: "🌍",
-    social: "🗺️",
+    operating_systems: "💻",
+    database_management: "🗄️",
+    computer_networks: "🌐",
+    data_structures: "🌲",
+    artificial_intelligence: "🤖",
     javascript: "📜",
     java: "☕",
     default: "📚",

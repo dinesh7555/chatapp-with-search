@@ -1,0 +1,61 @@
+{
+  "subject": "Social Studies",
+  "root": {
+    "id": "root",
+    "text": "Social Studies",
+    "children": [
+      {
+        "id": "history",
+        "text": "History",
+        "children": [
+          {
+            "id": "rch_h1",
+            "text": "Ancient Civilizations",
+            "description": "Studies of the cultures, societies, and empires of ancient civilizations such as Egypt, Greece, and Rome"
+          },
+          {
+            "id": "rch_h2",
+            "text": "Middle Ages",
+            "description": "Examines the period between the fall of the Roman Empire and the Renaissance, including the rise of Christianity and feudalism"
+          },
+          {
+            "id": "rch_h3",
+            "text": "Industrialization and Imperialism",
+            "description": "Explores the significant changes that occurred during the Industrial Revolution and the rise of European empires in the 18th and 19th centuries"
+          },
+          {
+            "id": "rch_h4",
+            "text": "Modern History",
+            "description": "Covers major events and developments from the 20th century to the present day, including World War I and II, the Cold War, and global conflict"
+          }
+        ]
+      },
+      {
+        "id": "geography",
+        "text": "Geography",
+        "children": [
+          {
+            "id": "chr_g1",
+            "text": "Map Skills",
+            "description": "Focuses on understanding map reading and navigation, including interpreting maps, analyzing geographic data, and understanding geographic projections"
+          },
+          {
+            "id": "chr_g2",
+            "text": "Economic Geography",
+            "description": "Studies the relationship between human societies and the physical environment, including economic activities, trade, and the impact of human activity on the environment"
+          },
+          {
+            "id": "chr_g3",
+            "text": "Human Population and Migration",
+            "description": "Examines the movement and distribution of people, including urbanization, immigration, and migration patterns, and their impact on the environment"
+          },
+          {
+            "id": "chr_g4",
+            "text": "Cultural Geography",
+            "description": "Investigates the ways in which culture is shaped by and influences the physical environment, including the relationship between culture and identity"
+          }
+        ]
+      }
+    ]
+  }
+}

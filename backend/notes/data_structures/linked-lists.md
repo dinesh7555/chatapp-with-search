@@ -1,35 +1,32 @@
-# History
+# Linked-Lists
 ## Introduction
-### What is History?
-History refers to the study and analysis of past events, societies, and cultures. It involves the systematic recording, interpretation, and understanding of human experiences, actions, and decisions that have shaped the world we live in today.
+### What are Linked-Lists?
+A linked-list is a linear collection of data elements whose order is not given by their physical placement in memory. Instead, each element points to the next. It is a data structure consisting of a group of nodes which together represent a sequence.
 
-### Why This Matters for Social Students
-Understanding history is crucial for social students as it enables them to grasp the complex social, political, and economic structures that have evolved over time. By studying history, social students can gain insights into the development of social institutions, cultural norms, and global events that have influenced the lives of individuals and societies. This knowledge is essential for making informed decisions, understanding contemporary issues, and developing empathetic and nuanced perspectives on the human experience.
+### Why This Matters for data_structures Students
+Understanding linked-lists is crucial for data_structures students as they are used extensively in many real-world applications such as databases, web browsers, and file systems. They are used to implement dynamic memory allocation and can be efficiently used for inserting and deleting elements from the list.
 
 ## Key Concepts
-### Historical Periodization
+### Node
 #### Definition
-Historical periodization refers to the process of dividing the timeline of human history into distinct periods or eras, each characterized by unique cultural, social, economic, or political features.
+A node is the basic unit of a linked-list, consisting of a value and a reference (i.e., a "link") to the next node in the sequence.
 
 #### Example
-For instance, the ancient civilizations of Greece and Rome can be distinguished from the medieval period, which saw the rise of Christianity and the development of European feudalism. The modern era, characterized by industrialization, globalization, and technological advancements, can further be divided into distinct sub-periods such as the 18th century Enlightenment, the 19th century Industrial Revolution, and the 20th century Cold War era.
+Consider a linked-list of integers, where each node contains an integer value and a reference to the next node in the list. The node 3 would contain the value 3 and a reference to the node containing the value 5. This allows for efficient insertion and deletion of nodes at any position in the list.
 
-### Historical Determinism
+### Linked-List Types
 #### Definition
-Historical determinism refers to the idea that historical events and social processes are predetermined by factors such as geography, economy, culture, or technology, rather than being the result of random chance or individual free will.
+There are two main types of linked-lists: singly-linked and doubly-linked.
 
 #### Example
-For instance, the rise of industrial capitalism in Europe during the 18th century can be seen as a result of specific historical and geographical conditions, such as the availability of coal and iron ore, the growth of urban centers, and the emergence of a new middle class. This perspective suggests that historical events are shaped by underlying structural factors rather than the actions of individual agents.
+A singly-linked list only allows traversal in one direction (from the head to the tail), whereas a doubly-linked list allows traversal in both directions (from the head to the tail and from the tail to the head).
 
-### Historiography
+### Linked-List Operations
 #### Definition
-Historiography refers to the study and writing of history, including the methods, theories, and practices used by historians to research, analyze, and present the past.
+Some common operations performed on linked-lists include adding a new node, removing a node, and traversing the list.
 
 #### Example
-For instance, historians may employ different methods to study the same event, such as analyzing primary sources like documents and artifacts, conducting interviews with witnesses, or employing statistical analysis to identify patterns and trends. Historians may also use different theoretical frameworks to interpret the meaning and significance of historical events, such as Marxism, feminism, or post-structuralism.
+To add a new node, you would create a new node and append it to the end of the list. To remove a node, you would find the node to be removed and adjust the references of the adjacent nodes. To traverse the list, you would start at the head node and follow the references of each node until you reach the tail node.
 
 ## Formulas Reference
-
-$$Historical Periodization = \frac{Context \times Events}{Significance}$$
-
-Note: This equation is a simplified representation of the complex process of historical periodization and is intended to illustrate the relationship between context, events, and significance rather than providing a precise mathematical formula.
+No formulas are generally used for linked-lists, as they are typically manipulated through node references and traversal algorithms.

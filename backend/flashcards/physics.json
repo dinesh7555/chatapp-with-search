@@ -1,0 +1,42 @@
+[
+  {
+    "question": "What is Newton's First Law?",
+    "answer": "An object at rest stays at rest, and an object in motion stays in motion, with a constant velocity, unless acted upon by an external force."
+  },
+  {
+    "question": "What is the formula for kinetic energy?",
+    "answer": "Kinetic energy = (1/2)mv^2"
+  },
+  {
+    "question": "What is the electromagnetic force?",
+    "answer": "The force of attraction or repulsion between charged particles, such as protons and electrons, or between a charged particle and a magnetic field."
+  },
+  {
+    "question": "What is the wave-particle duality?",
+    "answer": "The concept that particles, such as electrons, can exhibit both wave-like and particle-like behavior under different conditions."
+  },
+  {
+    "question": "What is the process of radioactive decay?",
+    "answer": "The spontaneous transformation of an unstable atomic nucleus into a more stable nucleus, resulting in the emission of radiation."
+  },
+  {
+    "question": "What is the definition of a black hole?",
+    "answer": "A region in space where the gravitational pull is so strong that nothing, including light, can escape."
+  },
+  {
+    "question": "What is the principle of relativity?",
+    "answer": "The idea that the laws of physics are the same for all observers, regardless of their relative motion."
+  },
+  {
+    "question": "What is compressibility?",
+    "answer": "The ability of a substance to change its volume in response to a change in pressure."
+  },
+  {
+    "question": "What is the invention credited to Benjamin Franklin?",
+    "answer": "The lightning rod"
+  },
+  {
+    "question": "What is the formula for the escape velocity of an object on Earth?",
+    "answer": "Escape velocity = \u221a(2 \u00d7 g \u00d7 r)"
+  }
+]

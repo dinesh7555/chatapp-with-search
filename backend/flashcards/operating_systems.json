@@ -1,0 +1,42 @@
+[
+  {
+    "question": "What is the primary function of the kernel in an operating system?",
+    "answer": "To manage hardware resources such as CPU, memory, and I/O devices and provide a platform for applications to run on"
+  },
+  {
+    "question": "What is the difference between a process and a thread in an operating system?",
+    "answer": "A process is an independent unit of execution that runs in its own memory space, while a thread is a lightweight process that shares memory space with other threads within the same process"
+  },
+  {
+    "question": "What is interrupts in operating systems and what is their purpose?",
+    "answer": "Interrupts are a mechanism in operating systems that allow the kernel to be notified of events occurring outside of the normal system execution flow, such as a hardware failure or a network packet arrival, and their purpose is to manage and handle these events differently"
+  },
+  {
+    "question": "What is the concept of preemptive scheduling in operating systems?",
+    "answer": "Preemptive scheduling is a scheduling algorithm in which a higher-priority task can interrupt a lower-priority task at any time, typically to ensure timely response to user requests"
+  },
+  {
+    "question": "What is the difference between a file system and a file system virtualization layer?",
+    "answer": "A file system is a logical structure that provides a way to organize and store files on a storage device, while a file system virtualization layer is a layer of abstraction that provides a unified interface to multiple file systems"
+  },
+  {
+    "question": "What are the benefits of using a microkernel architecture in an operating system?",
+    "answer": "The benefits of using a microkernel architecture include improved modularity, scalability, and fault tolerance, as well as reduced complexity and improved security"
+  },
+  {
+    "question": "What is the role of a device driver in an operating system?",
+    "answer": "A device driver is a software component that interacts with a hardware device to provide its functionality to the operating system and other software components"
+  },
+  {
+    "question": "What is the concept of hierarchical memory in operating systems?",
+    "answer": "Hierarchical memory refers to the layered structure of memory in an operating system, where different levels of memory are allocated based on their accessibility and volatility, such as cache, main memory, and storage devices"
+  },
+  {
+    "question": "What is the difference between a monolithic kernel and a hybrid kernel?",
+    "answer": "A monolithic kernel is a traditional kernel design where the kernel is a single executable image, while a hybrid kernel is a modular design where the kernel is composed of multiple modules that can be dynamically loaded and unloaded"
+  },
+  {
+    "question": "What is the purpose of a Bootloader in an operating system?",
+    "answer": "A Bootloader is a software component responsible for loading the operating system into memory during the boot process"
+  }
+]

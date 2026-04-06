@@ -1,0 +1,161 @@
+{
+  "subject": "Database Management",
+  "root": {
+    "id": "root",
+    "text": "Database Management",
+    "children": [
+      {
+        "id": "sql-queries",
+        "text": "SQL Queries",
+        "children": [
+          {
+            "id": "querytypes",
+            "text": "Query Types",
+            "description": "Types of SQL queries: DML, DDL, DCL"
+          },
+          {
+            "id": "queryoptimization",
+            "text": "Query Optimization",
+            "description": "Techniques for improving query performance"
+          },
+          {
+            "id": "queryexecution",
+            "text": "Query Execution",
+            "description": "Steps involved in executing a SQL query"
+          }
+        ]
+      },
+      {
+        "id": "joins-aggregations",
+        "text": "Joins and Aggregations",
+        "children": [
+          {
+            "id": "joins",
+            "text": "Joins",
+            "description": "Types of joins: inner, outer, cross"
+          },
+          {
+            "id": "aggregations",
+            "text": "Aggregations",
+            "description": "Aggregate functions: SUM, COUNT, AVG, MIN, MAX"
+          },
+          {
+            "id": "groupby-having",
+            "text": "GROUP BY and HAVING",
+            "description": "Using GROUP BY and HAVING clauses in SQL queries"
+          }
+        ]
+      },
+      {
+        "id": "er-diagrams",
+        "text": "ER Diagrams",
+        "children": [
+          {
+            "id": "er-diagram-entities",
+            "text": "ER Diagram Entities",
+            "description": "Entities in an Entity-Relationship diagram"
+          },
+          {
+            "id": "er-diagram-relationships",
+            "text": "ER Diagram Relationships",
+            "description": "Types of relationships in an Entity-Relationship diagram"
+          },
+          {
+            "id": "er-diagram-keys",
+            "text": "ER Diagram Keys",
+            "description": "Types of keys in an Entity-Relationship diagram"
+          }
+        ]
+      },
+      {
+        "id": "normalization",
+        "text": "Normalization",
+        "children": [
+          {
+            "id": "normalization-rules",
+            "text": "Normalization Rules",
+            "description": "Rules for normalizing a database: 1NF, 2NF, 3NF"
+          },
+          {
+            "id": "normalization-benefits",
+            "text": "Normalization Benefits",
+            "description": "Advantages of database normalization: reduced data redundancy, improved data integrity"
+          },
+          {
+            "id": "normalization-challenges",
+            "text": "Normalization Challenges",
+            "description": "Common challenges in database normalization: increased complexity, reduced performance"
+          }
+        ]
+      },
+      {
+        "id": "acid-properties",
+        "text": "ACID Properties",
+        "children": [
+          {
+            "id": "atomicity",
+            "text": "Atomicity",
+            "description": "Ensuring that database transactions are executed as a single, indivisible unit"
+          },
+          {
+            "id": "consistency",
+            "text": "Consistency",
+            "description": "Ensuring that database transactions maintain data consistency"
+          },
+          {
+            "id": "isolation",
+            "text": "Isolation",
+            "description": "Ensuring that database transactions are isolated from each other"
+          },
+          {
+            "id": "durability",
+            "text": "Durability",
+            "description": "Ensuring that database transactions are persistent even in the event of a system failure"
+          }
+        ]
+      },
+      {
+        "id": "transactions",
+        "text": "Transactions",
+        "children": [
+          {
+            "id": "transaction-types",
+            "text": "Transaction Types",
+            "description": "Types of transactions: read-only, read-write"
+          },
+          {
+            "id": "transaction-control",
+            "text": "Transaction Control",
+            "description": "Mechanisms for controlling database transactions: COMMIT, ROLLBACK"
+          },
+          {
+            "id": "transaction-isolation",
+            "text": "Transaction Isolation",
+            "description": "Methods for providing transaction isolation: locking, timestamping"
+          }
+        ]
+      },
+      {
+        "id": "concurrency-control",
+        "text": "Concurrency Control",
+        "children": [
+          {
+            "id": "locking",
+            "text": "Locking",
+            "description": "Mechanism for providing concurrency control: locking, locking granularity"
+          },
+          {
+            "id": "timestamping",
+            "text": "Timestamping",
+            "description": "Method for providing concurrency control: timestamping, optimistic concurrency control"
+          },
+          {
+            "id": "pessimistic-optimistic",
+            "text": "Pessimistic and Optimistic Concurrency Control",
+            "description": "Comparison of pessimistic and optimistic concurrency control methods"
+          }
+        ]
+      }
+    ]
+  }
+}

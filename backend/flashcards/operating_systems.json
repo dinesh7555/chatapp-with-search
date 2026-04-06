@@ -1,0 +1,42 @@
+[
+  {
+    "question": "What is the primary function of the kernel in an operating system?",
+    "answer": "To manage and allocate system resources, as well as provide services to user-level applications"
+  },
+  {
+    "question": "What is the difference between a process and a thread in an operating system?",
+    "answer": "A process is a self-contained unit of execution, whereas a thread is a lightweight process that shares the same resources"
+  },
+  {
+    "question": "What is the role of the executive in an operating system?",
+    "answer": "To manage hardware resources, including CPU, memory, and I/O devices"
+  },
+  {
+    "question": "What is the purpose of the syst\u00e8me de fichiers (file system) in an operating system?",
+    "answer": "To organize and manage files and directories on a storage device"
+  },
+  {
+    "question": "What is the function of the Buffer Cache in an operating system?",
+    "answer": "To store data in RAM for faster access, reducing the need for disk I/O operations"
+  },
+  {
+    "question": "How do multi-level systems differ from single-level systems in an operating system?",
+    "answer": "Multi-level systems have a layered architecture, allowing for more flexibility and modularity, whereas single-level systems are monolithic"
+  },
+  {
+    "question": "What is the purpose of the Page Table in an operating system?",
+    "answer": "To map virtual memory addresses to physical memory addresses for efficient memory management"
+  },
+  {
+    "question": "What is the role of virtualization in an operating system?",
+    "answer": "To create a self-contained environment for a guest operating system, allowing for multiple OS instances to run on a single host"
+  },
+  {
+    "question": "What is the difference between a monolithic kernel and a microkernel in an operating system?",
+    "answer": "A monolithic kernel contains the entire operating system in a single program, whereas a microkernel is a thin layer of code that provides basic services and runs other operating system components on top"
+  },
+  {
+    "question": "What is the function of the File Allocation Table (FAT) in an operating system?",
+    "answer": "To keep track of file allocation, including file locations, sizes, and permissions, on a file system"
+  }
+]

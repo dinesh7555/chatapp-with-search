@@ -1,0 +1,169 @@
+{
+  "subject": "Operating Systems",
+  "root": {
+    "id": "root",
+    "text": "Operating Systems",
+    "children": [
+      {
+        "id": "what-is-os",
+        "text": "What is an Operating System?",
+        "children": [
+          {
+            "id": "def-of-os",
+            "text": "Definition of an Operating System",
+            "description": "An operating system is a software that manages computer hardware resources and provides common services to computer programs."
+          },
+          {
+            "id": "functions-of-os",
+            "text": "Functions of an Operating System",
+            "description": "An operating system performs various functions such as process control, memory management, and file management."
+          }
+        ]
+      },
+      {
+        "id": "process-management",
+        "text": "Process Management",
+        "children": [
+          {
+            "id": "process-creation",
+            "text": "Process Creation",
+            "description": "The process of creating a new process including creating a new process control block and allocating resources."
+          },
+          {
+            "id": "process-synchronization",
+            "text": "Process Synchronization",
+            "description": " techniques to coordinate the activities of multiple processes such as semaphores, monitors, and locks."
+          }
+        ]
+      },
+      {
+        "id": "cpu-scheduling",
+        "text": "CPU Scheduling",
+        "children": [
+          {
+            "id": "scheduling-algorithms",
+            "text": "Scheduling Algorithms",
+            "description": "Algorithms used to decide which process to execute next, such as First-Come-First-Served, Shortest-Job-First, and Priority Scheduling."
+          },
+          {
+            "id": "context-switching",
+            "text": "Context Switching",
+            "description": "The process of saving and restoring the state of a process to switch from one process to another."
+          }
+        ]
+      },
+      {
+        "id": "memory-management",
+        "text": "Memory Management",
+        "children": [
+          {
+            "id": "memory-layout",
+            "text": "Memory Layout",
+            "description": "The way in which the memory is organized in a computer system, including the locations of code, data, and stacks."
+          },
+          {
+            "id": "memory-allocation",
+            "text": "Memory Allocation",
+            "description": "The process of allocating memory to a process, including Best-Fit, Worst-Fit, and First-Fit algorithms."
+          }
+        ]
+      },
+      {
+        "id": "paging",
+        "text": "Paging",
+        "children": [
+          {
+            "id": "paging-mechanism",
+            "text": "Paging Mechanism",
+            "description": "A technique used to handle large virtual memory spaces by dividing it into fixed-size blocks called pages."
+          },
+          {
+            "id": "page-table",
+            "text": "Page Table",
+            "description": "A data structure used to keep track of the location of pages in physical memory."
+          }
+        ]
+      },
+      {
+        "id": "segmentation",
+        "text": "Segmentation",
+        "children": [
+          {
+            "id": "segment-mechanism",
+            "text": "Segment Mechanism",
+            "description": "A technique used to handle large virtual memory spaces by dividing it into variable-size segments."
+          },
+          {
+            "id": "segmentation-table",
+            "text": "Segmentation Table",
+            "description": "A data structure used to keep track of the location of segments in physical memory."
+          }
+        ]
+      },
+      {
+        "id": "virtual-memory",
+        "text": "Virtual Memory",
+        "children": [
+          {
+            "id": "virtual-memory-advantages",
+            "text": "Advantages of Virtual Memory",
+            "description": "Advantages of using virtual memory include increased capacity, protection, and sharing."
+          },
+          {
+            "id": "virtual-memory-limitations",
+            "text": "Limitations of Virtual Memory",
+            "description": "Limitations of virtual memory include overhead, thrashing, and fragmentation."
+          }
+        ]
+      },
+      {
+        "id": "deadlocks",
+        "text": "Deadlocks",
+        "children": [
+          {
+            "id": "deadlock-definition",
+            "text": "Definition of Deadlock",
+            "description": "A situation in which two or more processes are blocked indefinitely, each waiting for the other to release a resource."
+          },
+          {
+            "id": "deadlock-avoidance",
+            "text": "Deadlock Avoidance",
+            "description": "Techniques to avoid deadlocks including resource ordering, priority inversion, and banker's algorithm."
+          }
+        ]
+      },
+      {
+        "id": "disk-scheduling",
+        "text": "Disk Scheduling",
+        "children": [
+          {
+            "id": "disk-scheduling-algorithms",
+            "text": "Disk Scheduling Algorithms",
+            "description": "Algorithms used to manage the requests for disk access, such as FIFO, Shortest-Seek-Time-First, and SCAN."
+          },
+          {
+            "id": "disk-mechanisms",
+            "text": "Disk Mechanisms",
+            "description": "Mechanisms used in disk scheduling including sector-based allocation, track-based allocation, and set-based allocation."
+          }
+        ]
+      },
+      {
+        "id": "file-systems",
+        "text": "File Systems",
+        "children": [
+          {
+            "id": "file-system-components",
+            "text": "File System Components",
+            "description": "Components of a file system including the root directory, directories, files, and the file allocation table."
+          },
+          {
+            "id": "file-system-algorithms",
+            "text": "File System Algorithms",
+            "description": "Algorithms used in file systems including FAT, NTFS, and HFS."
+          }
+        ]
+      }
+    ]
+  }
+}

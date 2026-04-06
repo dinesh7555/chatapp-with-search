@@ -5,6 +5,9 @@ from datetime import datetime
 class MyNoteService:
     @staticmethod
     def create_note(user_id: str, title: str, content: str, subject_id: str):
+        # Normalize the subject_id (replace spaces with underscores, lowercase)
+        normalized_subject_id = subject_id.replace(" ", "_").lower()
+        
         query = """
         MERGE (u:Student {id: $user_id})
         MERGE (s:Subject {name: $subject_id})
@@ -21,7 +24,7 @@ class MyNoteService:
         RETURN n {.id, .title, .content, .created_at, subject_id: s.name}
         """
         with get_neo4j_session() as session:
-            result = session.run(query, user_id=user_id, title=title, content=content, subject_id=subject_id).single()
+            result = session.run(query, user_id=user_id, title=title, content=content, subject_id=normalized_subject_id).single()
             return result[0] if result else None
 
     @staticmethod

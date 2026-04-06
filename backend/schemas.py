@@ -64,3 +64,8 @@ class ResourceResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CodeExecutionPayload(BaseModel):
+    code: str
+    language: str
+    stdin: str = ""

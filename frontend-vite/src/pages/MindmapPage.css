@@ -1,99 +1,118 @@
+/* =============================================================
+   MINDMAPPAGE.CSS — Visual Path Overview
+   ============================================================= */
+
 .mindmap-page {
-    padding: var(--space-8);
+    padding: 40px 60px;
     max-width: 1200px;
     margin: 0 auto;
-    min-height: 100vh;
 }
 
-.page-header {
+.mindmap-header-inline {
     text-align: center;
-    margin-bottom: var(--space-10);
+    margin-bottom: 50px;
 }
 
-.page-header h1 {
-    font-family: var(--font-display);
-    font-size: 3rem;
-    margin-bottom: var(--space-2);
-    color: var(--color-text-primary);
+.mindmap-header-inline h1 {
+    font-family: var(--font-display, 'Playfair Display', serif);
+    font-size: 42px;
+    margin-bottom: 12px;
+    color: var(--ink, #2c1f0e);
+    letter-spacing: -0.02em;
 }
 
-.page-header p {
-    color: var(--color-text-secondary);
+.mindmap-header-inline p {
+    color: var(--ink-soft, #5c4a30);
     font-size: 1.1rem;
-}
-
-.back-btn {
-    position: absolute;
-    top: var(--space-8);
-    left: var(--space-8);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    padding: var(--space-2) var(--space-4);
-    color: var(--color-text-secondary);
+    opacity: 0.8;
 }
 
 .subject-selection-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: var(--space-6);
-    margin-top: var(--space-8);
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 24px;
+    margin-top: 40px;
 }
 
 .subject-select-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    padding: var(--space-8);
-    border-radius: var(--radius-xl);
+    background: #ffffff;
+    border: 1px solid var(--border, rgba(160, 130, 90, 0.2));
+    padding: 40px;
+    border-radius: 24px;
     text-align: center;
     cursor: pointer;
-    transition: all var(--transition-base);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-4);
+    gap: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
 
 .subject-select-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--color-accent);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-8px);
+    border-color: var(--accent, #4f3cc9);
+    box-shadow: 0 12px 24px rgba(92, 72, 50, 0.1);
 }
 
 .subject-icon {
-    font-size: 3rem;
+    font-size: 48px;
 }
 
 .subject-select-card h3 {
     margin: 0;
+    font-family: var(--font-display, 'Playfair Display', serif);
+    color: var(--ink, #2c1f0e);
 }
 
 .subject-select-card p {
     margin: 0;
-    color: var(--color-text-muted);
+    color: var(--ink-muted, #9b836a);
     font-size: 0.9rem;
+    font-style: italic;
 }
 
 .mindmap-container {
-    background: var(--color-surface);
-    border-radius: var(--radius-xl);
-    padding: var(--space-6);
-    box-shadow: var(--shadow-md);
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
     min-height: 700px;
     display: flex;
     flex-direction: column;
+    border: 1px solid var(--border, rgba(160, 130, 90, 0.2));
 }
 
 .mindmap-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-6);
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border, rgba(160, 130, 90, 0.1));
+}
+
+.mindmap-header h2 {
+    font-family: var(--font-display, 'Playfair Display', serif);
+    font-size: 24px;
+    color: var(--ink, #2c1f0e);
+    margin: 0;
 }
 
 .change-subject-btn {
-    background: var(--color-accent-light);
-    color: var(--color-accent);
-    padding: var(--space-2) var(--space-4);
+    background: var(--accent-light, rgba(79, 60, 201, 0.08));
+    color: var(--accent, #4f3cc9);
+    padding: 8px 16px;
+    border: 1px solid var(--accent-mid, rgba(79, 60, 201, 0.22));
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.change-subject-btn:hover {
+    background: var(--accent, #4f3cc9);
+    color: white;
 }
 
 .mindmap-loader {
@@ -102,14 +121,15 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-4);
+    gap: 20px;
+    color: var(--ink-muted, #9b836a);
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--color-accent-light);
-    border-top-color: var(--color-accent);
+    width: 44px;
+    height: 44px;
+    border: 3px solid var(--accent-light, rgba(79, 60, 201, 0.08));
+    border-top-color: var(--accent, #4f3cc9);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -118,12 +138,7 @@
     to { transform: rotate(360deg); }
 }
 
-.mindmap-error {
-    text-align: center;
-    padding: var(--space-10);
-}
-
-.mindmap-error p {
-    color: var(--color-danger);
-    margin-bottom: var(--space-4);
+@media (max-width: 768px) {
+    .mindmap-page { padding: 20px; }
+    .mindmap-header-inline h1 { font-size: 32px; }
 }

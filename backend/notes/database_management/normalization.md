@@ -1,35 +1,37 @@
-# Inorganic
+# Normalization
 ## Introduction
-### What is Inorganic?
-Inorganic chemistry refers to the study of the properties, behavior, and reactions of inorganic compounds, which are typically composed of elements or compounds that do not contain carbon and hydrogen as the main elements. Inorganic compounds can include salts, metals, minerals, and other substances that are not considered carbon-based or organic.
+### What is Normalization?
+Normalization is a systematic approach to organizing the structure of a relational database to minimize data redundancy and dependency. It ensures that each piece of data is stored in one place and one place only, making it easier to maintain and modify the database.
 
-### Why This Matters for chemistry Students
-Understanding inorganic chemistry is crucial for chemistry students as it provides a fundamental understanding of the building blocks of matter, including the periodic table, chemical reactions, and the properties of elements. Inorganic compounds play a vital role in various industries, such as mining, energy, and pharmaceuticals, and knowledge of their properties and reactions is essential for the development of new technologies and applications.
+### Why This Matters for Database Management Students
+Normalization is crucial in database design as it helps maintain data consistency, reduce data inconsistencies, and improve data integrity. It also enables efficient querying, reduces data duplication, and improves overall database performance. Proper normalization is essential for creating reliable and scalable databases that can handle large amounts of data and complex queries.
 
 ## Key Concepts
-### Inorganic Compounds
+### First Normal Form (1NF)
 #### Definition
-Inorganic compounds are typically formed by the reaction of elements or ions, and they do not contain carbon and hydrogen as the main elements.
+A table is in 1NF if and only if the table has only a single table attribute or composite attribute (made up of atomic values).
 
 #### Example
-Sodium chloride (NaCl), also known as common table salt, is an inorganic compound composed of sodium and chloride ions. It is formed through the reaction of sodium metal with chlorine gas.
+Consider a table called "Students" with attributes "Student Name" and "Mark" where "Student Name" is a column with variable-length strings (e.g., John, Jane, etc.). The table is not in 1NF because "Student Name" is a composite attribute. To achieve 1NF, we can create a separate table called "Student Names" with attributes "Student ID" and "Name".
 
-### Inorganic Reactions
+### Second Normal Form (2NF)
 #### Definition
-Inorganic reactions involve the transformation of inorganic compounds through various chemical reactions, such as acid-base reactions, oxidation-reduction reactions, and precipitation reactions.
+A table is in 2NF if and only if it is in 1NF and all non-key attributes are fully functional dependencies on the primary key.
 
 #### Example
-The reaction between nitric acid (HNO3) and sodium carbonate (Na2CO3) is an acid-base reaction that forms sodium nitrate (NaNO3) and water:
+Imagine a "Course" table with attributes "Course ID", "Course Name", "Semester", and "Credit". The table is not in 2NF because "Semester" and "Credit" are not fully functional dependencies on the primary key "Course ID". To normalize the table, we can create a separate table called "Course Details" with attributes "Course ID", "Semester", and "Credit".
 
-HNO3 + Na2CO3 → NaNO3 + H2O + NaOH
-
-### Electronic Structure and Bonding
+### Third Normal Form (3NF)
 #### Definition
-Inorganic compounds often exhibit characteristic electronic structures and bonding patterns, which are influenced by the chemical properties of the constituent elements.
+A table is in 3NF if and only if it is in 2NF and there are no transitive dependencies.
 
 #### Example
-Metal oxides, such as iron(III) oxide (Fe2O3), often exhibit ionic bonding, where the metal ion donates one or more electrons to form a stable ion. This leads to a rigid and crystalline structure.
+Consider a "Department" table with attributes "Department ID", "Department Name", and "Faculty ID". The table is not in 3NF because "Faculty ID" is a foreign key referencing the "Faculty" table, which creates a transitive dependency. To normalize the table, we can create a separate table called "Department Faculty" with attributes "Department ID", "Faculty ID", and "Start Date".
 
 ## Formulas Reference
-$$\mathrm{NaCl} \rightarrow \mathrm{Na^{+}} + \mathrm{Cl^{-}}$$
-$$\mathrm{HNO_{3}} + \mathrm{Na_{2}CO_{3}} \rightleftharpoons \mathrm{NaNO_{3}} + \mathrm{H_{2}O} + \mathrm{NaOH}$$
+$$\text{Normalization rules:}$$
+* 1NF: Each table cell contains a single value.
+* 2NF: Partial dependencies are eliminated.
+* 3NF: Transitive dependencies are eliminated.
+
+These notes provide a comprehensive introduction to normalization in database management, highlighting its importance, definition, and application. Key concepts such as 1NF, 2NF, and 3NF are explained with concrete examples, illustrating how to identify and resolve data redundancy and dependency issues.

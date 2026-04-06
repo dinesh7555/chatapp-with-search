@@ -1,35 +1,34 @@
-# History
+# Linked-Lists
 ## Introduction
-### What is History?
-History refers to the study and analysis of past events, societies, and cultures. It involves the systematic recording, interpretation, and understanding of human experiences, actions, and decisions that have shaped the world we live in today.
+### What is a Linked-List?
+A linked-list is a linear data structure, consisting of a sequence of nodes where each node holds a value and a reference (i.e., a "link") to the next node in the list. This allows for efficient insertion or removal of elements from any position in the list.
 
-### Why This Matters for Social Students
-Understanding history is crucial for social students as it enables them to grasp the complex social, political, and economic structures that have evolved over time. By studying history, social students can gain insights into the development of social institutions, cultural norms, and global events that have influenced the lives of individuals and societies. This knowledge is essential for making informed decisions, understanding contemporary issues, and developing empathetic and nuanced perspectives on the human experience.
+### Why This Matters for Data_Structures Students
+Understanding linked-lists is crucial for data structures students as it provides a fundamental building block for more complex data structures, such as stacks, queues, and trees. Additionally, linked-lists are commonly used in real-world applications, including database query optimization, web page rendering, andนสimple dynamic memory allocation.
 
 ## Key Concepts
-### Historical Periodization
+### Node Definition
 #### Definition
-Historical periodization refers to the process of dividing the timeline of human history into distinct periods or eras, each characterized by unique cultural, social, economic, or political features.
+A node is a single element in a linked-list, consisting of a value and a reference to the next node in the list.
 
 #### Example
-For instance, the ancient civilizations of Greece and Rome can be distinguished from the medieval period, which saw the rise of Christianity and the development of European feudalism. The modern era, characterized by industrialization, globalization, and technological advancements, can further be divided into distinct sub-periods such as the 18th century Enlightenment, the 19th century Industrial Revolution, and the 20th century Cold War era.
+Consider a linked-list with nodes [a, b, c, d] where 'a' is the head node. Each node has a value and a reference to the next node, so node 'a' has references to node 'b', node 'b' has references to node 'c', and node 'c' has references to node 'd'.
 
-### Historical Determinism
+### Linked-List Operations
 #### Definition
-Historical determinism refers to the idea that historical events and social processes are predetermined by factors such as geography, economy, culture, or technology, rather than being the result of random chance or individual free will.
+Linked-list operations include inserting nodes at specific positions, deleting nodes from specific positions, and searching for specific values in the list.
 
 #### Example
-For instance, the rise of industrial capitalism in Europe during the 18th century can be seen as a result of specific historical and geographical conditions, such as the availability of coal and iron ore, the growth of urban centers, and the emergence of a new middle class. This perspective suggests that historical events are shaped by underlying structural factors rather than the actions of individual agents.
+To insert a new node 'e' at the beginning of the linked-list, we would update the reference of node 'e' to node 'a', and then update the reference of node 'a' to point to node 'e'. This would alter the structure of the linked-list to [e, a, b, c, d].
 
-### Historiography
+### Traversal
 #### Definition
-Historiography refers to the study and writing of history, including the methods, theories, and practices used by historians to research, analyze, and present the past.
+Traversal in a linked-list involves iterating through the nodes in the list, either from the beginning to the end or from the end to the beginning.
 
 #### Example
-For instance, historians may employ different methods to study the same event, such as analyzing primary sources like documents and artifacts, conducting interviews with witnesses, or employing statistical analysis to identify patterns and trends. Historians may also use different theoretical frameworks to interpret the meaning and significance of historical events, such as Marxism, feminism, or post-structuralism.
+To traverse the linked-list from the beginning to the end, we would start at the head node 'a' and follow the references to the next node 'b', then 'c', and finally 'd'. This would allow us to access the values stored in each node.
 
 ## Formulas Reference
+None
 
-$$Historical Periodization = \frac{Context \times Events}{Significance}$$
-
-Note: This equation is a simplified representation of the complex process of historical periodization and is intended to illustrate the relationship between context, events, and significance rather than providing a precise mathematical formula.
+Note: As linked-lists do not involve complex mathematical formulas, there is no formulas reference section.

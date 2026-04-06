@@ -1,0 +1,70 @@
+.student-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--sepia-50);
+  overflow-x: clip;
+}
+
+.layout-content {
+  flex: 1;
+  padding-top: 80px; /* Space for the fixed navbar (height setup in dash-topbar padding) */
+  height: 0;         /* let flex:1 control the height, prevents min-height bleed */
+  overflow-y: auto; /* allow content to scroll */
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* Background Decorations (Moved from StudentDashboard.css) */
+.bg-decoration {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.45;
+}
+
+.bg-circle-1 {
+  width: 600px;
+  height: 600px;
+  top: -150px;
+  right: -100px;
+  background: radial-gradient(circle, #f5deb3 0%, transparent 70%);
+}
+
+.bg-circle-2 {
+  width: 400px;
+  height: 400px;
+  bottom: 100px;
+  left: -80px;
+  background: radial-gradient(circle, #e8d5b0 0%, transparent 70%);
+}
+
+.bg-circle-3 {
+  width: 300px;
+  height: 300px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(196, 124, 43, 0.06) 0%, transparent 70%);
+}
+
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(160, 130, 90, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160, 130, 90, 0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
+}

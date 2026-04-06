@@ -1,41 +1,43 @@
-# Mechanics
-
+# Process Management
 ## Introduction
-### What is Mechanics?
-Mechanics is the branch of physics that deals with the study of motion and the forces that cause it. It encompasses the behavior of objects under the influence of forces, energy, and momentum, and is a fundamental area of study in physics, engineering, and other related fields.
+### What is Process Management?
+Process management is the mechanism by which an operating system schedules and manages the execution of processes, ensuring efficient use of system resources and maximizing system performance.
 
-### Why This Matters for Physics Students
-Understanding mechanics is crucial for physics students, as it provides a foundation for understanding other areas of physics, such as thermodynamics, electromagnetism, and quantum mechanics. Mechanics is also essential for solving real-world problems in fields like engineering, astronomy, and medicine, where understanding motion and force is critical.
+### Why This Matters for Operating Systems Students
+Understanding process management is crucial for operating systems students as it enables them to design and implement efficient process scheduling algorithms, allocate system resources effectively, and develop operating systems that can handle a large number of concurrent processes and threads.
 
 ## Key Concepts
-
-### Kinematics
+### Process Scheduling
 #### Definition
-Kinematics is the study of the motion of objects without considering the forces that cause the motion.
+Process scheduling is the algorithm used by the operating system to decide which process should be executed next, given a set of processes in the ready queue.
 
 #### Example
-Imagine a ball thrown by a player on a baseball field. The ball's position, velocity, and acceleration can be described using kinematic definitions, such as displacement (distance), velocity, and acceleration, without considering the forces that caused the ball's motion, like the force of the throw or air resistance.
+Suppose a system has three processes: P1, P2, and P3. The ready queue contains these processes in the order P1, P2, P3. The process scheduling algorithm is Round Robin (RR) with a time quantum of 2 time units. The current time is 0 time units. The operating system will execute P1 for 2 time units, then context switch to P2, execute it for 2 time units, and finally context switch to P3. This process continues until all processes have been executed.
 
-### Dynamics
+### Context Switching
 #### Definition
-Dynamics is the study of the motion of objects under the influence of forces.
+Context switching is the process of saving the current state of a process and restoring the state of the previously running process.
 
 #### Example
-Returning to the example of the ball thrown on the baseball field, dynamics would involve understanding the forces acting on the ball, such as the force of gravity, air resistance, and the force of the throw. By applying Newton's laws of motion, we can describe the ball's motion using equations that take into account these forces.
+Suppose P1 is currently executing and its state includes the current program counter, registers, and memory pointers. The operating system needs to switch to P2. The operating system would save P1's state, including the program counter, registers, and memory pointers, and restore P2's state, bringing P2 out of the idle state.
 
-### Energy and Momentum
+### Process States
 #### Definition
-Energy is the ability to do work, while momentum is the product of an object's mass and velocity.
+A process can be in one of several states, including Newborn, Running, Waiting, Sleeping, and Zombie.
 
 #### Example
-Consider a car traveling down a highway. The car's kinetic energy, which is the energy of motion, is proportional to its velocity and mass. As the car brakes, its kinetic energy is converted into potential energy, which is stored in the car's springs and suspension. The car's momentum is also an important concept, as it affects the car's response to external forces like friction and air resistance.
+Suppose a process P1 is in the Newborn state and is about to start executing. The operating system would allocate resources for P1, bring it into memory, and initialize its state. Once P1 has allocated all its resources, it transitions to the Running state and begins executing.
+
+### Synchronization
+#### Definition
+Synchronization is the mechanism used to coordinate the actions of multiple processes, ensuring that they access shared resources correctly and avoiding conflicts.
+
+#### Example
+Suppose two processes, P1 and P2, need to access a shared resource, a file. A semaphore is used to synchronize access to the file. When P1 wants to access the file, it decrements the semaphore value, checks if it is greater than 0, and if so, accesses the file. When P1 finishes accessing the file, it increments the semaphore value. P2 follows a similar procedure.
 
 ## Formulas Reference
+$$W(S) = \frac{\sum_{i=1}^{n} (T_i - T_i^o)}{\sum_{i=1}^{n} T_i}$$
+where W(S) is the average waiting time, T_i is the arrival time of process i, and T_i^o is the completion time of process i.
 
-$$F = ma$$ (Newton's second law of motion)
-
-$$E_{kinetic} = \frac{1}{2}mv^2$$ (kinetic energy)
-
-$$p = mv$$ (momentum)
-
-These formulas are essential tools for solving problems in mechanics and will be used extensively throughout this course.
+$$T(S) = \frac{\sum_{i=1}^{n} T_i}{n}$$
+where T(S) is the average service time and n is the number of processes.

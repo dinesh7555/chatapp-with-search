@@ -45,7 +45,8 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
   // Reset or initialize state when panel opens or subjectId prop changes
   useEffect(() => {
     if (isOpen) {
-      setSelectedSubject(subjectId || null);
+      const normalizedPropId = subjectId ? subjectId.replace(/\s+/g, '_').toLowerCase() : null;
+      setSelectedSubject(normalizedPropId);
       setSelectedNote(null);
     }
   }, [isOpen, subjectId]);
@@ -175,7 +176,7 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
                 <button 
                   key={key} 
                   className="mynotes-subject-btn"
-                  onClick={() => setSelectedSubject(name)}
+                  onClick={() => setSelectedSubject(subj.id || name)}
                 >
                   <span className="subject-icon">{getSubjectIcon(subj)}</span>
                   <span>{name.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>

@@ -1,14 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from auth import require_student
 from services.compiler_service import run_java_code
-from pydantic import BaseModel
+from schemas import CodeExecutionPayload
 
 router = APIRouter(prefix="/compiler", tags=["Compiler"])
-
-class CodeExecutionPayload(BaseModel):
-    code: str
-    language: str
-    stdin: str = ""
 
 @router.post("/run")
 async def run_code(

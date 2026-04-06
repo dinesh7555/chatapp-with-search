@@ -1,33 +1,80 @@
-# Organic
+# SQL Queries
 ## Introduction
-### What is Organic?
-In chemistry, the term "organic" refers to a branch of chemistry that deals with the study of carbon-based compounds, primarily those containing carbon-hydrogen bonds. These compounds are often referred to as organic molecules or organic compounds. The definition has been expanded to include any carbon-containing compound, whether it is or ever could be synthesized, except those containing carbon in the form of carbonates, carbides, carbon oxides, cyanides, cyanates, isocyanides, thiocyanates, and their salts.
+### What are SQL Queries?
+A SQL query is a request to a Database Management System (DBMS) to retrieve or manipulate data stored in a database. SQL queries use a specific syntax to request data from one or more database tables.
 
-### Why This Matters for Chemistry Students
-Understanding organic chemistry is crucial for chemistry students because it comprises the majority of biochemical reactions in living organisms. These are complex compounds that make up every living organism, and the principles of organic chemistry serve as the foundation for the understanding of biological processes, such as metabolism, respiration, and the synthesis of various biological molecules.
+### Why This Matters for Database Management Students
+SQL queries are the building blocks of database management. They enable users to manage and interact with data stored in a database, making them an essential aspect of database management.
 
 ## Key Concepts
-### Carbon-Based Compounds Structure
+
+### Basic Query Syntax
 #### Definition
-Carbon's unique ability to form long chains and branches due to its four valence electrons, allows for an almost endless variety of structures, which is the backbone of organic chemistry. Compounds may be saturated (single bonds only) or unsaturated (multiple bonds).
+The basic syntax of a SQL query consists of a SELECT statement, clauses to specify the data to retrieve, and optional clauses to filter, sort, or manipulate the data.
 
 #### Example
-Consider ethene (C2H4), which is a simple unsaturated hydrocarbon with a single double bond between its carbon atoms. Its structure is represented as:
+Consider a simple query to retrieve the names and addresses of customers from a customers table:
+```sql
+SELECT name, address
+FROM customers
+```
+This query specifies that the database should retrieve the name and address columns from the customers table.
 
-\[
-C₂H₄: CH₂=CH₂
-\]
+### Query Clauses
+#### SELECT Clause
+The SELECT clause defines the columns or expressions to include in the output of the query. Multiple columns are separated by commas.
+```sql
+SELECT name, email, phone
+FROM customers
+```
+#### WHERE Clause
+The WHERE clause is used to filter the data. It specifies conditions that the data must meet to be included in the output.
+```sql
+SELECT *
+FROM customers
+WHERE country='USA'
+```
+This query retrieves all columns from the customers table where the country is 'USA'.
 
-### Functional Groups and IUPAC Nomenclature
-#### Definition
-Functional groups are specific groups of atoms within an organic molecule that determine its chemical properties and reactivity. The International Union of Pure and Applied Chemistry (IUPAC) has established guidelines for naming organic compounds based on functional groups, allowing for clear and consistent communication across the scientific community.
+#### JOIN Clause
+The JOIN clause is used to combine data from two or more tables based on a common column.
+```sql
+SELECT orders.order_id, customers.name
+FROM orders
+JOIN customers
+ON orders.customer_id=customers.customer_id
+```
+This query retrieves the order ID and name of customers from the orders and customers tables, respectively, based on the customer_id column.
 
-#### Example
-The compound glucose is named based on its functional group (-OH) at the end of the molecule. The roles of these groups dictate the names of the molecule, therefore glucose's existence includes the functional group '-ose'.
+### Advanced Query Concepts
 
-### Reaction Types
-#### Definition
-Reactions in organic chemistry involve the breaking and forming of covalent bonds, often among carbon atoms. There are several categories of these reactions including additions, substitutions, elimination, isomerization, and rearrangement.
+#### Subqueries
+A subquery is a query nested inside another query. It is used to perform complex operations on the data.
+```sql
+SELECT *
+FROM orders
+WHERE order_total > (
+  SELECT AVG(order_total)
+  FROM orders
+)
+```
+This query retrieves all orders with a total amount greater than the average order total.
 
-#### Example
-Simplifying, consider the electrophilic addition to an alkene in a reaction. An electrophile reacts with the alkene to create a product through an addition reaction where a single molecule is formed by the conjugation of two different molecules, resulting in a tetravalent carbocation intermediate.
+#### Grouping and Aggregates
+Grouping and aggregates are used to summarize and analyze data. Common aggregate functions include SUM, AVG, MAX, MIN, and COUNT.
+```sql
+SELECT product_name, SUM(quantity) as total_quantity
+FROM orders
+GROUP BY product_name
+```
+This query retrieves the product name and total quantity for each product in the orders table.
+
+## Formulas Reference
+
+$$
+\begin{align}
+\text{Query Plan} &= \text{SELECT Clause} + \text{FROM Clause} + \text{WHERE Clause} + \text{ORDER BY Clause} \\
+\text{JOIN Types} &= \text{INNER JOIN}, \text{LEFT JOIN}, \text{RIGHT JOIN}, \text{FULL OUTER JOIN} \\
+\text{Subquery Syntax} &= \text{SELECT statement} + \text{FROM clause} + \text{WHERE clause} + \text{GROUP BY clause}
+\end{align}
+$$

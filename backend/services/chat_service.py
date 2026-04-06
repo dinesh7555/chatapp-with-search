@@ -398,3 +398,13 @@ def clear_chat_code_problem(chat_id: str):
     """
     with get_neo4j_session() as session:
         session.run(query, chat_id=chat_id)
+
+def delete_chat_session(chat_id: str, user_id: int):
+    query = """
+    MATCH (u:User {user_id: $user_id})-[:HAS_CHAT_SESSION]->(c:ChatSession {chat_id: $chat_id})
+    OPTIONAL MATCH (c)-[:HAS_MESSAGE]->(m:Message)
+    DETACH DELETE c, m
+    """
+    with get_neo4j_session() as session:
+        session.run(query, chat_id=chat_id, user_id=user_id)
+        return True

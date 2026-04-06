@@ -8,7 +8,8 @@ export default function ChatSidebar({
   activeChatId,
   onSelectChat,
   onNewChat,
-  onSearch
+  onSearch,
+  onDeleteChat
 }) {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -81,6 +82,16 @@ export default function ChatSidebar({
             <div className="chat-title">
               {chat.title || "New Chat"}
             </div>
+            <button
+              className="delete-chat-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteChat(chat.chat_id);
+              }}
+              title="Delete Chat"
+            >
+              🗑️
+            </button>
           </div>
         ))}
       </div>

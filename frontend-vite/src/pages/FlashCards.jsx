@@ -102,21 +102,11 @@ const FlashCards = () => {
     };
 
     return (
-        <div className="flashcards-container">
-            {/* Background decoration */}
-            <div className="bg-decoration" aria-hidden="true">
-                <div className="bg-circle bg-circle-1" />
-                <div className="bg-circle bg-circle-2" />
-                <div className="bg-grid" />
-            </div>
-
+        <div className="flashcards-page">
             <div className="flashcards-inner">
-                <nav className="flash-nav">
-                    <button className="back-btn" onClick={() => navigate("/student-dashboard")}>
-                        ← Back to Dashboard
-                    </button>
-                    <h1 className="flash-title">Flash Cards</h1>
-                </nav>
+                <div className="flash-header-inline">
+                    <h1>Flash Cards</h1>
+                </div>
 
                 {error && <div className="flash-error">{error}</div>}
 

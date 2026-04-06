@@ -110,6 +110,16 @@ export async function searchChats(query, token) {
   return res.json();
 }
 
+export async function deleteChat(chatId, token) {
+  const res = await fetch(`${BASE_URL}/chat/${chatId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
 export async function logout() {
   const token = localStorage.getItem("token");
 
@@ -259,15 +269,12 @@ export async function getStudentState(token, subjectId, topic, studentId = null)
 
 /* ---------- SUBJECT/NOTES FUNCTIONS ---------- */
 
-export async function getNotes(subjectId, topic, refresh = false) {
+export async function getNotes(subjectId, topic) {
   const token = localStorage.getItem("token");
   const params = new URLSearchParams({
     subject_id: subjectId,
     topic,
   });
-  if (refresh) {
-    params.set("refresh", "true");
-  }
   const res = await fetch(`${BASE_URL}/subjects/notes?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,

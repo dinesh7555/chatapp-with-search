@@ -28,7 +28,7 @@ const CurriculumSidebar = ({ subjectData, currentTopic, onTopicSelect, onQuizSel
         {subjectData.units.map((chapter, uIdx) => (
           <div key={chapter.id} className="chapter-container">
             <div className="chapter-header">
-              <h4>{chapter.title}</h4>
+              <h4>{chapter.title?.replace(/Chapter/g, 'Unit') || `Unit ${uIdx + 1}`}</h4>
               <span className="chapter-status-icon success">✓</span>
             </div>
             

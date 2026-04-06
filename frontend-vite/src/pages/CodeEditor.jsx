@@ -170,28 +170,29 @@ solution();`;
     };
 
     return (
-        <div className="code-editor-layout">
-            <div className="code-editor-main">
-                <header className="code-editor-header">
-                    <div className="header-left">
-                        <button className="back-link" onClick={() => navigate(`/topic-view/${subjectId}/${topic}`)}>
-                            <span className="back-icon">‹</span> Back to Notes
+        <div className="code-editor-page">
+            <div className="editor-workspace-container">
+                <div className="editor-panel-header">
+                    <div className="eph-left">
+                        <button className="eph-back-btn" onClick={() => navigate(`/topic-view/${subjectId}/${topic}`)}>
+                            <span className="eph-back-icon">‹</span> Notes
                         </button>
-                        <div className="topic-info">
-                            <span className="subject-label">{subjectId?.toUpperCase()}</span>
-                            <h1>Coding: {topic}</h1>
+                        <div className="eph-info">
+                            <span className="eph-subject-pill">{subjectId?.toUpperCase()}</span>
+                            <span className="eph-topic-name">{topic}</span>
                         </div>
                     </div>
 
-                    <div className="header-actions">
-                        <button className="run-btn" onClick={runCode} disabled={isRunning}>
-                            <svg className="play-icon" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
+                    <div className="eph-right">
+                        <span className="eph-lang-badge">{subjectId === "java" ? "Java" : "JavaScript"}</span>
+                        <button className="eph-run-btn" onClick={runCode} disabled={isRunning}>
+                            <svg className="eph-play-icon" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" fill="currentColor" />
                             </svg>
-                            {isRunning ? "Running..." : "Run Code"}
+                            {isRunning ? "Running..." : "Run"}
                         </button>
                     </div>
-                </header>
+                </div>
 
                 <div className="editor-workspace">
                     <div className="editor-panel">

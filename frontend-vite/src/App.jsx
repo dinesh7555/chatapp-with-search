@@ -9,6 +9,7 @@ import TopicView from "./pages/TopicView";
 import CodeEditor from "./pages/CodeEditor";
 import MindmapPage from "./pages/MindmapPage";
 import FlashCards from "./pages/FlashCards";
+import StudentLayout from "./components/StudentLayout";
 import useHeartbeat from "./hooks/useHeartbeat";
 
 function App() {
@@ -42,17 +43,17 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<StudentDashboard />} />
-        <Route path="/student-dashboard" element={<StudentDashboard />} />
-        <Route path="/my-subjects" element={<MySubjects />} />
-        {/* <Route path="/my%20subjects" element={<MySubjects />} />
-        <Route path="/my subjects" element={<MySubjects />} /> */}
-        <Route path="/topic-view/:subjectId/:topic" element={<TopicView />} />
-        <Route path="/code-editor/:subjectId/:topic" element={<CodeEditor />} />
-        <Route path="/mindmap" element={<MindmapPage />} />
-        <Route path="/mindmap/:subjectId" element={<MindmapPage />} />
-        <Route path="/flashcards" element={<FlashCards />} />
-        <Route path="/flashcards/:subjectId" element={<FlashCards />} />
+        <Route element={<StudentLayout />}>
+          <Route path="/" element={<StudentDashboard />} />
+          <Route path="/student-dashboard" element={<StudentDashboard />} />
+          <Route path="/my-subjects" element={<MySubjects />} />
+          <Route path="/topic-view/:subjectId/:topic" element={<TopicView />} />
+          <Route path="/code-editor/:subjectId/:topic" element={<CodeEditor />} />
+          <Route path="/mindmap" element={<MindmapPage />} />
+          <Route path="/mindmap/:subjectId" element={<MindmapPage />} />
+          <Route path="/flashcards" element={<FlashCards />} />
+          <Route path="/flashcards/:subjectId" element={<FlashCards />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

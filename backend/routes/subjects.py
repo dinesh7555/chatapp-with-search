@@ -28,7 +28,6 @@ def get_subjects():
 async def get_topic_notes(
     subject_id: str = Query(...),
     topic: str = Query(...),
-    refresh: bool = Query(False, description="if true, regenerate and overwrite cached notes"),
     current_user = Depends(require_student)
 ):
     """
@@ -43,15 +42,6 @@ async def get_topic_notes(
         raise HTTPException(status_code=400, detail="Invalid topic for this subject")
 
     try:
-        if refresh:
-            # delete cache file so fetch_or_generate_notes will regenerate
-            from services.note_service import _sanitize_filename, NOTES_BASE_DIR
-            safe_subj = _sanitize_filename(subject_id)
-            safe_topic = _sanitize_filename(topic)
-            path = os.path.join(NOTES_BASE_DIR, safe_subj, f"{safe_topic}.md")
-            if os.path.isfile(path):
-                os.remove(path)
-
         notes = await fetch_or_generate_notes(subject_id, topic)
         return {"notes": notes}
     except Exception as e:

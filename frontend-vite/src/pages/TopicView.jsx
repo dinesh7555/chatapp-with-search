@@ -12,7 +12,8 @@ import {
     getQuestions,
     submitQuiz,
     getCodeProblem,
-    submitCode
+    submitCode,
+    deleteChat
 } from "../services/api";
 import ChatSidebar from "./ChatSidebar";
 import CurriculumSidebar from "../components/CurriculumSidebar";
@@ -62,8 +63,13 @@ const TopicView = () => {
 
     const [showHistory, setShowHistory] = useState(false);
     const [isNotesPanelOpen, setIsNotesPanelOpen] = useState(false);
-    const [notesWidth, setNotesWidth] = useState(50); // percentage
+    const [notesWidth, setNotesWidth] = useState(() => {
+        const saved = localStorage.getItem("preferredNotesWidth");
+        return saved ? parseFloat(saved) : 50;
+    });
+    const [resizingState, setResizingState] = useState(false);
     const isResizing = useRef(false);
+    const workspaceRef = useRef(null);
 
     const [topicDropdownOpen, setTopicDropdownOpen] = useState(false);
     const topicDropdownRef = useRef(null);
@@ -71,6 +77,7 @@ const TopicView = () => {
     const messagesEndRef = useRef(null);
 
     const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username") || "Student";
 
     // 🔹 Load subjects and hierarchy
     useEffect(() => {
@@ -103,6 +110,11 @@ const TopicView = () => {
         loadSubjects();
     }, [subjectId]);
 
+    const handleTopicSelect = (newTopic) => {
+        setIsCurriculumOpen(false);
+        navigate(`/topic-view/${subjectId}/${newTopic}`);
+    };
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (topicDropdownRef.current && !topicDropdownRef.current.contains(event.target)) {
@@ -115,8 +127,9 @@ const TopicView = () => {
 
     useEffect(() => {
         if (subjectId && topicParam) {
-            // Update localStorage to ensure API calls use the correct subject
-            localStorage.setItem("subject", subjectId.toLowerCase());
+            // Normalize subjectId for API calls (e.g. "Data Structures" -> "data_structures")
+            const normalizedSubject = subjectId.replace(/ |%20/g, "_").toLowerCase();
+            localStorage.setItem("subject", normalizedSubject);
 
             setTopic(topicParam);
             // Reset states for new topic
@@ -126,18 +139,32 @@ const TopicView = () => {
             setChatId(null);
 
             // Auto-load notes on mount as per user request
-            fetchNotes(subjectId, topicParam);
+            fetchNotes(normalizedSubject, topicParam);
             // Load sessions for history
             loadSessions().then(() => {
                 if (chatIdParam) {
                     handleSelectChat(chatIdParam);
                 } else {
                     // Automatically start/resume chat for the topic
-                    autoStartChat(subjectId, topicParam);
+                    autoStartChat(normalizedSubject, topicParam);
                 }
             });
         }
     }, [subjectId, topicParam, chatIdParam]);
+
+    // Global "App Lock" for Quiz/Code Challenges
+    useEffect(() => {
+        if (quizActive || codeProblemActive) {
+            document.body.classList.add("quiz-active-lock");
+        } else {
+            document.body.classList.remove("quiz-active-lock");
+        }
+
+        // Cleanup on unmount
+        return () => {
+            document.body.classList.remove("quiz-active-lock");
+        };
+    }, [quizActive, codeProblemActive]);
 
     useEffect(() => {
         if (chatId) {
@@ -155,27 +182,27 @@ const TopicView = () => {
 
     // Resizing Logic
     useEffect(() => {
-        if (!isResizing.current) return;
+        if (!resizingState) return;
 
         const handleMouseMove = (e) => {
-            const container = document.querySelector(".topic-view-container");
-            if (!container) return;
+            if (!workspaceRef.current) return;
+            const containerRect = workspaceRef.current.getBoundingClientRect();
+            let newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
 
-            const containerRect = container.getBoundingClientRect();
-            const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            // Constraints: 15% minimum, 85% maximum
+            if (newWidth < 15) newWidth = 15;
+            if (newWidth > 85) newWidth = 85;
 
-            if (newWidth > 15 && newWidth < 85) {
-                setNotesWidth(newWidth);
-            }
+            setNotesWidth(newWidth);
         };
 
         const handleMouseUp = () => {
             isResizing.current = false;
-            document.body.style.cursor = "default";
-            document.body.style.userSelect = "auto";
-            // Force a re-render to cleanup effect if needed, though ref change doesn't trigger it
-            // We use a state to track active resizing for the effect
             setResizingState(false);
+            document.body.classList.remove("resizing-active");
+            
+            // Persist preference
+            localStorage.setItem("preferredNotesWidth", notesWidth.toString());
         };
 
         document.addEventListener("mousemove", handleMouseMove);
@@ -185,15 +212,13 @@ const TopicView = () => {
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isResizing.current]); // This will be triggered by setResizingState
-
-    const [resizingState, setResizingState] = useState(false);
+    }, [resizingState, notesWidth]);
 
     const handleMouseDown = (e) => {
+        e.preventDefault();
         isResizing.current = true;
         setResizingState(true);
-        document.body.style.cursor = "col-resize";
-        document.body.style.userSelect = "none";
+        document.body.classList.add("resizing-active");
     };
 
     const fetchNotes = async (sId = subjectId, tName = topicParam) => {
@@ -222,7 +247,9 @@ const TopicView = () => {
     const autoStartChat = async (sId = subjectId, tName = topicParam) => {
         try {
             setLoading(true);
-            localStorage.setItem("subject", sId.toLowerCase());
+            const normalizedSubject = sId.replace(/ |%20/g, "_").toLowerCase();
+            localStorage.setItem("subject", normalizedSubject);
+            
             const data = await startChat(token, tName);
             setChatId(data.chat_id);
 
@@ -249,6 +276,9 @@ const TopicView = () => {
 
     const handleSelectChat = async (id) => {
         try {
+            const normalizedSubject = subjectId.replace(/ |%20/g, "_").toLowerCase();
+            localStorage.setItem("subject", normalizedSubject);
+            
             setChatId(id);
             const history = await getHistory(id, token);
 
@@ -287,6 +317,9 @@ const TopicView = () => {
 
     const handleNewChat = async () => {
         try {
+            const normalizedSubject = subjectId.replace(/ |%20/g, "_").toLowerCase();
+            localStorage.setItem("subject", normalizedSubject);
+
             // Clear current chat to start fresh for the same topic
             setMessages([]);
             setChatId(null);
@@ -310,6 +343,29 @@ const TopicView = () => {
         const res = await searchChats(query, token);
         setSearchResults(res.results || []);
         setIsSearching(true);
+    };
+
+    const handleDeleteChat = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this chat session?")) {
+            return;
+        }
+
+        try {
+            await deleteChat(id, token);
+            // Remove from local state
+            setSessions(prev => prev.filter(s => s.chat_id !== id));
+            
+            // If the deleted chat was the active one, reset
+            if (id === chatId) {
+                setChatId(null);
+                setMessages([]);
+                setQuizActive(false);
+                setCodeProblemActive(false);
+            }
+        } catch (err) {
+            console.error("Failed to delete chat", err);
+            alert("Failed to delete chat. Please try again.");
+        }
     };
 
     const handleSendMessage = async (e) => {
@@ -543,207 +599,137 @@ const TopicView = () => {
     };
 
     return (
-        <>
-            <div className={`topic-view-layout ${quizActive ? "content-blurred" : ""}`}>
-                <CurriculumSidebar 
-                    subjectData={subjectData} 
-                    currentTopic={topicParam}
-                    isOpen={isCurriculumOpen}
-                    onClose={() => setIsCurriculumOpen(false)}
-                    onTopicSelect={(t) => {
-                        navigate(`/topic-view/${subjectId}/${t}`);
-                        if (window.innerWidth < 1024) setIsCurriculumOpen(false);
-                    }}
-                    onQuizSelect={(qId) => console.log("Quiz select:", qId)}
-                />
-
-                {isCurriculumOpen && (
-                    <div 
-                        className="sidebar-overlay" 
-                        onClick={() => setIsCurriculumOpen(false)}
-                    />
-                )}
-                <div className="topic-view-main">
-                    <header className="topic-view-header">
-                        <div className="header-left">
+        <div className={`topic-view-page ${quizActive ? "content-blurred" : ""}`}>
+            <div className="topic-workspace" ref={workspaceRef}>
+                {/* Left Panel: Study Material & Navigation */}
+                <div className="workspace-panel left-panel" style={{ width: `${notesWidth}%` }}>
+                    <div className="panel-header-new">
+                        <div className="panel-header-left">
                             <button 
-                                className="curriculum-toggle-btn"
+                                className="hamburger-btn"
                                 onClick={() => setIsCurriculumOpen(true)}
-                                aria-label="Open Curriculum"
+                                aria-label="Open Topics"
                             >
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="3" y1="12" x2="21" y2="12"></line>
                                     <line x1="3" y1="6" x2="21" y2="6"></line>
                                     <line x1="3" y1="18" x2="21" y2="18"></line>
                                 </svg>
-                                <span>Chapters</span>
                             </button>
-                            <div className="header-divider" />
-                            <Link 
-                                to="/my-subjects" 
-                                className="back-link" 
-                                style={{ textDecoration: 'none', zIndex: 9999, position: 'relative' }}
-                                onClick={() => { window.location.href = "/my-subjects"; }}
-                            >
-                                <span className="back-icon">&lsaquo;</span> Subjects
-                            </Link>
-                            <div className="topic-info">
-                                <span className="subject-label">{subjectId?.toUpperCase()}</span>
-                                <h1>{topicParam}</h1>
-                            </div>
+                            <span className="panel-title-text">Study Notes</span>
                         </div>
-
-                        <div className="topic-dropdown-container" ref={topicDropdownRef}>
-                            <button
-                                className={`topic-dropdown-trigger ${topicDropdownOpen ? "active" : ""}`}
-                                onClick={() => setTopicDropdownOpen(!topicDropdownOpen)}
+                        <div className="panel-header-right">
+                             <button
+                                className="panel-code-btn"
+                                onClick={() => navigate(`/code-editor/${subjectId}/${topicParam}`)}
                             >
-                                <span className="current-topic-text">{topicParam}</span>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="chevron-icon">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                </svg>
+                                <code>&lt;/&gt;</code> Code
                             </button>
+                        </div>
+                    </div>
 
-                            {topicDropdownOpen && (
-                                <ul className="topic-dropdown-menu">
-                                    {allTopics.map((t) => (
-                                        <li
-                                            key={t}
-                                            className={`topic-dropdown-item ${t === topicParam ? "current" : ""}`}
-                                            onClick={() => {
-                                                navigate(`/topic-view/${subjectId}/${t}`);
-                                                setTopicDropdownOpen(false);
-                                            }}
-                                        >
-                                            <span className="topic-dot"></span>
-                                            {t}
-                                        </li>
-                                    ))}
-                                </ul>
+                    <div className="panel-content-area">
+                        <div className="notes-container markdown-body">
+                            {loadingNotes ? (
+                                <div className="loading-container">
+                                    <div className="spinner"></div>
+                                    <p>Loading {topic}...</p>
+                                </div>
+                            ) : (
+                                <ReactMarkdown components={{ code: CodeBlock }}>
+                                    {notes}
+                                </ReactMarkdown>
                             )}
                         </div>
+                    </div>
+                </div>
 
-                        <button
-                            className="nav-code-btn"
-                            onClick={() => navigate(`/code-editor/${subjectId}/${topicParam}`)}
-                        >
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="code-icon">
-                                <polyline points="16 18 22 12 16 6"></polyline>
-                                <polyline points="8 6 2 12 8 18"></polyline>
-                            </svg>
-                            Code
-                        </button>
+                {/* Resizer */}
+                <div className="workspace-resizer" onMouseDown={handleMouseDown}></div>
 
-                        <div className="header-actions">
-                            <button className="nav-code-btn" style={{marginRight: '10px'}} onClick={() => setIsNotesPanelOpen(true)}>
+                {/* Right Panel: AI Tutor */}
+                <div className="workspace-panel right-panel" style={{ width: `${100 - notesWidth}%` }}>
+                    <div className="panel-header-new">
+                        <div className="panel-header-left">
+                            <span className="ai-status-dot"></span>
+                            <span className="panel-title-text">AI Tutor</span>
+                        </div>
+                        <div className="panel-header-right">
+                             <button
+                                className="history-toggle-pill"
+                                onClick={() => setIsNotesPanelOpen(true)}
+                            >
                                 📝 My Notes
                             </button>
-                            <button className="history-toggle" onClick={() => setShowHistory(!showHistory)}>
-                                {showHistory ? "Hide History" : "Chat History"}
+                            <button
+                                className={`history-toggle-pill ${showHistory ? "active" : ""}`}
+                                onClick={() => setShowHistory(!showHistory)}
+                            >
+                                {showHistory ? "✖ Close Sidebar" : "📜 History"}
                             </button>
                         </div>
-                    </header>
+                    </div>
 
-                    <div className="topic-view-container split-view">
-                        {/* Left Panel: Notes */}
-                        <div className="notes-panel" style={{ width: `${notesWidth}%`, flex: "none" }}>
-                            <div className="panel-header">
-                                <h2>Notes</h2>
-                            </div>
-                            <div className="notes-content markdown-body">
-                                {loadingNotes ? (
-                                    <div className="loading-container">
-                                        <div className="spinner"></div>
-                                        <p>Preparing study material for {topic}...</p>
+                    <div className="chat-workspace-body">
+                        <div className={`history-sidebar-inline ${showHistory ? "open" : ""}`}>
+                            <ChatSidebar
+                                sessions={isSearching ? searchResults : sessions}
+                                activeChatId={chatId}
+                                onSelectChat={handleSelectChat}
+                                onNewChat={handleNewChat}
+                                onSearch={handleSearch}
+                                onDeleteChat={handleDeleteChat}
+                            />
+                        </div>
+                        
+                        <div className="chat-interface-new">
+                            <div className="chat-messages">
+                                {messages.length === 0 ? (
+                                    <div className="chat-welcome">
+                                        <div className="welcome-bot-icon">🤖</div>
+                                        <h3>Hello, {username}!</h3>
+                                        <p>I'm your {subjectData?.name} tutor. How can I help you with <strong>{topicParam}</strong> today?</p>
+                                        <div className="suggested-prompts">
+                                            <button onClick={() => setInput(`Explain ${topicParam} in simple terms`)}>Explain in simple terms</button>
+                                            <button onClick={() => setInput(`Give me a real-world example of ${topicParam}`)}>Real-world example</button>
+                                        </div>
                                     </div>
                                 ) : (
-                                    <ReactMarkdown 
-                                        components={{
-                                            code: CodeBlock
-                                        }}
-                                    >
-                                        {notes}
-                                    </ReactMarkdown>
+                                    messages
+                                        .filter(msg => !msg.text.startsWith("[SYSTEM:"))
+                                        .map((msg, i) => (
+                                            <div key={i} className={`message-bubble ${msg.sender}`}>
+                                                <div className="bubble-content">
+                                                    <ReactMarkdown components={{ code: CodeBlock }}>
+                                                        {msg.text}
+                                                    </ReactMarkdown>
+                                                </div>
+                                            </div>
+                                        ))
                                 )}
+                                {loading && (
+                                    <div className="message-bubble ai typing">
+                                        <div className="typing-dots"><span></span><span></span><span></span></div>
+                                    </div>
+                                )}
+                                <div ref={messagesEndRef} />
                             </div>
-                        </div>
 
-                        {/* Resizer Handle */}
-                        <div className="resizer-handle" onMouseDown={handleMouseDown}></div>
-
-                        {/* Right Panel: Chat */}
-                        <div className="chat-panel" style={{ width: `${100 - notesWidth}%`, flex: "none" }}>
-                            <div className="panel-header">
-                                <h2>AI Tutor</h2>
-                                <button
-                                    className={`history-toggle ${showHistory ? "active" : ""}`}
-                                    onClick={() => setShowHistory(!showHistory)}
-                                    title="Past Conversations"
-                                >
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="clock-icon">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
+                            <form className="chat-input-row" onSubmit={handleSendMessage}>
+                                <input
+                                    type="text"
+                                    placeholder={quizActive || codeProblemActive ? "Complete challenge..." : "Message AI Tutor..."}
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    disabled={loading || quizActive || codeProblemActive}
+                                />
+                                <button type="submit" disabled={loading || !input.trim() || quizActive || codeProblemActive}>
+                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                                     </svg>
                                 </button>
-                            </div>
-
-                            <div className="chat-body-container">
-                                {showHistory && (
-                                    <ChatSidebar
-                                        sessions={isSearching ? searchResults : sessions}
-                                        activeChatId={chatId}
-                                        onSelectChat={handleSelectChat}
-                                        onNewChat={handleNewChat}
-                                        onSearch={handleSearch}
-                                    />
-                                )}
-
-                                <div className="chat-interaction-area">
-                                    <div className="chat-messages">
-                                        {messages.length === 0 ? (
-                                            <div className="chat-empty">
-                                                Ask anything about <strong>{topic}</strong> to start learning!
-                                            </div>
-                                        ) : (
-                                            messages
-                                                .filter(msg => !msg.text.startsWith("[SYSTEM:"))
-                                                .map((msg, i) => (
-                                                    <div key={i} className={`message ${msg.sender}`}>
-                                                        <div className="message-content">
-                                                            <ReactMarkdown 
-                                                                components={{
-                                                                    code: CodeBlock
-                                                                }}
-                                                            >
-                                                                {msg.text}
-                                                            </ReactMarkdown>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                        )}
-                                        {loading && (
-                                            <div className="message ai typing">
-                                                <span className="dot">.</span>
-                                                <span className="dot">.</span>
-                                                <span className="dot">.</span>
-                                            </div>
-                                        )}
-                                        <div ref={messagesEndRef} />
-                                    </div>
-                                    <form className="chat-input-area" onSubmit={handleSendMessage}>
-                                        <input
-                                            type="text"
-                                            placeholder={quizActive || codeProblemActive ? "Please complete the challenge to continue chatting..." : "Ask a question..."}
-                                            value={input}
-                                            onChange={(e) => setInput(e.target.value)}
-                                            disabled={loading || quizActive || codeProblemActive}
-                                        />
-                                        <button type="submit" disabled={loading || !input.trim() || quizActive || codeProblemActive}>
-                                            Send
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -756,12 +742,23 @@ const TopicView = () => {
                     submitting={submittingCode}
                 />
             )}
+            <div 
+                className={`curriculum-overlay ${isCurriculumOpen ? "active" : ""}`} 
+                onClick={() => setIsCurriculumOpen(false)}
+            />
+            <CurriculumSidebar
+                isOpen={isCurriculumOpen}
+                onClose={() => setIsCurriculumOpen(false)}
+                subjectData={subjectData}
+                currentTopic={topicParam}
+                onTopicSelect={handleTopicSelect}
+            />
             <MyNotesPanel 
                 isOpen={isNotesPanelOpen} 
                 onClose={() => setIsNotesPanelOpen(false)} 
                 subjectId={subjectId} 
             />
-        </>
+        </div>
     );
 };
 

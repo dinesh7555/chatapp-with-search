@@ -9,19 +9,14 @@
         "text": "What is an Operating System?",
         "children": [
           {
-            "id": "definition-os",
-            "text": "Definition of an OS",
-            "description": "An operating system is a software that manages computer hardware and provides common services to computer programs."
+            "id": "def-of-os",
+            "text": "Definition of an Operating System",
+            "description": "An operating system is a software that manages computer hardware resources and provides common services to computer programs."
           },
           {
-            "id": "types-os",
-            "text": "Types of Operating Systems",
-            "description": "The types of operating systems include single-user, multi-user, and multi-tasking OS."
-          },
-          {
-            "id": "functions-os",
+            "id": "functions-of-os",
             "text": "Functions of an Operating System",
-            "description": "The primary functions of an operating system include process management, memory management, file management, and I/O management."
+            "description": "An operating system performs various functions such as process control, memory management, and file management."
           }
         ]
       },
@@ -30,19 +25,14 @@
         "text": "Process Management",
         "children": [
           {
-            "id": "process-concepts",
-            "text": "Process Concepts",
-            "description": "Process concepts include process creation, process control, and process termination."
+            "id": "process-creation",
+            "text": "Process Creation",
+            "description": "The process of creating a new process including creating a new process control block and allocating resources."
           },
           {
             "id": "process-synchronization",
             "text": "Process Synchronization",
-            "description": "Process synchronization techniques include monitor, semaphores, and locks."
-          },
-          {
-            "id": "deadlocks",
-            "text": "Deadlocks",
-            "description": "A deadlock is a situation where two or more processes are blocked, waiting for each other to release resources."
+            "description": " techniques to coordinate the activities of multiple processes such as semaphores, monitors, and locks."
           }
         ]
       },
@@ -51,14 +41,14 @@
         "text": "CPU Scheduling",
         "children": [
           {
-            "id": "cpu-scheduling-algorithms",
-            "text": "CPU Scheduling Algorithms",
-            "description": "CPU scheduling algorithms include First-Come-First-Served (FCFS), Shortest Job First (SJF), Priority Scheduling, and Round Robin (RR)."
+            "id": "scheduling-algorithms",
+            "text": "Scheduling Algorithms",
+            "description": "Algorithms used to decide which process to execute next, such as First-Come-First-Served, Shortest-Job-First, and Priority Scheduling."
           },
           {
-            "id": "cpu-scheduling-parameters",
-            "text": "CPU Scheduling Parameters",
-            "description": "CPU scheduling parameters include arrival time, burst time, and priority."
+            "id": "context-switching",
+            "text": "Context Switching",
+            "description": "The process of saving and restoring the state of a process to switch from one process to another."
           }
         ]
       },
@@ -67,30 +57,30 @@
         "text": "Memory Management",
         "children": [
           {
-            "id": "memory-management-techniques",
-            "text": "Memory Management Techniques",
-            "description": "Memory management techniques include contiguous allocation, fragmentation, and virtual memory."
+            "id": "memory-layout",
+            "text": "Memory Layout",
+            "description": "The way in which the memory is organized in a computer system, including the locations of code, data, and stacks."
           },
           {
-            "id": "paging",
-            "text": "Paging",
-            "description": "Paging is a memory management technique that divides the address space of a process into fixed-size blocks called pages."
+            "id": "memory-allocation",
+            "text": "Memory Allocation",
+            "description": "The process of allocating memory to a process, including Best-Fit, Worst-Fit, and First-Fit algorithms."
           }
         ]
       },
       {
-        "id": "virtual-memory",
-        "text": "Virtual Memory",
+        "id": "paging",
+        "text": "Paging",
         "children": [
           {
-            "id": "virtual-memory-concepts",
-            "text": "Virtual Memory Concepts",
-            "description": "Virtual memory concepts include page tables, page fault handling, and demand paging."
+            "id": "paging-mechanism",
+            "text": "Paging Mechanism",
+            "description": "A technique used to handle large virtual memory spaces by dividing it into fixed-size blocks called pages."
           },
           {
-            "id": "virtual-memory-advantages",
-            "text": "Virtual Memory Advantages",
-            "description": "Virtual memory advantages include improved memory utilization, reduced memory requirements, and improved program execution."
+            "id": "page-table",
+            "text": "Page Table",
+            "description": "A data structure used to keep track of the location of pages in physical memory."
           }
         ]
       },
@@ -99,14 +89,46 @@
         "text": "Segmentation",
         "children": [
           {
-            "id": "segmentation-techniques",
-            "text": "Segmentation Techniques",
-            "description": "Segmentation techniques include fixed-size segmentation and variable-size segmentation."
+            "id": "segment-mechanism",
+            "text": "Segment Mechanism",
+            "description": "A technique used to handle large virtual memory spaces by dividing it into variable-size segments."
           },
           {
-            "id": "segmentation-advantages",
-            "text": "Segmentation Advantages",
-            "description": "Segmentation advantages include improved memory utilization, reduced memory requirements, and improved program execution."
+            "id": "segmentation-table",
+            "text": "Segmentation Table",
+            "description": "A data structure used to keep track of the location of segments in physical memory."
+          }
+        ]
+      },
+      {
+        "id": "virtual-memory",
+        "text": "Virtual Memory",
+        "children": [
+          {
+            "id": "virtual-memory-advantages",
+            "text": "Advantages of Virtual Memory",
+            "description": "Advantages of using virtual memory include increased capacity, protection, and sharing."
+          },
+          {
+            "id": "virtual-memory-limitations",
+            "text": "Limitations of Virtual Memory",
+            "description": "Limitations of virtual memory include overhead, thrashing, and fragmentation."
+          }
+        ]
+      },
+      {
+        "id": "deadlocks",
+        "text": "Deadlocks",
+        "children": [
+          {
+            "id": "deadlock-definition",
+            "text": "Definition of Deadlock",
+            "description": "A situation in which two or more processes are blocked indefinitely, each waiting for the other to release a resource."
+          },
+          {
+            "id": "deadlock-avoidance",
+            "text": "Deadlock Avoidance",
+            "description": "Techniques to avoid deadlocks including resource ordering, priority inversion, and banker's algorithm."
           }
         ]
       },
@@ -117,12 +139,12 @@
           {
             "id": "disk-scheduling-algorithms",
             "text": "Disk Scheduling Algorithms",
-            "description": "Disk scheduling algorithms include First-Come-First-Served (FCFS), Shortest Seek Time First (SSTF), andSCAN."
+            "description": "Algorithms used to manage the requests for disk access, such as FIFO, Shortest-Seek-Time-First, and SCAN."
           },
           {
-            "id": "disk-scheduling-parameters",
-            "text": "Disk Scheduling Parameters",
-            "description": "Disk scheduling parameters include disk head movement, disk seek time, and disk rotation speed."
+            "id": "disk-mechanisms",
+            "text": "Disk Mechanisms",
+            "description": "Mechanisms used in disk scheduling including sector-based allocation, track-based allocation, and set-based allocation."
           }
         ]
       },
@@ -131,14 +153,14 @@
         "text": "File Systems",
         "children": [
           {
-            "id": "file-system-types",
-            "text": "File System Types",
-            "description": "File system types include hierarchical file systems, network file systems, and flash file systems."
+            "id": "file-system-components",
+            "text": "File System Components",
+            "description": "Components of a file system including the root directory, directories, files, and the file allocation table."
           },
           {
-            "id": "file-system-organization",
-            "text": "File System Organization",
-            "description": "File system organization includes directory hierarchy, file allocation, and file organization."
+            "id": "file-system-algorithms",
+            "text": "File System Algorithms",
+            "description": "Algorithms used in file systems including FAT, NTFS, and HFS."
           }
         ]
       }

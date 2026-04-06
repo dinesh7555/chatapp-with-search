@@ -72,15 +72,7 @@ const MindmapPage = () => {
 
     return (
         <div className="mindmap-page">
-            <div className="page-header">
-                <Link 
-                    to="/" 
-                    className="back-btn" 
-                    style={{ textDecoration: 'none', zIndex: 9999, position: 'relative' }}
-                    onClick={() => { window.location.href = "/"; }}
-                >
-                    &lsaquo; Dashboard
-                </Link>
+            <div className="mindmap-header-inline">
                 <h1>Subject Overviews</h1>
                 <p>Visualize your learning path with interactive mindmaps</p>
             </div>

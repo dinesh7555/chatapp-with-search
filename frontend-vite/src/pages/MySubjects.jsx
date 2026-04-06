@@ -37,23 +37,13 @@ const MySubjects = () => {
     if (error) return <div className="error">Error: {error}</div>;
 
     return (
-        <div className="subjects-container">
-            <Link 
-                to="/" 
-                className="back-btn" 
-                style={{ textDecoration: 'none', zIndex: 9999, position: 'relative' }}
-                onClick={(e) => {
-                    // Force navigation if the Link component doesn't handle it
-                    window.location.href = "/";
-                }}
-            >
-                &lsaquo; Back to Dashboard
-            </Link>
-
-            <h1>My Subjects</h1>
-            <p className="subjects-subtitle">
-                {subjects.length} subject{subjects.length !== 1 ? "s" : ""} enrolled
-            </p>
+        <div className="subjects-page">
+            <div className="subjects-header-inline">
+                <h1>My Subjects</h1>
+                <p className="subjects-subtitle">
+                    {subjects.length} subject{subjects.length !== 1 ? "s" : ""} enrolled
+                </p>
+            </div>
 
             <div className="subjects-rule">
                 <span className="subjects-rule-dot" />
@@ -64,29 +54,18 @@ const MySubjects = () => {
                     <div key={subject.name} className="subject-card">
                         <div className="subject-card-header">
                             <h2>{subject.name}</h2>
-                            <span className="subject-topic-count">
-                                {subject.topics.length} topic{subject.topics.length !== 1 ? "s" : ""}
-                            </span>
                         </div>
                         <div className="chapters-container">
-                            {subject.units && subject.units.map((chapter, index) => (
-                                <div key={chapter.id} className="chapter-group">
-                                    <h3 className="chapter-card-title">
-                                        {chapter.title}
+                            {subject.units && subject.units.map((unit) => (
+                                <div 
+                                    key={unit.id} 
+                                    className="unit-group"
+                                    onClick={() => handleTopicClick(subject.id, unit.topics[0])}
+                                >
+                                    <h3 className="unit-card-title">
+                                        {unit.title.replace(/CHAPTER/g, 'UNIT').replace(/Chapter/g, 'Unit')}
                                     </h3>
-                                    <ul className="topics-list">
-                                        {chapter.topics.map((topic) => (
-                                            <li
-                                                key={topic}
-                                                className="topic-item"
-                                                onClick={() => handleTopicClick(subject.id, topic)}
-                                            >
-                                                <span className="topic-name">{topic.replace(/-/g, ' ')}</span>
-                                                <span className="topic-arrow">→</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    {index < subject.units.length - 1 && <div className="chapter-divider" />}
+                                    <span className="unit-action-arrow">→</span>
                                 </div>
                             ))}
                         </div>

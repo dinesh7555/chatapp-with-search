@@ -15,7 +15,8 @@ from services.chat_service import (
     clear_chat_quiz,
     set_chat_code_problem,
     get_chat_code_problem,
-    clear_chat_code_problem
+    clear_chat_code_problem,
+    delete_chat_session
 )
 from services.metrics_service import (
     calculate_metrics,
@@ -800,4 +801,13 @@ async def submit_code(
         return {"status": "success", "message": "Code evaluated and saved.", "feedback": feedback}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+@router.delete("/{chat_id}")
+def delete_chat(chat_id: str, current_user = Depends(require_student)):
+    try:
+        # The service function checks if the chat belongs to the user
+        delete_chat_session(chat_id, current_user.id)
+        return {"status": "success", "message": "Chat session deleted."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 

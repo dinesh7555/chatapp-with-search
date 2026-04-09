@@ -190,14 +190,8 @@ SUBJECT_CURRICULUM = {
             {
                 "id": "js_unit_1",
                 "title": "Chapter I: Core Concepts",
-                "topics": ["basics", "dom-manipulation"],
+                "topics": ["introduction-and-variables", "datatypes", "loops"],
                 "quiz": {"id": "js_quiz_1", "title": "Quiz 1"}
-            },
-            {
-                "id": "js_unit_2",
-                "title": "Chapter II: Async & ES6",
-                "topics": ["async-js", "promises-await"],
-                "quiz": {"id": "js_quiz_2", "title": "Quiz 2"}
             }
         ]
     },

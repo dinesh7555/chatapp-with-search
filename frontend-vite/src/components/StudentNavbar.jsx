@@ -85,8 +85,8 @@ const SubjectsNavDropdown = () => {
         }
     };
 
-    const handleTopicClick = (subject, topic) => {
-        navigate(`/topic-view/${subject.id}/${topic}`);
+    const handleUnitClick = (subject, unit) => {
+        navigate(`/unit-topics/${subject.id}/${unit.id}`);
         setSubjectMenuOpen(false);
         setSelectedSubject(null);
         setTopicMenuOpen(false);
@@ -156,7 +156,7 @@ const SubjectsNavDropdown = () => {
                             <li
                                 key={unit.id}
                                 className="nav-unit-item"
-                                onClick={() => handleTopicClick(selectedSubject, unit.topics[0])}
+                                onClick={() => handleUnitClick(selectedSubject, unit)}
                             >
                                 <span className="nav-topic-dot">•</span>
                                 <span className="nav-unit-name">{unit.title?.replace(/Chapter/g, 'Unit') || "Untitled Unit"}</span>

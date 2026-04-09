@@ -9,6 +9,7 @@ import TopicView from "./pages/TopicView";
 import CodeEditor from "./pages/CodeEditor";
 import MindmapPage from "./pages/MindmapPage";
 import FlashCards from "./pages/FlashCards";
+import UnitTopics from "./pages/UnitTopics";
 import StudentLayout from "./components/StudentLayout";
 import useHeartbeat from "./hooks/useHeartbeat";
 
@@ -47,6 +48,7 @@ function App() {
           <Route path="/" element={<StudentDashboard />} />
           <Route path="/student-dashboard" element={<StudentDashboard />} />
           <Route path="/my-subjects" element={<MySubjects />} />
+          <Route path="/unit-topics/:subjectId/:unitId" element={<UnitTopics />} />
           <Route path="/topic-view/:subjectId/:topic" element={<TopicView />} />
           <Route path="/code-editor/:subjectId/:topic" element={<CodeEditor />} />
           <Route path="/mindmap" element={<MindmapPage />} />

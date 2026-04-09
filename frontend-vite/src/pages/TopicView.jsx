@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+
 import {
     getNotes,
     startChat,
@@ -40,6 +46,14 @@ const TopicView = () => {
     const [chatId, setChatId] = useState(null);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
+    const [pdfUrl, setPdfUrl] = useState(null);
+    const [numPages, setNumPages] = useState(null);
+    const [pageNumber, setPageNumber] = useState(1);
+
+    const onDocumentLoadSuccess = ({ numPages }) => {
+        setNumPages(numPages);
+    };
+
     const [loading, setLoading] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
@@ -78,6 +92,22 @@ const TopicView = () => {
 
     const token = localStorage.getItem("token");
     const username = localStorage.getItem("username") || "Student";
+
+    const pdfWrapperRef = useRef(null);
+    const [pdfWidth, setPdfWidth] = useState(null);
+
+    useEffect(() => {
+        const observer = new ResizeObserver((entries) => {
+            if (entries[0]) {
+                setPdfWidth(entries[0].contentRect.width - 20); // padding adjustment for scrollbars
+            }
+        });
+        if (pdfWrapperRef.current) {
+            observer.observe(pdfWrapperRef.current);
+        }
+        return () => observer.disconnect();
+    }, [pdfUrl, isCurriculumOpen, notesWidth]);
+
 
     // 🔹 Load subjects and hierarchy
     useEffect(() => {
@@ -134,12 +164,15 @@ const TopicView = () => {
             setTopic(topicParam);
             // Reset states for new topic
             setNotes("");
+            setPdfUrl(null);
+            setNumPages(null);
+            setPageNumber(1);
             setLoadingNotes(true);
             setMessages([]);
             setChatId(null);
 
             // Auto-load notes on mount as per user request
-            fetchNotes(normalizedSubject, topicParam);
+            fetchNotesOrPdf(normalizedSubject, topicParam);
             // Load sessions for history
             loadSessions().then(() => {
                 if (chatIdParam) {
@@ -221,9 +254,22 @@ const TopicView = () => {
         document.body.classList.add("resizing-active");
     };
 
-    const fetchNotes = async (sId = subjectId, tName = topicParam) => {
+    const fetchNotesOrPdf = async (sId = subjectId, tName = topicParam) => {
         try {
             setLoadingNotes(true);
+            const url = `/pdfs/${sId}/${tName}.pdf`;
+            const res = await fetch(url, { method: 'HEAD' });
+            if (res.ok) {
+                setPdfUrl(url);
+                setLoadingNotes(false);
+                return;
+            }
+        } catch (err) {
+            console.error("PDF check failed, falling back to LLM notes:", err);
+        }
+
+        setPdfUrl(null);
+        try {
             const data = await getNotes(sId, tName);
             // Change data.content to data.notes to match backend response
             setNotes(data.notes || "No notes available for this topic.");
@@ -630,10 +676,46 @@ const TopicView = () => {
 
                     <div className="panel-content-area">
                         <div className="notes-container markdown-body">
-                            {loadingNotes ? (
+                            {loadingNotes && !pdfUrl ? (
                                 <div className="loading-container">
                                     <div className="spinner"></div>
                                     <p>Loading {topic}...</p>
+                                </div>
+                            ) : pdfUrl ? (
+                                <div className="pdf-viewer-container">
+                                    <div className="pdf-viewer-controls" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', padding: '10px', background: '#f5f5f5', borderRadius: '8px', marginBottom: '15px' }}>
+                                        <button 
+                                            disabled={pageNumber <= 1} 
+                                            onClick={() => setPageNumber(prev => prev - 1)}
+                                            style={{ padding: '8px 16px', border: 'none', background: pageNumber <= 1 ? '#ccc' : '#4f46e5', color: '#fff', borderRadius: '5px', cursor: pageNumber <= 1 ? 'not-allowed' : 'pointer' }}
+                                        >
+                                            ← Previous
+                                        </button>
+                                        <span style={{ fontWeight: 'bold' }}>
+                                            Page {pageNumber} of {numPages || '--'}
+                                        </span>
+                                        <button 
+                                            disabled={pageNumber >= numPages} 
+                                            onClick={() => setPageNumber(prev => prev + 1)}
+                                            style={{ padding: '8px 16px', border: 'none', background: pageNumber >= numPages ? '#ccc' : '#4f46e5', color: '#fff', borderRadius: '5px', cursor: pageNumber >= numPages ? 'not-allowed' : 'pointer' }}
+                                        >
+                                            Next →
+                                        </button>
+                                    </div>
+                                    <div ref={pdfWrapperRef} style={{ display: 'flex', justifyContent: 'center', width: '100%', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', minHeight: '600px', backgroundColor: '#e5e4e2' }}>
+                                        <Document
+                                            file={pdfUrl}
+                                            onLoadSuccess={onDocumentLoadSuccess}
+                                            loading={<div className="spinner"></div>}
+                                        >
+                                            <Page 
+                                                pageNumber={pageNumber} 
+                                                renderTextLayer={true} 
+                                                renderAnnotationLayer={true} 
+                                                width={pdfWidth}
+                                            />
+                                        </Document>
+                                    </div>
                                 </div>
                             ) : (
                                 <ReactMarkdown components={{ code: CodeBlock }}>

@@ -28,9 +28,9 @@ const MySubjects = () => {
         fetchSubjects();
     }, []);
 
-    const handleTopicClick = (subjectId, topic) => {
-        console.log(`Viewing integrated topic view for ${subjectId} - ${topic}`);
-        navigate(`/topic-view/${subjectId.toLowerCase()}/${topic}`);
+    const handleUnitClick = (subjectId, unitId) => {
+        console.log(`Viewing topics for unit ${unitId} in subject ${subjectId}`);
+        navigate(`/unit-topics/${subjectId.toLowerCase()}/${unitId}`);
     };
 
     if (loading) return <div className="loading">Loading subjects...</div>;
@@ -60,7 +60,7 @@ const MySubjects = () => {
                                 <div 
                                     key={unit.id} 
                                     className="unit-group"
-                                    onClick={() => handleTopicClick(subject.id, unit.topics[0])}
+                                    onClick={() => handleUnitClick(subject.id, unit.id)}
                                 >
                                     <h3 className="unit-card-title">
                                         {unit.title.replace(/CHAPTER/g, 'UNIT').replace(/Chapter/g, 'Unit')}

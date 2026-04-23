@@ -1,3 +1,4 @@
+import { apiFetch } from '../services/api';
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { getMindmap } from "../services/api";
@@ -27,7 +28,7 @@ const MindmapPage = () => {
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/subjects/`);
+                const response = await apiFetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/subjects/`);
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 setSubjects(data.subjects || []);
@@ -73,7 +74,7 @@ const MindmapPage = () => {
     return (
         <div className="mindmap-page">
             <div className="mindmap-header-inline">
-                <h1>Subject Overviews</h1>
+                <h1>Academic Subject Overviews</h1>
                 <p>Visualize your learning path with interactive mindmaps</p>
             </div>
 
@@ -100,7 +101,7 @@ const MindmapPage = () => {
                             {SUBJECT_ICONS[subjectId.toLowerCase()] || SUBJECT_ICONS.default} {subjectId.toUpperCase()} Mindmap
                         </h2>
                         <button className="change-subject-btn" onClick={() => navigate("/mindmap")}>
-                            Change Subject
+                            Change Academic Subject
                         </button>
                     </div>
 

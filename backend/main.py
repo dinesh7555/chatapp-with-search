@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import user, chat, search, subjects, resource, compiler, mynotes, activity
+from routes import user, chat, search, subjects, resource, compiler, mynotes, activity, personalized_course
 
 # 🔴 ADD THESE IMPORTS
 from database import engine, Base
@@ -21,7 +21,8 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://172.168.11.8:3000",
         "http://172.168.12.102:3000",
-        "http://172.168.11.5:3000"
+        "http://172.168.11.5:3000",
+        "http://172.168.15.119:3000"
     ],
     # allow_credentials=False,
     allow_methods=["*"],
@@ -36,6 +37,7 @@ app.include_router(resource.router)
 app.include_router(compiler.router)
 app.include_router(mynotes.router, prefix="/mynotes", tags=["MyNotes"])
 app.include_router(activity.router)
+app.include_router(personalized_course.router)
 print(">>> Routers loaded")
 
 # 🔴 ADD THIS BLOCK

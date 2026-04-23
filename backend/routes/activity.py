@@ -46,14 +46,10 @@ def get_activity_stats(
     if not profile:
         raise HTTPException(status_code=404, detail="Student profile not found")
 
-    # Check if streak is still valid (if not active today and yesterday, streak broke)
-    today = date.today()
-    last_active = profile.last_active_date.date() if profile.last_active_date else None
-    
-    if last_active and last_active < today - timedelta(days=1):
-        # If user didn't log in yesterday, reset streak (but don't reset if they're viewing it TODAY)
-        # Actually, let's just reset when they log in/heartbeat.
-        pass
+    # Use the service to handle new-day resets and sentinel initialization
+    profile = update_user_activity(db, current_user.id, is_heartbeat=False)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Student profile not found")
 
     return {
         "current_streak": profile.current_streak,

@@ -1,3 +1,4 @@
+import { apiFetch } from '../services/api';
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./MySubjects.css";
@@ -12,12 +13,18 @@ const MySubjects = () => {
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
-                const response = await fetch(`${BASE_URL}/subjects/`);
+                const token = localStorage.getItem("token");
+                const response = await apiFetch(`${BASE_URL}/subjects/`, {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                });
                 if (!response.ok) {
                     throw new Error("Failed to fetch subjects");
                 }
                 const data = await response.json();
-                setSubjects(data.subjects);
+                const academicOnly = (data.subjects || []).filter(s => !s.is_personalized);
+                setSubjects(academicOnly);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -28,9 +35,14 @@ const MySubjects = () => {
         fetchSubjects();
     }, []);
 
-    const handleTopicClick = (subjectId, topic) => {
-        console.log(`Viewing integrated topic view for ${subjectId} - ${topic}`);
-        navigate(`/topic-view/${subjectId.toLowerCase()}/${topic}`);
+    const handleTopicClick = (subject, topic) => {
+        if (subject.is_personalized) {
+            console.log(`Viewing personalized course ${subject.id}`);
+            navigate(`/personalized/course/${subject.id}`);
+            return;
+        }
+        console.log(`Viewing integrated topic view for ${subject.id} - ${topic}`);
+        navigate(`/topic-view/${subject.id.toLowerCase()}/${topic}`);
     };
 
     if (loading) return <div className="loading">Loading subjects...</div>;
@@ -39,7 +51,7 @@ const MySubjects = () => {
     return (
         <div className="subjects-page">
             <div className="subjects-header-inline">
-                <h1>My Subjects</h1>
+                <h1>Academic Subjects</h1>
                 <p className="subjects-subtitle">
                     {subjects.length} subject{subjects.length !== 1 ? "s" : ""} enrolled
                 </p>
@@ -60,7 +72,7 @@ const MySubjects = () => {
                                 <div 
                                     key={unit.id} 
                                     className="unit-group"
-                                    onClick={() => handleTopicClick(subject.id, unit.topics[0])}
+                                    onClick={() => handleTopicClick(subject, unit.topics[0])}
                                 >
                                     <h3 className="unit-card-title">
                                         {unit.title.replace(/CHAPTER/g, 'UNIT').replace(/Chapter/g, 'Unit')}

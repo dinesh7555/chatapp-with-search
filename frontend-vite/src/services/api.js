@@ -1,5 +1,45 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+/* ---------- HELPER ---------- */
+
+/**
+ * Global handler for 401 Unauthorized responses.
+ * Clears local storage and forces a hard redirect to the login page.
+ */
+function handle401() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("username");
+  localStorage.setItem("sessionExpired", "true");
+  // Hard reload to reset app state and trigger redirect to Auth
+  window.location.href = "/";
+}
+
+export async function apiFetch(url, options = {}) {
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    handle401();
+    throw new Error("Session expired");
+  }
+  return res;
+}
+
+export async function verifyToken(token) {
+  if (!token) return { status: "error", detail: "No token" };
+  try {
+    const res = await fetch(`${BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (res.status === 401) {
+      handle401();
+      return { status: "error", detail: "Expired" };
+    }
+    return res.json();
+  } catch (err) {
+    return { status: "error", detail: err.message };
+  }
+}
+
 /* ---------- AUTH ---------- */
 
 export async function registerUser(data) {
@@ -20,14 +60,13 @@ export async function loginUser(data) {
   return res.json();
 }
 
-
 function getSubject() {
   return localStorage.getItem("subject") || "physics";
 }
 
 export async function startChat(token, topic) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/start?subject_id=${subject}&topic=${encodeURIComponent(topic)}`, {
+  const res = await apiFetch(`${BASE_URL}/chat/start?subject_id=${subject}&topic=${encodeURIComponent(topic)}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -38,7 +77,7 @@ export async function startChat(token, topic) {
 
 export async function sendMessage(chatId, message, token) {
   const subject = getSubject();
-  const res = await fetch(
+  const res = await apiFetch(
     `${BASE_URL}/chat/${chatId}/message/stream?subject_id=${subject}`, {
     method: "POST",
     headers: {
@@ -52,7 +91,7 @@ export async function sendMessage(chatId, message, token) {
 
 export async function sendMessageStream(chatId, message, token) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/message/stream?subject_id=${subject}`, {
+  const res = await apiFetch(`${BASE_URL}/chat/${chatId}/message/stream?subject_id=${subject}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -66,7 +105,7 @@ export async function sendMessageStream(chatId, message, token) {
 
 export async function getHistory(chatId, token) {
   const subject = getSubject();
-  const res = await fetch(
+  const res = await apiFetch(
     `${BASE_URL}/chat/${chatId}/history?subject_id=${subject}`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -75,11 +114,9 @@ export async function getHistory(chatId, token) {
   return res.json();
 }
 
-
-
 export async function getChatSessions(token) {
   const subject = getSubject();
-  const res = await fetch(
+  const res = await apiFetch(
     `${BASE_URL}/chat/sessions?subject_id=${subject}`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -89,7 +126,7 @@ export async function getChatSessions(token) {
 }
 
 export async function getAllChatSessions(token) {
-  const res = await fetch(`${BASE_URL}/chat/sessions/all`, {
+  const res = await apiFetch(`${BASE_URL}/chat/sessions/all`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -99,7 +136,7 @@ export async function getAllChatSessions(token) {
 
 export async function searchChats(query, token) {
   const subject = getSubject();
-  const res = await fetch(
+  const res = await apiFetch(
     `${BASE_URL}/search?subject_id=${subject}&q=${encodeURIComponent(query)}`,
     {
       headers: {
@@ -111,7 +148,7 @@ export async function searchChats(query, token) {
 }
 
 export async function deleteChat(chatId, token) {
-  const res = await fetch(`${BASE_URL}/chat/${chatId}`, {
+  const res = await apiFetch(`${BASE_URL}/chat/${chatId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -137,7 +174,7 @@ export async function logout() {
 /* ---------- ADMIN FUNCTIONS ---------- */
 
 export async function getUsers(token) {
-  const res = await fetch(`${BASE_URL}/auth/students`, {
+  const res = await apiFetch(`${BASE_URL}/auth/students`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -146,7 +183,7 @@ export async function getUsers(token) {
 }
 
 export async function deleteUser(userId, token) {
-  const res = await fetch(`${BASE_URL}/auth/users/${userId}`, {
+  const res = await apiFetch(`${BASE_URL}/auth/users/${userId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -156,7 +193,6 @@ export async function deleteUser(userId, token) {
 }
 
 export async function createUser(data, token) {
-  // Route based on role
   let endpoint = `${BASE_URL}/auth/register`;
 
   if (data.role === "admin") {
@@ -167,7 +203,7 @@ export async function createUser(data, token) {
     endpoint = `${BASE_URL}/auth/register/teacher`;
   }
 
-  const res = await fetch(endpoint, {
+  const res = await apiFetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -180,7 +216,7 @@ export async function createUser(data, token) {
 }
 
 export async function getAdmins(token) {
-  const res = await fetch(`${BASE_URL}/auth/admins`, {
+  const res = await apiFetch(`${BASE_URL}/auth/admins`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -203,7 +239,7 @@ export async function getStudents(token, filters = {}) {
     url += `?${queryString}`;
   }
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -212,7 +248,7 @@ export async function getStudents(token, filters = {}) {
 }
 
 export async function createStudent(data, token) {
-  const res = await fetch(`${BASE_URL}/auth/register/student`, {
+  const res = await apiFetch(`${BASE_URL}/auth/register/student`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -224,7 +260,7 @@ export async function createStudent(data, token) {
 }
 
 export async function updateStudentStatus(studentId, status, token) {
-  const res = await fetch(`${BASE_URL}/auth/students/${studentId}/status?status=${status}`, {
+  const res = await apiFetch(`${BASE_URL}/auth/students/${studentId}/status?status=${status}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -234,7 +270,7 @@ export async function updateStudentStatus(studentId, status, token) {
 }
 
 export async function getTeachers(token) {
-  const res = await fetch(`${BASE_URL}/auth/teachers`, {
+  const res = await apiFetch(`${BASE_URL}/auth/teachers`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -243,7 +279,7 @@ export async function getTeachers(token) {
 }
 
 export async function createTeacher(data, token) {
-  const res = await fetch(`${BASE_URL}/auth/register/teacher`, {
+  const res = await apiFetch(`${BASE_URL}/auth/register/teacher`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -259,7 +295,7 @@ export async function getStudentState(token, subjectId, topic, studentId = null)
   if (studentId) {
     url += `&student_id=${studentId}`;
   }
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -275,7 +311,7 @@ export async function getNotes(subjectId, topic) {
     subject_id: subjectId,
     topic,
   });
-  const res = await fetch(`${BASE_URL}/subjects/notes?${params.toString()}`, {
+  const res = await apiFetch(`${BASE_URL}/subjects/notes?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -288,7 +324,7 @@ export async function getNotes(subjectId, topic) {
 }
 
 export async function getMindmap(subjectId, token) {
-  const res = await fetch(`${BASE_URL}/subjects/${subjectId.toLowerCase()}/mindmap`, {
+  const res = await apiFetch(`${BASE_URL}/subjects/${subjectId.toLowerCase()}/mindmap`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -299,6 +335,7 @@ export async function getMindmap(subjectId, token) {
   }
   return res.json();
 }
+
 /* ---------- RESOURCE FUNCTIONS ---------- */
 
 export async function uploadResource(data, token) {
@@ -308,7 +345,7 @@ export async function uploadResource(data, token) {
   formData.append("subject", data.subject);
   formData.append("file", data.file);
 
-  const res = await fetch(`${BASE_URL}/resources/upload`, {
+  const res = await apiFetch(`${BASE_URL}/resources/upload`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -330,7 +367,7 @@ export async function getResources(token, filters = {}) {
     url += `?${queryString}`;
   }
 
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -339,7 +376,7 @@ export async function getResources(token, filters = {}) {
 }
 
 export async function deleteResource(resourceId, token) {
-  const res = await fetch(`${BASE_URL}/resources/${resourceId}`, {
+  const res = await apiFetch(`${BASE_URL}/resources/${resourceId}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -349,7 +386,7 @@ export async function deleteResource(resourceId, token) {
 }
 
 export async function downloadResource(resourceId, token) {
-  const res = await fetch(`${BASE_URL}/resources/download/${resourceId}`, {
+  const res = await apiFetch(`${BASE_URL}/resources/download/${resourceId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -360,7 +397,7 @@ export async function downloadResource(resourceId, token) {
 
 export async function generateQuestions(chatId, token) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/generate-questions?subject_id=${subject}`, {
+  const res = await apiFetch(`${BASE_URL}/chat/${chatId}/generate-questions?subject_id=${subject}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -371,7 +408,7 @@ export async function generateQuestions(chatId, token) {
 
 export async function getQuestions(chatId, token) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/questions?subject_id=${subject}`, {
+  const res = await apiFetch(`${BASE_URL}/chat/${chatId}/questions?subject_id=${subject}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -381,7 +418,7 @@ export async function getQuestions(chatId, token) {
 
 export async function submitQuiz(chatId, payload, token) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/submit-quiz?subject_id=${subject}`, {
+  const res = await apiFetch(`${BASE_URL}/chat/${chatId}/submit-quiz?subject_id=${subject}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -394,7 +431,7 @@ export async function submitQuiz(chatId, payload, token) {
 
 export async function getCodeProblem(chatId, token) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/code-problem?subject_id=${subject}`, {
+  const res = await apiFetch(`${BASE_URL}/chat/${chatId}/code-problem?subject_id=${subject}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -404,7 +441,7 @@ export async function getCodeProblem(chatId, token) {
 
 export async function submitCode(chatId, payload, token) {
   const subject = getSubject();
-  const res = await fetch(`${BASE_URL}/chat/${chatId}/submit-code?subject_id=${subject}`, {
+  const res = await apiFetch(`${BASE_URL}/chat/${chatId}/submit-code?subject_id=${subject}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -416,7 +453,7 @@ export async function submitCode(chatId, payload, token) {
 }
 
 export async function runCode(payload, token) {
-  const res = await fetch(`${BASE_URL}/compiler/run`, {
+  const res = await apiFetch(`${BASE_URL}/compiler/run`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -430,7 +467,7 @@ export async function runCode(payload, token) {
 /* ---------- MYNOTES FUNCTIONS ---------- */
 
 export async function createMyNote(title, subjectId, token) {
-  const res = await fetch(`${BASE_URL}/mynotes/`, {
+  const res = await apiFetch(`${BASE_URL}/mynotes/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -446,14 +483,14 @@ export async function getMyNotes(subjectId, token) {
   if (subjectId) {
     url += `?subject_id=${encodeURIComponent(subjectId)}`;
   }
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.json();
 }
 
 export async function updateMyNote(noteId, title, content, token) {
-  const res = await fetch(`${BASE_URL}/mynotes/${noteId}`, {
+  const res = await apiFetch(`${BASE_URL}/mynotes/${noteId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -465,7 +502,7 @@ export async function updateMyNote(noteId, title, content, token) {
 }
 
 export async function deleteMyNote(noteId, token) {
-  const res = await fetch(`${BASE_URL}/mynotes/${noteId}`, {
+  const res = await apiFetch(`${BASE_URL}/mynotes/${noteId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -475,7 +512,7 @@ export async function deleteMyNote(noteId, token) {
 /* ---------- ACTIVITY TRACKING ---------- */
 
 export async function sendHeartbeat(token) {
-  const res = await fetch(`${BASE_URL}/activity/heartbeat`, {
+  const res = await apiFetch(`${BASE_URL}/activity/heartbeat`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -485,10 +522,76 @@ export async function sendHeartbeat(token) {
 }
 
 export async function getActivityStats(token) {
-  const res = await fetch(`${BASE_URL}/activity/stats`, {
+  const res = await apiFetch(`${BASE_URL}/activity/stats`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+  return res.json();
+}
+
+/* ---------- PERSONALIZED COURSES ---------- */
+
+export async function startPersonalizedCourse(topic, token) {
+  const res = await apiFetch(`${BASE_URL}/personalized/start`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ topic }),
+  });
+  return res.json();
+}
+
+export async function answerOnboardingQuestion(courseId, answer, token) {
+  const res = await apiFetch(`${BASE_URL}/personalized/${courseId}/answer`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ answer }),
+  });
+  return res.json();
+}
+
+export async function generateSyllabus(courseId, token) {
+  const res = await apiFetch(`${BASE_URL}/personalized/${courseId}/generate_syllabus`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  return res.json();
+}
+
+export async function reviewSyllabus(courseId, approved, feedback, token) {
+  const res = await apiFetch(`${BASE_URL}/personalized/${courseId}/syllabus/review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ approved, feedback }),
+  });
+  return res.json();
+}
+
+export async function getModuleContent(courseId, moduleId, token) {
+  const res = await apiFetch(`${BASE_URL}/personalized/${courseId}/content/${moduleId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return res.json();
+}
+
+export async function getCourseState(courseId, token) {
+  const res = await apiFetch(`${BASE_URL}/personalized/${courseId}/state`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
   });
   return res.json();
 }

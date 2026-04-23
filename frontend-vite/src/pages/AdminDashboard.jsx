@@ -187,7 +187,7 @@ export default function AdminDashboard({ onLogout }) {
 
   async function handleViewStats(student) {
     if (filterSubject === "all" || filterTopic === "all") {
-      alert("Please select a specific Subject and Topic to view student stats.");
+      alert("Please select a specific Academic Subject and Topic to view student stats.");
       return;
     }
 
@@ -488,7 +488,7 @@ export default function AdminDashboard({ onLogout }) {
                 />
                 <input
                   className="admin-input"
-                  placeholder="Subject"
+                  placeholder="Academic Subject"
                   value={teacherSubject}
                   onChange={(e) => setTeacherSubject(e.target.value)}
                 />
@@ -665,7 +665,7 @@ export default function AdminDashboard({ onLogout }) {
                     value={filterSubject}
                     onChange={(e) => setFilterSubject(e.target.value)}
                   >
-                    <option value="all">All Subjects</option>
+                    <option value="all">All Academic Subjects</option>
                     <option value="operating_systems">Operating Systems</option>
                     <option value="database_management">Database Management</option>
                     <option value="computer_networks">Computer Networks</option>

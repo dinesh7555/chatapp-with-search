@@ -1,3 +1,4 @@
+import { apiFetch } from '../services/api';
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/api";
@@ -32,10 +33,16 @@ const SubjectsNavDropdown = () => {
         const fetchSubjects = async () => {
             setLoadingSubjects(true);
             try {
-                const response = await fetch(`${BASE_URL}/subjects/`);
+                const token = localStorage.getItem("token");
+                const response = await apiFetch(`${BASE_URL}/subjects/`, {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                });
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
-                setSubjects(data.subjects || []);
+                const academicOnly = (data.subjects || []).filter(s => !s.is_personalized);
+                setSubjects(academicOnly);
             } catch (err) {
                 console.error("Subjects fetch error:", err);
             } finally {
@@ -86,7 +93,11 @@ const SubjectsNavDropdown = () => {
     };
 
     const handleTopicClick = (subject, topic) => {
-        navigate(`/topic-view/${subject.id}/${topic}`);
+        if (subject.is_personalized) {
+            navigate(`/personalized/course/${subject.id}`);
+        } else {
+            navigate(`/topic-view/${subject.id}/${topic}`);
+        }
         setSubjectMenuOpen(false);
         setSelectedSubject(null);
         setTopicMenuOpen(false);
@@ -104,12 +115,12 @@ const SubjectsNavDropdown = () => {
                 onClick={() => navigate("/my-subjects")}
             >
                 <span className="nav-btn-icon">🎓</span>
-                <span>Subjects</span>
+                <span>Academic Subjects</span>
             </button>
 
             {subjectMenuOpen && (
                 <div className="nav-dropdown nav-subjects-panel" ref={subjectPanelRef}>
-                    <div className="nav-dropdown-header">My Subjects</div>
+                    <div className="nav-dropdown-header">My Academic Subjects</div>
                     {loadingSubjects ? (
                         <div className="nav-dropdown-loading">
                             {[1, 2, 3].map((i) => (
@@ -308,6 +319,11 @@ const StudentNavbar = ({ setIsNotesPanelOpen }) => {
 
                     <div className="nav-center">
                         <SubjectsNavDropdown />
+
+                        <button className="nav-btn" onClick={() => navigate("/personalized/onboarding")}>
+                            <span className="nav-btn-icon">🌟</span>
+                            <span>Explore New Topic</span>
+                        </button>
 
                         <button className="nav-btn" onClick={() => navigate("/mindmap")}>
                             <span className="nav-btn-icon">🧠</span>

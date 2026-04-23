@@ -1,3 +1,4 @@
+import { apiFetch } from '../services/api';
 
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -34,7 +35,7 @@ const FlashCards = () => {
         const fetchSubjects = async () => {
             setLoadingSubjects(true);
             try {
-                const response = await fetch(`${BASE_URL}/subjects/`);
+                const response = await apiFetch(`${BASE_URL}/subjects/`);
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 setSubjects(data.subjects || []);
@@ -61,7 +62,7 @@ const FlashCards = () => {
             setCurrentIndex(0);
             setIsFlipped(false);
             try {
-                const response = await fetch(`${BASE_URL}/subjects/${subjectId}/flashcards`, {
+                const response = await apiFetch(`${BASE_URL}/subjects/${subjectId}/flashcards`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -112,7 +113,7 @@ const FlashCards = () => {
 
                 {!subjectId ? (
                     <section className="subject-selection">
-                        <h2 className="selection-heading">Select a subject to start</h2>
+                        <h2 className="selection-heading">Select an Academic Subject to start</h2>
                         <div className="selection-grid">
                             {loadingSubjects ? (
                                 [1, 2, 3, 4].map(i => <div key={i} className="selection-skeleton" />)
@@ -136,7 +137,7 @@ const FlashCards = () => {
                     <section className="flashcard-viewer">
                         <div className="viewer-header">
                             <button className="change-subject-btn" onClick={() => navigate("/flashcards")}>
-                                Δ Change Subject
+                                Δ Change Academic Subject
                             </button>
                             <span className="current-subject-label">
                                 {SUBJECT_ICONS[subjectId.toLowerCase()] || SUBJECT_ICONS.default} {subjectId.toUpperCase()}

@@ -1,17 +1,15 @@
-<<<<<<< HEAD
-# AI Chat Application
+# AI-Powered Learning Management System (LMS)
 
-A full-stack web application for interactive AI-powered conversations with chat history management, topic extraction, and embedding-based search capabilities.
+A full-stack project providing a personalized learning experience through AI integration, interactive dashboards, and advanced learning tools.
 
-## Features
+## ✨ Core Features
 
-- **User Authentication**: Secure registration and login with JWT tokens
-- **Real-time Chat Interface**: Interactive chat with AI responses
-- **Chat History**: Persistent storage of conversations
-- **Topic Extraction**: Automatic topic detection using LLM
-- **Vector Embeddings**: Semantic search across chat messages
-- **Chat Management**: Create, retrieve, and manage multiple chat sessions
-- **Auto-generated Titles**: Automatic chat session titles based on first 3 messages
+- **Personalized AI Learning Assistant**: Real-time AI tutoring with personalized context.
+- **Multi-Role Dashboards**: Customized views for Students, Teachers, and Admins.
+- **Advanced Learning Tools**: Integrated Quizzes, Flashcards, Mindmaps, and Code Compiler.
+- **Analytics & Tracking**: Competency radar, skill proficiency tracking, and daily streaks.
+- **AI-Driven Analytics**: Semantic search, automated topic extraction, and RAG-based responses.
+- **Secure Authentication**: Role-based access control with JWT tokens.
 
 ## Architecture
 
@@ -85,15 +83,6 @@ The application is built with a microservices architecture using Docker Compose:
 ├── docker-compose.yml
 ├── README.md
 └── package.json
-   # AI Chat — Repository Overview
-
-   This repository contains a full-stack AI chat application: a FastAPI backend that manages users, chat sessions, embeddings, and topics; and a React frontend (Vite) for an interactive chat UI. The project is configured to run locally or via Docker Compose.
-
-   ## Quick Links
-   - Frontend (Vite): [frontend-vite](frontend-vite)
-   - Backend: [backend](backend)
-   - Compose config: [docker-compose.yml](docker-compose.yml)
-
    ## Quick Start — Local (dev)
 
    1. Backend
@@ -120,36 +109,6 @@ The application is built with a microservices architecture using Docker Compose:
       - Frontend (dev server): http://localhost:5173 (Vite default)
       - Backend API: http://localhost:8000
       - API docs: http://localhost:8000/docs
-
-   ## Quick Start — Docker (recommended)
-
-   1. Copy or edit environment variables in `backend/.env.docker` and `frontend-vite/.env` as needed.
-
-   2. Build and run
-
-      ```bash
-      docker compose up --build
-      ```
-
-   3. Open
-
-      - Frontend: http://localhost:3000
-      - Backend: http://localhost:8000
-      - Neo4j Browser: http://localhost:7474
-
-   Notes: MySQL is exposed on 3306 by default in the compose file. Adjust firewall or host bindings if necessary.
-
-   ## Project Structure
-
-   Top-level folders and files:
-
-   ```
-   ai-chat-docker/
-   ├── backend/           # FastAPI backend (Python)
-   ├── frontend-vite/     # React + Vite frontend
-   ├── docker-compose.yml # Docker Compose orchestration
-   └── README.md          # This file
-   ```
 
    Backend important files and folders:
 

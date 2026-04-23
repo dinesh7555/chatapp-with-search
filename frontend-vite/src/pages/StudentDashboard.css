@@ -41,12 +41,13 @@
 
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 
-  min-height: 100vh;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
   background: var(--sepia-50);
   color: var(--ink);
   font-family: 'Georgia', 'Palatino Linotype', serif;
   position: relative;
-  overflow-x: clip;
 }
 
 /* ── Background Decorations ── */
@@ -497,95 +498,7 @@
 /* ══════════════════════════════════════
    STUDENT INFO BANNER
 ══════════════════════════════════════ */
-.student-info-banner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--surface);
-  border: 1.5px solid var(--border-strong);
-  color: var(--ink);
-  padding: 14px 24px;
-  border-radius: var(--radius-md);
-  margin-bottom: 32px;
-  font-family: system-ui, sans-serif;
-  box-shadow: var(--shadow-sm);
-  animation: fadeSlideUp 0.6s var(--ease-spring) 0.05s both;
-}
 
-.sib-left {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.sib-right {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  flex-wrap: wrap;
-}
-
-.sib-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-soft);
-}
-
-.sib-item strong {
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.sib-icon {
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-}
-
-.sib-attendance {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-}
-
-.sib-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--ink-muted);
-}
-
-.sib-bar-bg {
-  width: 120px;
-  height: 6px;
-  background: var(--sepia-200);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-
-.sib-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), #e8a44a);
-  border-radius: var(--radius-pill);
-}
-
-.sib-value {
-  font-weight: 700;
-  color: var(--ink);
-}
-
-@media (max-width: 900px) {
-  .student-info-banner {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-  }
-}
 
 /* ══════════════════════════════════════
    HERO SECTION
@@ -820,7 +733,7 @@
 ══════════════════════════════════════ */
 .quick-actions-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
   margin-top: 20px;
 }
@@ -857,6 +770,10 @@
 
 .action-syllabus::after {
   background: linear-gradient(90deg, #5f8a4e, #7ab565);
+}
+
+.action-personalized::after {
+  background: linear-gradient(90deg, #f1c40f, #f39c12);
 }
 
 .action-card:hover {

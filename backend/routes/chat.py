@@ -16,7 +16,8 @@ from services.chat_service import (
     set_chat_code_problem,
     get_chat_code_problem,
     clear_chat_code_problem,
-    delete_chat_session
+    delete_chat_session,
+    is_personalized_subject
 )
 from services.metrics_service import (
     calculate_metrics,
@@ -235,12 +236,16 @@ def start_chat(
     current_user = Depends(require_student)
 ):
     subject_id = subject_id.replace(" ", "_").lower()
-    if subject_id not in ALLOWED_SUBJECTS:
+    is_pers = is_personalized_subject(subject_id)
+    
+    if subject_id not in ALLOWED_SUBJECTS and not is_pers:
         raise HTTPException(status_code=400, detail=f"Invalid subject: {subject_id}")
 
-    allowed_topics = SUBJECT_TOPICS.get(subject_id, [])
-    if topic not in allowed_topics:
-        raise HTTPException(status_code=400, detail="Invalid topic for this subject")
+    # Only validate topic against hardcoded list if it's not a personalized course
+    if not is_pers:
+        allowed_topics = SUBJECT_TOPICS.get(subject_id, [])
+        if topic not in allowed_topics:
+            raise HTTPException(status_code=400, detail="Invalid topic for this subject")
 
     # 🔹 Check for an existing empty chat session for this topic
     existing_chat_id = find_empty_chat_session(
@@ -454,7 +459,7 @@ async def send_message_stream(
     subject_id: str = Query(...),
     current_user = Depends(require_student)
 ):
-    if subject_id not in ALLOWED_SUBJECTS:
+    if subject_id not in ALLOWED_SUBJECTS and not is_personalized_subject(subject_id):
         raise HTTPException(status_code=400, detail="Invalid subject")
 
     # 1️⃣ Fetch history and check quiz status
@@ -495,7 +500,8 @@ async def send_message_stream(
     )
 
     # 5️⃣ DETECT TOPIC SHIFT / CONCLUSION (Auto-Quiz Trigger)
-    if len(history) >= 4:
+    is_pers = is_personalized_subject(subject_id)
+    if not is_pers and len(history) >= 4:
         is_shift = await detect_topic_shift(history, payload.message)
         if is_shift:
             # Trigger generation for the PREVIOUS history only (exclude current message)
@@ -599,7 +605,7 @@ def chat_history(
     current_user = Depends(require_student),
     subject_id: str = Query(...)
 ):
-    if subject_id not in ALLOWED_SUBJECTS:
+    if subject_id not in ALLOWED_SUBJECTS and not is_personalized_subject(subject_id):
         raise HTTPException(status_code=400, detail="Invalid subject")
 
     history = get_chat_history(chat_id, current_user.id, subject_id)
@@ -619,8 +625,11 @@ async def generate_chat_questions(
     subject_id: str = Query(...),
     current_user = Depends(require_student)
 ):
-    if subject_id not in ALLOWED_SUBJECTS:
+    if subject_id not in ALLOWED_SUBJECTS and not is_personalized_subject(subject_id):
         raise HTTPException(status_code=400, detail="Invalid subject")
+    
+    if is_personalized_subject(subject_id):
+        raise HTTPException(status_code=403, detail="Quizzes are managed by the course curriculum for personalized subjects.")
 
     # Check current status
     quiz_data_db = get_chat_quiz(chat_id)
@@ -664,7 +673,7 @@ async def get_chat_questions(
     subject_id: str = Query(...),
     current_user = Depends(require_student)
 ):
-    if subject_id not in ALLOWED_SUBJECTS:
+    if subject_id not in ALLOWED_SUBJECTS and not is_personalized_subject(subject_id):
         raise HTTPException(status_code=400, detail="Invalid subject")
     
     quiz_data_db = get_chat_quiz(chat_id)
@@ -681,7 +690,7 @@ async def submit_chat_quiz(
     subject_id: str = Query(...),
     current_user = Depends(require_student)
 ):
-    if subject_id not in ALLOWED_SUBJECTS:
+    if subject_id not in ALLOWED_SUBJECTS and not is_personalized_subject(subject_id):
         raise HTTPException(status_code=400, detail="Invalid subject")
 
     quiz_data_db = get_chat_quiz(chat_id)
@@ -716,7 +725,7 @@ async def submit_chat_quiz(
 
 @router.get("/sessions")
 def list_chat_sessions(subject_id: str = Query(...), current_user = Depends(require_student)):
-    if subject_id not in ALLOWED_SUBJECTS:
+    if subject_id not in ALLOWED_SUBJECTS and not is_personalized_subject(subject_id):
         raise HTTPException(status_code=400, detail="Invalid subject")
     sessions = get_user_chat_sessions(current_user.id, subject_id)
     return {
@@ -737,7 +746,7 @@ def get_student_topic_state(
     student_id: int = Query(None),
     current_user = Depends(require_roles("teacher", "admin"))
 ):
-    if subject_id not in ALLOWED_SUBJECTS:
+    if subject_id not in ALLOWED_SUBJECTS and not is_personalized_subject(subject_id):
         raise HTTPException(status_code=400, detail="Invalid subject")
     
     # If student_id is provided, use it. Otherwise use current user's ID

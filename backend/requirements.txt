@@ -14,3 +14,7 @@ numpy
 requests
 redis
 python-multipart
+langgraph
+langchain-openai
+langgraph-checkpoint-sqlite
+aiosqlite

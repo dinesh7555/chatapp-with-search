@@ -3,6 +3,15 @@ import uuid
 from datetime import datetime
 
 
+def is_personalized_subject(subject_id: str) -> bool:
+    """
+    Checks if a subject_id corresponds to a personalized course in Neo4j.
+    """
+    query = "MATCH (s:Subject {subject_id: $subject_id}) RETURN s.subject_id LIMIT 1"
+    with get_neo4j_session() as session:
+        result = session.run(query, subject_id=subject_id)
+        return result.single() is not None
+
 
 # def create_chat_session(user_id: int, subject_id: str, topic: str = None):
 #     chat_id = str(uuid.uuid4())
@@ -408,3 +417,160 @@ def delete_chat_session(chat_id: str, user_id: int):
     with get_neo4j_session() as session:
         session.run(query, chat_id=chat_id, user_id=user_id)
         return True
+
+def create_personalized_subject(user_id: int, course_id: str, topic: str):
+    """
+    Creates a new personalized subject node for the user in Neo4j, 
+    mapping the LangGraph course_id to a Subject/Topic representation.
+    """
+    query = """
+    MERGE (u:User {user_id: $user_id})
+    
+    // We treat personalized courses as a special type of subject for UI integration
+    CREATE (s:Subject {
+        subject_id: $course_id,
+        name: $topic,
+        is_personalized: true,
+        created_at: $created_at
+    })
+    
+    MERGE (u)-[:HAS_SUBJECT]->(s)
+    """
+    
+    with get_neo4j_session() as session:
+        session.run(
+            query,
+            user_id=user_id,
+            course_id=course_id,
+            topic=topic,
+            created_at=str(datetime.utcnow())
+        )
+    return course_id
+
+def store_course_module(course_id: str, module_idx: int, chapter_title: str, topic_title: str, content: str, quiz_json_list: list = None):
+    """
+    Caches the generated module content in Neo4j under its Unit and Topic.
+    """
+    import json
+    query = """
+    MATCH (s:Subject {subject_id: $course_id})
+    MERGE (u:Unit {title: $chapter_title, subject_id: $course_id})
+    MERGE (s)-[:HAS_UNIT]->(u)
+    MERGE (t:Topic {name: $topic_title, subject_id: $course_id})
+    MERGE (u)-[:HAS_TOPIC]->(t)
+    
+    MERGE (m:ModuleContent {course_id: $course_id, module_index: $module_idx})
+    SET m.content = $content, m.created_at = $created_at, m.quiz_data = $quiz_str
+    MERGE (t)-[:HAS_CONTENT]->(m)
+    """
+    with get_neo4j_session() as session:
+        session.run(
+            query,
+            course_id=course_id,
+            module_idx=int(module_idx),
+            chapter_title=chapter_title,
+            topic_title=topic_title,
+            content=content,
+            quiz_str=json.dumps(quiz_json_list) if quiz_json_list else "[]",
+            created_at=str(datetime.utcnow())
+        )
+
+def get_course_module(course_id: str, module_idx: int):
+    """
+    Retrieves cached module content from Neo4j if it exists based on the new explicit hierarchy.
+    """
+    import json
+    query = """
+    MATCH (s:Subject {subject_id: $course_id})-[:HAS_UNIT]->(u:Unit)-[:HAS_TOPIC]->(t:Topic)-[:HAS_CONTENT]->(m:ModuleContent {module_index: $module_idx})
+    RETURN m.content as content, m.quiz_data as quiz_data
+    """
+    with get_neo4j_session() as session:
+        result = session.run(query, course_id=course_id, module_idx=int(module_idx))
+        record = result.single()
+        if record:
+            return {
+                "content": record.get("content"),
+                "quiz": json.loads(record.get("quiz_data") or "[]")
+            }
+        return None
+
+def formalize_syllabus(user_id: int, course_id: str, topic: str, hierarchical_syllabus: list, learner_profile: dict = None):
+    """
+    Called upon syllabus approval. Creates the full skeleton of the course in Neo4j.
+    Subject -> Unit -> Topic
+    """
+    import json
+    query = """
+    MERGE (u:User {user_id: $user_id})
+    MERGE (s:Subject {subject_id: $course_id})
+    SET s.name = $topic, 
+        s.is_personalized = true, 
+        s.created_at = $created_at,
+        s.learner_profile = $profile_json
+    MERGE (u)-[:HAS_SUBJECT]->(s)
+    
+    WITH s
+    UNWIND $chapters AS chapter
+    MERGE (unit:Unit {title: chapter.chapter_title, subject_id: $course_id})
+    MERGE (s)-[:HAS_UNIT]->(unit)
+    SET unit.description = chapter.chapter_description
+    
+    WITH unit, chapter
+    UNWIND chapter.topics AS topic_data
+    MERGE (t:Topic {name: topic_data.title, subject_id: $course_id})
+    MERGE (unit)-[:HAS_TOPIC]->(t)
+    SET t.description = topic_data.description, t.topic_id = topic_data.id
+    """
+    with get_neo4j_session() as session:
+        session.run(
+            query,
+            user_id=user_id,
+            course_id=course_id,
+            topic=topic,
+            chapters=hierarchical_syllabus,
+            profile_json=json.dumps(learner_profile) if learner_profile else None,
+            created_at=str(datetime.utcnow())
+        )
+
+def get_course_details(course_id: str):
+    """
+    Retrieves the basic details of a course (topic, profile) from Neo4j.
+    """
+    import json
+    query = """
+    MATCH (s:Subject {subject_id: $course_id})
+    RETURN s.name AS topic, s.learner_profile AS profile_json
+    """
+    with get_neo4j_session() as session:
+        result = session.run(query, course_id=course_id)
+        record = result.single()
+        if record:
+            return {
+                "topic": record["topic"],
+                "learner_profile": json.loads(record["profile_json"]) if record["profile_json"] else {}
+            }
+    return None
+
+def get_formalized_syllabus(course_id: str):
+    """
+    Retrieves the full hierarchical syllabus from Neo4j for a given course_id.
+    """
+    query = """
+    MATCH (s:Subject {subject_id: $course_id})-[:HAS_UNIT]->(u:Unit)
+    MATCH (u)-[:HAS_TOPIC]->(t:Topic)
+    WITH u, t
+    ORDER BY t.topic_id  // Keep alphabetical or ID order if no sequence exists
+    RETURN u.title AS chapter_title, u.description AS chapter_description, 
+           collect({id: t.topic_id, title: t.name, description: t.description}) AS topics
+    """
+    
+    with get_neo4j_session() as session:
+        result = session.run(query, course_id=course_id)
+        chapters = []
+        for record in result:
+            chapters.append({
+                "chapter_title": record["chapter_title"],
+                "chapter_description": record["chapter_description"],
+                "topics": record["topics"]
+            })
+        return chapters

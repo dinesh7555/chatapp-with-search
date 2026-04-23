@@ -2,7 +2,27 @@ import React from 'react';
 import './CurriculumSidebar.css';
 
 const CurriculumSidebar = ({ subjectData, currentTopic, onTopicSelect, onQuizSelect, isOpen, onClose }) => {
-  if (!subjectData) return <div className="curriculum-loading">Loading curriculum...</div>;
+  if (!subjectData) {
+    return (
+      <div className={`curriculum-sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="curriculum-header">
+           <div className="curriculum-header-top">
+             <div className="curriculum-title-group">
+               <span className="curriculum-icon">📖</span>
+               <h3>Chapters</h3>
+             </div>
+             <button className="sidebar-close-btn" onClick={onClose} aria-label="Close Sidebar">
+               &times;
+             </button>
+           </div>
+        </div>
+        <div className="curriculum-loading-state">
+          <div className="spinner-small"></div>
+          <p>Loading curriculum...</p>
+        </div>
+      </div>
+    );
+  }
 
   const totalTopics = subjectData.units.reduce((acc, unit) => acc + unit.topics.length, 0);
   const completedTopics = 0; // Mock for now, could be derived from unit state

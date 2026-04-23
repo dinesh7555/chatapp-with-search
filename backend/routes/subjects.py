@@ -6,15 +6,18 @@ from auth import require_student
 from services.note_service import fetch_or_generate_notes
 from services.mindmap_service import fetch_or_generate_mindmap
 from services.flashcard_service import fetch_or_generate_flashcards
+from neo4j_db import get_neo4j_session
 
 router = APIRouter(prefix="/subjects", tags=["Subjects"])
 
 @router.get("/")
-def get_subjects():
+def get_subjects(current_user = Depends(require_student)):
     """
     Returns a list of all allowed subjects and their corresponding topics.
+    Also fetches custom personalized subjects from the database.
     """
     subjects_data = []
+    
     for subject_id, data in SUBJECT_CURRICULUM.items():
         subjects_data.append({
             "id": subject_id,
@@ -22,6 +25,25 @@ def get_subjects():
             "units": data["units"],
             "topics": SUBJECT_TOPICS.get(subject_id, []) # Keep flat topics for compatibility
         })
+        
+    try:
+        query = "MATCH (u:User {user_id: $user_id})-[:HAS_SUBJECT]->(s:Subject {is_personalized: true}) RETURN s.subject_id as id, s.name as name"
+        with get_neo4j_session() as session:
+            result = session.run(query, user_id=current_user.id)
+            for record in result:
+                sub_id = record["id"]
+                sub_name = record["name"]
+                
+                subjects_data.append({
+                    "id": sub_id,
+                    "name": sub_name,
+                    "units": [{"id": f"unit_1_{sub_id}", "title": "Unit 1: " + sub_name, "topics": [sub_name]}],
+                    "topics": [sub_name],
+                    "is_personalized": True
+                })
+    except Exception as e:
+        print(f"Failed to fetch personalized subjects: {e}")
+
     return {"subjects": subjects_data}
 
 @router.get("/notes")

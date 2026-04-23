@@ -25,16 +25,7 @@ const MOTIVATIONAL_QUOTES = [
     "Live as if you were to die tomorrow. Learn as if you were to live forever.",
 ];
 
-const MOCK_STUDENT_INFO = {
-    branch: "AI/ML",
-    year: "III Year",
-    section: "Sec-A",
-    semester: "V",
-    cgpa: 8.42,
-    attendance: 81,
-    creditsEarned: 124,
-    creditsTotal: 160
-};
+
 
 const StudentDashboard = () => {
     const navigate = useNavigate();
@@ -135,35 +126,7 @@ const StudentDashboard = () => {
     return (
         <div className="dashboard-container">
             <div className="dashboard-inner">
-                <div className="student-info-banner">
-                    <div className="sib-left">
-                        <span className="sib-item">
-                            <span className="sib-icon">🎓</span>
-                            <span>Branch: <strong>{MOCK_STUDENT_INFO.branch} ({MOCK_STUDENT_INFO.year}, {MOCK_STUDENT_INFO.section})</strong></span>
-                        </span>
-                        <span className="sib-item">
-                            <span className="sib-icon">📘</span>
-                            <span>Sem: <strong>{MOCK_STUDENT_INFO.semester}</strong></span>
-                        </span>
-                        <span className="sib-item">
-                            <span className="sib-icon" style={{color: '#facc15'}}>⭐</span>
-                            <span>CGPA: <strong>{MOCK_STUDENT_INFO.cgpa}</strong></span>
-                        </span>
-                    </div>
-                    <div className="sib-right">
-                        <div className="sib-attendance">
-                            <span className="sib-label">ATTENDANCE</span>
-                            <div className="sib-bar-bg">
-                                <div className="sib-bar-fill" style={{width: `${MOCK_STUDENT_INFO.attendance}%`}}></div>
-                            </div>
-                            <span className="sib-value">{MOCK_STUDENT_INFO.attendance}%</span>
-                        </div>
-                        <span className="sib-item">
-                            <span className="sib-icon">🏅</span>
-                            <span>Credits: <strong>{MOCK_STUDENT_INFO.creditsEarned}/{MOCK_STUDENT_INFO.creditsTotal}</strong></span>
-                        </span>
-                    </div>
-                </div>
+
 
                 <section className="hero-section">
                     <div className="hero-left">
@@ -211,8 +174,16 @@ const StudentDashboard = () => {
                         <div className="action-card action-subjects" onClick={() => navigate("/my-subjects")}>
                             <span className="action-icon">🎓</span>
                             <div className="action-text">
-                                <h3>My Subjects</h3>
+                                <h3>My Academic Subjects</h3>
                                 <p>Browse topics and study materials</p>
+                            </div>
+                            <span className="action-arrow">→</span>
+                        </div>
+                        <div className="action-card action-personalized" onClick={() => navigate("/personalized/onboarding")}>
+                            <span className="action-icon">🌟</span>
+                            <div className="action-text">
+                                <h3>Explore New Topic</h3>
+                                <p>Create a personalized learning course</p>
                             </div>
                             <span className="action-arrow">→</span>
                         </div>

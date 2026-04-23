@@ -204,7 +204,7 @@ export default function TeacherDashboard({ onLogout }) {
 
     async function handleViewStats(student) {
         if (filterSubject === "all" || filterTopic === "all") {
-            alert("Please select a specific Subject and Topic to view student stats.");
+            alert("Please select a specific Academic Subject and Topic to view student stats.");
             return;
         }
 
@@ -482,7 +482,7 @@ export default function TeacherDashboard({ onLogout }) {
                                         value={filterSubject}
                                         onChange={(e) => setFilterSubject(e.target.value)}
                                     >
-                                        <option value="all">All Subjects</option>
+                                        <option value="all">All Academic Subjects</option>
                                         <option value="operating_systems">Operating Systems</option>
                                         <option value="database_management">Database Management</option>
                                         <option value="computer_networks">Computer Networks</option>
@@ -650,7 +650,7 @@ export default function TeacherDashboard({ onLogout }) {
                                     value={resSubject}
                                     onChange={(e) => setResSubject(e.target.value)}
                                 >
-                                    <option value="all">Select Subject</option>
+                                    <option value="all">Select Academic Subject</option>
                                     <option value="operating_systems">Operating Systems</option>
                                     <option value="database_management">Database Management</option>
                                     <option value="computer_networks">Computer Networks</option>

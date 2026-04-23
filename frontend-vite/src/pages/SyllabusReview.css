@@ -1,0 +1,140 @@
+.syllabus-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  animation: fadeIn 0.5s ease;
+}
+
+.syllabus-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.syllabus-header h2 {
+  color: var(--text-primary);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.syllabus-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.syllabus-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.module-card {
+  display: flex;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+  align-items: center;
+  gap: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.module-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.module-number {
+  background: var(--color-accent);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.module-content h3 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.module-content p {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.syllabus-actions-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.syllabus-actions-card h3 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.approve-btn {
+  background: var(--color-success);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.approve-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.revision-section {
+  border-top: 1px dashed var(--border-light);
+  padding-top: 2rem;
+  text-align: left;
+}
+
+.revision-section p {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.revision-section textarea {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  min-height: 100px;
+  resize: vertical;
+  margin-bottom: 1rem;
+}
+
+.revise-btn {
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.revise-btn:hover:not(:disabled) {
+  background: rgba(144, 202, 249, 0.1);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

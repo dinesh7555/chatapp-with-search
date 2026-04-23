@@ -1,3 +1,4 @@
+import { apiFetch } from '../services/api';
 import React, { useState, useEffect } from 'react';
 import { 
   getMyNotes, 
@@ -25,7 +26,7 @@ const getSubjectIcon = (subj) => {
   return name && SUBJECT_ICONS[name.toLowerCase()] ? SUBJECT_ICONS[name.toLowerCase()] : "📚";
 };
 
-const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
+const MyNotesPanel = ({ isOpen, onClose, subjectId, displayName }) => {
   const [selectedSubject, setSelectedSubject] = useState(subjectId || null);
   const [selectedNote, setSelectedNote] = useState(null);
   const [notes, setNotes] = useState([]);
@@ -64,7 +65,7 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
     if (isOpen && !selectedSubject && availableSubjects.length === 0) {
       const fetchSubjects = async () => {
         try {
-            const res = await fetch(`${BASE_URL}/subjects/`);
+            const res = await apiFetch(`${BASE_URL}/subjects/`);
             const data = await res.json();
             setAvailableSubjects(data.subjects || []);
         } catch (err) {
@@ -133,6 +134,13 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
     }
   };
 
+  // Helper to get presentable subject name
+  const getDisplayTitle = () => {
+    if (displayName) return displayName;
+    if (!selectedSubject) return "";
+    return selectedSubject.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -141,7 +149,7 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
         
         <div className="mynotes-header">
           {!selectedSubject ? (
-            <h2>📚 Select a Subject</h2>
+            <h2>📚 Select an Academic Subject</h2>
           ) : !selectedNote ? (
             <div className="mynotes-header-nav">
               {!subjectId && (
@@ -149,7 +157,7 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
                   ←
                 </button>
               )}
-              <h2>📝 {selectedSubject.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Notes</h2>
+              <h2>📝 {getDisplayTitle()} Notes</h2>
             </div>
           ) : (
             <div className="mynotes-header-nav">
@@ -167,7 +175,7 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
           {/* VIEW 0: Select Subject */}
           {!selectedSubject && (
             <div className="mynotes-subject-grid">
-              <p className="mynotes-prompt">Which subject's notes do you want to access?</p>
+              <p className="mynotes-prompt">Which Academic Subject's notes do you want to access?</p>
               {availableSubjects.map((subj, idx) => {
                 const name = typeof subj === 'string' ? subj : subj.name;
                 const key = subj.id || name || idx;
@@ -184,7 +192,7 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
                 );
               })}
               {availableSubjects.length === 0 && (
-                <div className="mynotes-empty">Loading subjects catalog...</div>
+                <div className="mynotes-empty">Loading Academic Subjects catalog...</div>
               )}
             </div>
           )}
@@ -205,7 +213,7 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId }) => {
               {loading ? (
                 <div className="mynotes-loading">Loading notes...</div>
               ) : notes.length === 0 ? (
-                <div className="mynotes-empty">No notes found for {selectedSubject}. Start by creating one!</div>
+                <div className="mynotes-empty">No notes found for {getDisplayTitle()}. Start by creating one!</div>
               ) : (
                 <div className="mynotes-list">
                   {notes.map(note => (

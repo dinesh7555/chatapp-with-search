@@ -1,3 +1,4 @@
+import { apiFetch } from '../services/api';
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -84,7 +85,7 @@ const TopicView = () => {
         const loadSubjects = async () => {
             if (!subjectId) return;
             try {
-                const response = await fetch(`${BASE_URL}/subjects/`, {
+                const response = await apiFetch(`${BASE_URL}/subjects/`, {
                     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
                 });
                 if (response.ok) {

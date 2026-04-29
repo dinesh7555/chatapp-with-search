@@ -12,6 +12,8 @@ class UserLogin(BaseModel):
 
 class ChatMessage(BaseModel):
     message: str
+    selected_text: Optional[str] = None
+    source: Optional[str] = None
 
 class QuizSubmit(BaseModel):
     score: int

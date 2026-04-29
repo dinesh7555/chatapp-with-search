@@ -101,21 +101,20 @@ async def answer_onboarding_question(
     # The output will pause at human_checkpoint (we use conditional logic)
     # Wait, in LangGraph 0.1/0.2, if it breaks at human_checkpoint, we can check state.
     
-    # Let's see what the latest state is
+    # Check if we moved to syllabus generation
     updated_state = result
     
     if updated_state.get("syllabus"):
         return {"status": "success", "next_action": "review_syllabus", "syllabus": updated_state["syllabus"]}
         
-    from services.personalized_course_service import ONBOARDING_QUESTIONS
-    if updated_state.get("onboarding_step", 0) >= len(ONBOARDING_QUESTIONS):
-        messages = updated_state.get("messages", [])
-        last_ai_message = messages[-1].content if messages and messages[-1].type == "ai" else "Moving on..."
-        return {"status": "success", "next_action": "generate_syllabus", "message": last_ai_message}
-        
     messages = updated_state.get("messages", [])
     last_ai_message = messages[-1].content if messages and messages[-1].type == "ai" else "Moving on..."
-    
+
+    if "[[COMPLETE]]" in last_ai_message:
+        # Clean up the token for display
+        clean_message = last_ai_message.replace("[[COMPLETE]]", "").strip()
+        return {"status": "success", "next_action": "generate_syllabus", "message": clean_message}
+        
     return {"status": "success", "next_action": "answer_question", "message": last_ai_message}
 
 @router.post("/{course_id}/syllabus/review")

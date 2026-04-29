@@ -17,7 +17,8 @@ from services.chat_service import (
     get_chat_code_problem,
     clear_chat_code_problem,
     delete_chat_session,
-    is_personalized_subject
+    is_personalized_subject,
+    get_course_details
 )
 from services.metrics_service import (
     calculate_metrics,
@@ -360,13 +361,23 @@ def build_llm_messages(
     new_message: str,
     semantic_memory: list,
     subject_id: str,
-    user_state: dict = None
+    user_state: dict = None,
+    current_topic: str = None,
+    subject_title: str = None,
+    selected_text: str = None,
+    source: str = None
 ):
     # 1. CORE SYSTEM ROLE & CONSTRAINTS
-    subject_prompt = SUBJECT_PROMPTS.get(subject_id, "You are a helpful tutor.")
+    subject_prompt = SUBJECT_PROMPTS.get(subject_id)
+    if not subject_prompt:
+        title_str = subject_title if subject_title else "your personalized subject"
+        subject_prompt = f"You are a helpful tutor for the course: {title_str}."
     
     # Consolidate core identity and constraints into the first message
     system_content = f"{subject_prompt.strip()}\n\n"
+    if current_topic:
+        system_content += f"CURRENT TOPIC CONTEXT:\n- The user is currently studying the topic: '{current_topic}'. Please heavily contextualize your answers around this specific topic and clear their doubts related to it.\n\n"
+
     system_content += "CORE CONSTRAINTS:\n"
     system_content += "- Stay strictly within your subject area.\n"
     system_content += "- Be concise but thorough.\n"
@@ -375,7 +386,7 @@ def build_llm_messages(
     system_content += "- For lists, start each item on a new line with a clear bullet point or number.\n"
     system_content += "- ANTI-REPETITION: Do NOT repeat the same explanations, definitions, or bullet points if they have already appeared in the conversation history or the context below.\n"
     system_content += "- PROGRESSIVE LEARNING: If the student understands a concept, acknowledge it and move forward. Do NOT re-lecture on topics already covered unless the student clearly shows a misconception.\n"
-    system_content += "- STUDY AND LEARN MODE: You are an active tutor. After answering the user's query, you MUST ask a relevant follow-up question to test their understanding.\n"
+    system_content += "- STUDY AND LEARN MODE: You are an active tutor. After answering the user's query, you can ask a relevant follow-up question to test their understanding.\n"
     system_content += "- If the user is answering a previous question of yours, evaluate their answer, explain any misconceptions, and ask another follow-up question to deepen their knowledge. Promote active recall.\n"
 
     messages = [
@@ -444,9 +455,27 @@ def build_llm_messages(
         })
 
     # 5. CURRENT STUDENT QUERY
+    user_content = new_message
+    if selected_text:
+        user_content = f"""Source: {source or 'content_page'}
+Selected Text:
+\"\"\"
+{selected_text}
+\"\"\"
+User Question:
+{new_message}
+
+Instructions:
+- Use the selected text as the primary context.
+- Focus on answering the user's question.
+- If the context is insufficient, ask for clarification.
+- Do not hallucinate missing details.
+Output:
+Return a clear and helpful response."""
+
     messages.append({
         "role": "user",
-        "content": new_message
+        "content": user_content
     })
 
     return messages
@@ -490,13 +519,27 @@ async def send_message_stream(
 
     user_state = get_user_topic_state(current_user.id, topic,subject_id) if topic else None
 
+    # Fetch subject title for prompt context
+    is_pers = is_personalized_subject(subject_id)
+    subject_title = None
+    if is_pers:
+        details = get_course_details(subject_id)
+        if details:
+            subject_title = details["topic"]
+    else:
+        subject_title = SUBJECT_CURRICULUM.get(subject_id, {}).get("title", subject_id)
+
     # 4️⃣ Build prompt
     llm_messages = build_llm_messages(
         history=history,
         new_message=payload.message,
         semantic_memory=semantic_memory,
         subject_id=subject_id,
-        user_state=user_state
+        user_state=user_state,
+        current_topic=topic,
+        subject_title=subject_title,
+        selected_text=payload.selected_text,
+        source=payload.source
     )
 
     # 5️⃣ DETECT TOPIC SHIFT / CONCLUSION (Auto-Quiz Trigger)
@@ -540,13 +583,17 @@ async def send_message_stream(
                     )
 
     # 4️⃣ Store USER message immediately (if no quiz triggered)
+    db_message = payload.message
+    if payload.selected_text:
+        db_message = f"> {payload.selected_text}\n\n{payload.message}"
+
     try:
         user_seq = store_message(
             chat_id=chat_id,
             user_id=current_user.id,
             subject_id=subject_id,
             sender="user",
-            text=payload.message
+            text=db_message
         )
         
         # ✅ Trigger Activity/Streak Update
@@ -584,7 +631,7 @@ async def send_message_stream(
             current_user.id,
             subject_id,
             user_seq,
-            payload.message,
+            db_message,
             ai_seq,
             full_response,
             topic,

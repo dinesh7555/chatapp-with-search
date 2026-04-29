@@ -65,7 +65,9 @@ const MyNotesPanel = ({ isOpen, onClose, subjectId, displayName }) => {
     if (isOpen && !selectedSubject && availableSubjects.length === 0) {
       const fetchSubjects = async () => {
         try {
-            const res = await apiFetch(`${BASE_URL}/subjects/`);
+            const res = await apiFetch(`${BASE_URL}/subjects/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             const data = await res.json();
             setAvailableSubjects(data.subjects || []);
         } catch (err) {

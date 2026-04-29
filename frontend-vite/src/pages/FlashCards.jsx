@@ -35,7 +35,9 @@ const FlashCards = () => {
         const fetchSubjects = async () => {
             setLoadingSubjects(true);
             try {
-                const response = await apiFetch(`${BASE_URL}/subjects/`);
+                const response = await apiFetch(`${BASE_URL}/subjects/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 setSubjects(data.subjects || []);

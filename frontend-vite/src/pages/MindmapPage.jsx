@@ -28,7 +28,9 @@ const MindmapPage = () => {
     useEffect(() => {
         const fetchSubjects = async () => {
             try {
-                const response = await apiFetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/subjects/`);
+                const response = await apiFetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/subjects/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
                 if (!response.ok) throw new Error("Failed to fetch subjects");
                 const data = await response.json();
                 setSubjects(data.subjects || []);

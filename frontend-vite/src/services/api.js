@@ -89,15 +89,21 @@ export async function sendMessage(chatId, message, token) {
   return res.json();
 }
 
-export async function sendMessageStream(chatId, message, token) {
+export async function sendMessageStream(chatId, message, token, selectedText = null, source = "content_page") {
   const subject = getSubject();
+  const bodyPayload = { message };
+  if (selectedText) {
+    bodyPayload.selected_text = selectedText;
+    bodyPayload.source = source;
+  }
+
   const res = await apiFetch(`${BASE_URL}/chat/${chatId}/message/stream?subject_id=${subject}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify(bodyPayload),
   });
 
   return res;

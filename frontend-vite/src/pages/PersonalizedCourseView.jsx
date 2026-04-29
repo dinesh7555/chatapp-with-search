@@ -15,6 +15,7 @@ import CodeBlock from "../components/CodeBlock";
 import CurriculumSidebar from "../components/CurriculumSidebar";
 import ChatSidebar from "./ChatSidebar";
 import MyNotesPanel from "../components/MyNotesPanel";
+import AskAIFloatingButton from "../components/AskAIFloatingButton";
 import "./TopicView.css";
 
 const PersonalizedCourseView = () => {
@@ -44,6 +45,14 @@ const PersonalizedCourseView = () => {
     const [showHistory, setShowHistory] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
+    const [selectedTextForChat, setSelectedTextForChat] = useState(null);
+    const chatInputRef = useRef(null);
+
+    useEffect(() => {
+        if (selectedTextForChat && chatInputRef.current) {
+            chatInputRef.current.focus();
+        }
+    }, [selectedTextForChat]);
 
     // Resizing states
     const [notesWidth, setNotesWidth] = useState(() => {
@@ -308,13 +317,29 @@ const PersonalizedCourseView = () => {
     const handleSendMessage = async (e) => {
         e.preventDefault();
         if (!input.trim() || !chatId || sendingRef.current) return;
+
         sendingRef.current = true;
         setLoading(true);
+
         const userText = input;
+        const currentQuote = selectedTextForChat;
+
         setInput("");
-        setMessages((prev) => [...prev, { sender: "user", text: userText }, { sender: "ai", text: "" }]);
+        setSelectedTextForChat(null);
+
+        // Update local messages for the Chat UI (simulate ChatGPT style quote)
+        const displayMessage = currentQuote 
+            ? `> ${currentQuote}\n\n${userText}`
+            : userText;
+
+        setMessages((prev) => [
+            ...prev, 
+            { sender: "user", text: displayMessage }, 
+            { sender: "ai", text: "" }
+        ]);
+
         try {
-            const res = await sendMessageStream(chatId, userText, token);
+            const res = await sendMessageStream(chatId, userText, token, currentQuote, "content_page");
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
             let aiText = "";
@@ -549,50 +574,69 @@ const PersonalizedCourseView = () => {
                         </div>
 
                         <div className="chat-interface-new">
-                            <div className="chat-messages">
-                                {messages.length === 0 ? (
-                                    <div className="chat-welcome">
-                                        <div className="welcome-bot-icon">🤖</div>
-                                        <h3>Hello, {username}!</h3>
-                                        <p>I'm your personal tutor. How can I help you with <strong>{currentTopic}</strong> today?</p>
-                                    </div>
-                                ) : (
-                                    messages.filter(msg => !msg.text.startsWith("[SYSTEM:")).map((msg, i) => (
-                                        <div key={i} className={`message-bubble ${msg.sender}`}>
-                                            <div className="bubble-content">
-                                                <ReactMarkdown components={{ code: CodeBlock }}>{msg.text}</ReactMarkdown>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                                {loading && (
-                                    <div className="message-bubble ai typing">
-                                        <div className="typing-dots"><span></span><span></span><span></span></div>
-                                    </div>
-                                )}
-                                <div ref={messagesEndRef} />
-                            </div>
+                             <div className="chat-messages">
+                                 {messages.length === 0 ? (
+                                     <div className="chat-welcome">
+                                         <div className="welcome-bot-icon">🤖</div>
+                                         <h3>Hello, {username}!</h3>
+                                         <p>I'm your personal tutor. How can I help you with <strong>{currentTopic}</strong> today?</p>
+                                     </div>
+                                 ) : (
+                                     messages.filter(msg => !msg.text.startsWith("[SYSTEM:")).map((msg, i) => (
+                                         <div key={i} className={`message-bubble ${msg.sender}`}>
+                                             <div className="bubble-content">
+                                                 <ReactMarkdown components={{ code: CodeBlock }}>{msg.text}</ReactMarkdown>
+                                             </div>
+                                         </div>
+                                     ))
+                                 )}
+                                 {loading && (
+                                     <div className="message-bubble ai typing">
+                                         <div className="typing-dots"><span></span><span></span><span></span></div>
+                                     </div>
+                                 )}
+                                 <div ref={messagesEndRef} />
+                             </div>
 
-                            <form className="chat-input-row" onSubmit={handleSendMessage}>
-                                <input
-                                    type="text"
-                                    placeholder={quizActive ? "Complete quiz..." : "Message AI Tutor..."}
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    disabled={loading || quizActive}
-                                />
-                                <button type="submit" disabled={loading || !input.trim() || quizActive}>
+                             {selectedTextForChat && (
+                                 <div className="chat-selection-quote">
+                                     <div className="quote-header">
+                                         <span>Ask about selected text</span>
+                                         <button className="quote-close-btn" onClick={() => setSelectedTextForChat(null)}>
+                                             <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none">
+                                                 <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                 <line x1="6" y1="6" x2="18" y2="18"></line>
+                                             </svg>
+                                         </button>
+                                     </div>
+                                     <div className="quote-content">
+                                         "{selectedTextForChat}"
+                                     </div>
+                                 </div>
+                             )}
 
-                                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                    </svg>
-                                </button>
-                            </form>
+                             <form className={`chat-input-row ${selectedTextForChat ? 'has-quote' : ''}`} onSubmit={handleSendMessage}>
+                                 <input
+                                     ref={chatInputRef}
+                                     type="text"
+                                     placeholder={quizActive ? "Complete quiz..." : "Message AI Tutor..."}
+                                     value={input}
+                                     onChange={(e) => setInput(e.target.value)}
+                                     disabled={loading || quizActive}
+                                 />
+                                 <button type="submit" disabled={loading || !input.trim() || quizActive}>
+
+                                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                         <line x1="22" y1="2" x2="11" y2="13"></line>
+                                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                     </svg>
+                                 </button>
+                             </form>
+                        </div>
                         </div>
                     </div>
                 </div>
-            </div>
+
             <div 
                 className={`curriculum-overlay ${isCurriculumOpen ? "active" : ""}`} 
                 onClick={() => setIsCurriculumOpen(false)}
@@ -605,6 +649,7 @@ const PersonalizedCourseView = () => {
                 subjectId={courseId} 
                 displayName={courseName}
             />
+            <AskAIFloatingButton onAsk={(text) => setSelectedTextForChat(text)} />
         </div>
     );
 };

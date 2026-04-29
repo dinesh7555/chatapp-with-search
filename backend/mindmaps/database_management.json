@@ -1,0 +1,161 @@
+{
+  "subject": "Database Management",
+  "root": {
+    "id": "root",
+    "text": "Database Management",
+    "children": [
+      {
+        "id": "sql_queries",
+        "text": "SQL Queries",
+        "children": [
+          {
+            "id": "query_types",
+            "text": "Query Types",
+            "description": "Understanding different types of SQL queries including SELECT, INSERT, UPDATE, and DELETE"
+          },
+          {
+            "id": "query_basics",
+            "text": "Query Basics",
+            "description": "Understanding the basic syntax and structure of SQL queries"
+          },
+          {
+            "id": "query_optimization",
+            "text": "Query Optimization",
+            "description": "Understanding techniques to optimize query performance"
+          }
+        ]
+      },
+      {
+        "id": "joins_aggregations",
+        "text": "Joins and Aggregations",
+        "children": [
+          {
+            "id": "join_types",
+            "text": "Join Types",
+            "description": "Understanding different types of joins including INNER JOIN, LEFT JOIN, and RIGHT JOIN"
+          },
+          {
+            "id": "aggregation_functions",
+            "text": "Aggregation Functions",
+            "description": "Understanding aggregation functions such as SUM, COUNT, and AVG"
+          },
+          {
+            "id": "subquery_usage",
+            "text": "Subquery Usage",
+            "description": "Understanding the use of subqueries in SQL queries"
+          }
+        ]
+      },
+      {
+        "id": "er_diagrams",
+        "text": "ER Diagrams",
+        "children": [
+          {
+            "id": "conceptual_model",
+            "text": "Conceptual Model",
+            "description": "Understanding the conceptual model of ER diagrams and its representation of entities and relationships"
+          },
+          {
+            "id": "logical_model",
+            "text": "Logical Model",
+            "description": "Understanding the logical model of ER diagrams and its representation of entities, attributes, and relationships"
+          },
+          {
+            "id": "physical_model",
+            "text": "Physical Model",
+            "description": "Understanding the physical model of ER diagrams and its representation of data storage and retrieval"
+          }
+        ]
+      },
+      {
+        "id": "normalization",
+        "text": "Normalization",
+        "children": [
+          {
+            "id": "1NF",
+            "text": "1NF (First Normal Form)",
+            "description": "Understanding the concept of 1NF and its application in database design"
+          },
+          {
+            "id": "2NF",
+            "text": "2NF (Second Normal Form)",
+            "description": "Understanding the concept of 2NF and its application in database design"
+          },
+          {
+            "id": "3NF",
+            "text": "3NF (Third Normal Form)",
+            "description": "Understanding the concept of 3NF and its application in database design"
+          }
+        ]
+      },
+      {
+        "id": "acid_properties",
+        "text": "ACID Properties",
+        "children": [
+          {
+            "id": "atomicity",
+            "text": "Atomicity",
+            "description": "Understanding the concept of atomicity and its role in ensuring database transactions are executed as a single, all-or-nothing unit"
+          },
+          {
+            "id": "consistency",
+            "text": "Consistency",
+            "description": "Understanding the concept of consistency and its role in ensuring database transactions maintain data integrity"
+          },
+          {
+            "id": "isolation",
+            "text": "Isolation",
+            "description": "Understanding the concept of isolation and its role in ensuring database transactions are executed independently"
+          },
+          {
+            "id": "durability",
+            "text": "Durability",
+            "description": "Understanding the concept of durability and its role in ensuring database transactions are persisted even in the event of a failure"
+          }
+        ]
+      },
+      {
+        "id": "transactions",
+        "text": "Transactions",
+        "children": [
+          {
+            "id": "transaction_types",
+            "text": "Transaction Types",
+            "description": "Understanding different types of transactions including COMMIT, ROLLBACK, and SAVEPOINT"
+          },
+          {
+            "id": "transaction_control",
+            "text": "Transaction Control",
+            "description": "Understanding how to control transactions using SQL commands and stored procedures"
+          },
+          {
+            "id": "transaction_isolation",
+            "text": "Transaction Isolation",
+            "description": "Understanding how to implement transaction isolation using locking and timestamping"
+          }
+        ]
+      },
+      {
+        "id": "concurrency_control",
+        "text": "Concurrency Control",
+        "children": [
+          {
+            "id": "locking",
+            "text": "Locking",
+            "description": "Understanding the concept of locking and its role in controlling concurrency"
+          },
+          {
+            "id": "timestamping",
+            "text": "Timestamping",
+            "description": "Understanding the concept of timestamping and its role in controlling concurrency"
+          },
+          {
+            "id": "optimistic_concurrency",
+            "text": "Optimistic Concurrency",
+            "description": "Understanding the concept of optimistic concurrency and its role in controlling concurrency"
+          }
+        ]
+      }
+    ]
+  }
+}

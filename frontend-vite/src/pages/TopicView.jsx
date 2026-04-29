@@ -21,6 +21,7 @@ import CurriculumSidebar from "../components/CurriculumSidebar";
 import CodeProblemOverlay from "../components/CodeProblemOverlay";
 import CodeBlock from "../components/CodeBlock";
 import MyNotesPanel from "../components/MyNotesPanel";
+import AskAIFloatingButton from "../components/AskAIFloatingButton";
 import "./TopicView.css";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -44,6 +45,14 @@ const TopicView = () => {
     const [loading, setLoading] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
+    const [selectedTextForChat, setSelectedTextForChat] = useState(null);
+    const chatInputRef = useRef(null);
+
+    useEffect(() => {
+        if (selectedTextForChat && chatInputRef.current) {
+            chatInputRef.current.focus();
+        }
+    }, [selectedTextForChat]);
 
     // Quiz states
     const [quizActive, setQuizActive] = useState(false);
@@ -51,7 +60,7 @@ const TopicView = () => {
     const [quizAnswers, setQuizAnswers] = useState({});
     const [generatingQuiz, setGeneratingQuiz] = useState(false);
     const [submittingQuiz, setSubmittingQuiz] = useState(false);
-    
+
     // Code Problem states
     const [codeProblemActive, setCodeProblemActive] = useState(false);
     const [codeProblemData, setCodeProblemData] = useState(null);
@@ -90,7 +99,7 @@ const TopicView = () => {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     // Normalize the subjectId from the URL for comparison
                     const normalizedUrlId = subjectId.replace(/ |%20/g, "_").toLowerCase();
 
@@ -201,7 +210,7 @@ const TopicView = () => {
             isResizing.current = false;
             setResizingState(false);
             document.body.classList.remove("resizing-active");
-            
+
             // Persist preference
             localStorage.setItem("preferredNotesWidth", notesWidth.toString());
         };
@@ -250,7 +259,7 @@ const TopicView = () => {
             setLoading(true);
             const normalizedSubject = sId.replace(/ |%20/g, "_").toLowerCase();
             localStorage.setItem("subject", normalizedSubject);
-            
+
             const data = await startChat(token, tName);
             setChatId(data.chat_id);
 
@@ -279,7 +288,7 @@ const TopicView = () => {
         try {
             const normalizedSubject = subjectId.replace(/ |%20/g, "_").toLowerCase();
             localStorage.setItem("subject", normalizedSubject);
-            
+
             setChatId(id);
             const history = await getHistory(id, token);
 
@@ -355,7 +364,7 @@ const TopicView = () => {
             await deleteChat(id, token);
             // Remove from local state
             setSessions(prev => prev.filter(s => s.chat_id !== id));
-            
+
             // If the deleted chat was the active one, reset
             if (id === chatId) {
                 setChatId(null);
@@ -377,16 +386,26 @@ const TopicView = () => {
         setLoading(true);
 
         const userText = input;
+        const currentQuote = selectedTextForChat;
+
         setInput("");
+        setSelectedTextForChat(null);
+
+        // Update local messages for the Chat UI (simulate ChatGPT style quote)
+        const displayMessage = currentQuote
+            ? `> ${currentQuote}\n\n${userText}`
+            : userText;
 
         setMessages((prev) => [
             ...prev,
-            { sender: "user", text: userText },
+            { sender: "user", text: displayMessage },
             { sender: "ai", text: "" } // placeholder for AI response
         ]);
 
         try {
-            const res = await sendMessageStream(chatId, userText, token);
+            // Pass the source as 'chat' or 'content_page' based on where they are
+            // Since this is TopicView, it's mostly content page
+            const res = await sendMessageStream(chatId, userText, token, currentQuote, "content_page");
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
 
@@ -606,7 +625,7 @@ const TopicView = () => {
                 <div className="workspace-panel left-panel" style={{ width: `${notesWidth}%` }}>
                     <div className="panel-header-new">
                         <div className="panel-header-left">
-                            <button 
+                            <button
                                 className="hamburger-btn"
                                 onClick={() => setIsCurriculumOpen(true)}
                                 aria-label="Open Topics"
@@ -620,7 +639,7 @@ const TopicView = () => {
                             <span className="panel-title-text">Study Notes</span>
                         </div>
                         <div className="panel-header-right">
-                             <button
+                            <button
                                 className="panel-code-btn"
                                 onClick={() => navigate(`/code-editor/${subjectId}/${topicParam}`)}
                             >
@@ -656,7 +675,7 @@ const TopicView = () => {
                             <span className="panel-title-text">AI Tutor</span>
                         </div>
                         <div className="panel-header-right">
-                             <button
+                            <button
                                 className="history-toggle-pill"
                                 onClick={() => setIsNotesPanelOpen(true)}
                             >
@@ -682,7 +701,7 @@ const TopicView = () => {
                                 onDeleteChat={handleDeleteChat}
                             />
                         </div>
-                        
+
                         <div className="chat-interface-new">
                             <div className="chat-messages">
                                 {messages.length === 0 ? (
@@ -716,8 +735,26 @@ const TopicView = () => {
                                 <div ref={messagesEndRef} />
                             </div>
 
-                            <form className="chat-input-row" onSubmit={handleSendMessage}>
+                            {selectedTextForChat && (
+                                <div className="chat-selection-quote">
+                                    <div className="quote-header">
+                                        <span>Ask about selected text</span>
+                                        <button className="quote-close-btn" onClick={() => setSelectedTextForChat(null)}>
+                                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div className="quote-content">
+                                        "{selectedTextForChat}"
+                                    </div>
+                                </div>
+                            )}
+
+                            <form className={`chat-input-row ${selectedTextForChat ? 'has-quote' : ''}`} onSubmit={handleSendMessage}>
                                 <input
+                                    ref={chatInputRef}
                                     type="text"
                                     placeholder={quizActive || codeProblemActive ? "Complete challenge..." : "Message AI Tutor..."}
                                     value={input}
@@ -737,14 +774,15 @@ const TopicView = () => {
             </div>
             {quizActive && quizData.length > 0 && renderQuizOverlay()}
             {codeProblemActive && codeProblemData && (
-                <CodeProblemOverlay 
-                    problem={codeProblemData} 
+                <CodeProblemOverlay
+                    problem={codeProblemData}
                     onSubmit={handleSubmitCode}
                     submitting={submittingCode}
                 />
             )}
-            <div 
-                className={`curriculum-overlay ${isCurriculumOpen ? "active" : ""}`} 
+            <AskAIFloatingButton onAsk={(text) => setSelectedTextForChat(text)} />
+            <div
+                className={`curriculum-overlay ${isCurriculumOpen ? "active" : ""}`}
                 onClick={() => setIsCurriculumOpen(false)}
             />
             <CurriculumSidebar
@@ -754,10 +792,10 @@ const TopicView = () => {
                 currentTopic={topicParam}
                 onTopicSelect={handleTopicSelect}
             />
-            <MyNotesPanel 
-                isOpen={isNotesPanelOpen} 
-                onClose={() => setIsNotesPanelOpen(false)} 
-                subjectId={subjectId} 
+            <MyNotesPanel
+                isOpen={isNotesPanelOpen}
+                onClose={() => setIsNotesPanelOpen(false)}
+                subjectId={subjectId}
             />
         </div>
     );

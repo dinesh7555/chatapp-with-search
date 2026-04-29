@@ -15,18 +15,20 @@
   --accent-light: rgba(79, 60, 201, 0.08);
   --border: rgba(160, 130, 90, 0.2);
   --surface: #ffffff;
-  
+
   --font-display: 'Playfair Display', Georgia, serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
-  
+
   --radius-md: 10px;
   --radius-lg: 16px;
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .topic-view-page {
-  flex: 1;              /* fill the flex-column layout-content */
-  min-height: 0;        /* prevent flex bleed */
+  flex: 1;
+  /* fill the flex-column layout-content */
+  min-height: 0;
+  /* prevent flex bleed */
   display: flex;
   flex-direction: column;
   background: var(--sepia-50);
@@ -46,7 +48,8 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 0;       /* prevent flex bleed */
+  min-height: 0;
+  /* prevent flex bleed */
   background: var(--surface);
   position: relative;
   overflow: hidden;
@@ -82,7 +85,8 @@ body.resizing-active .workspace-panel {
   z-index: 10;
 }
 
-.panel-header-left, .panel-header-right {
+.panel-header-left,
+.panel-header-right {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -149,7 +153,8 @@ body.resizing-active .workspace-panel {
   overflow-x: hidden;
   overscroll-behavior: contain;
   position: relative;
-  height: 0; /* force flex child to respect parent height */
+  height: 0;
+  /* force flex child to respect parent height */
 }
 
 /* ── Notes Style ── */
@@ -166,8 +171,8 @@ body.resizing-active .workspace-panel {
   color: var(--ink);
 }
 
-.markdown-body h1, 
-.markdown-body h2, 
+.markdown-body h1,
+.markdown-body h2,
 .markdown-body h3 {
   font-family: var(--font-display);
   font-weight: 700;
@@ -176,7 +181,8 @@ body.resizing-active .workspace-panel {
 }
 
 .notes-topic-header {
-  display: none; /* Removed as per user request */
+  display: none;
+  /* Removed as per user request */
 }
 
 /* ── Inline Curriculum ── */
@@ -264,7 +270,7 @@ body.resizing-active .workspace-panel {
   transition: background 0.2s;
 }
 
-.workspace-resizer:hover, 
+.workspace-resizer:hover,
 .workspace-resizer:active,
 body.resizing-active .workspace-resizer {
   background: var(--accent);
@@ -280,7 +286,8 @@ body.resizing-active {
 .chat-workspace-body {
   flex: 1;
   display: flex;
-  flex-direction: row; /* Side-by-side history + chat */
+  flex-direction: row;
+  /* Side-by-side history + chat */
   overflow: hidden;
   position: relative;
 }
@@ -290,7 +297,8 @@ body.resizing-active {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-width: 0; /* important for flex items to prevent overflow */
+  min-width: 0;
+  /* important for flex items to prevent overflow */
 }
 
 .chat-messages {
@@ -302,7 +310,8 @@ body.resizing-active {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  height: 0; /* force flex child to stop bleeding scroll to parent */
+  height: 0;
+  /* force flex child to stop bleeding scroll to parent */
 }
 
 .chat-welcome {
@@ -350,8 +359,15 @@ body.resizing-active {
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .message-bubble.user {
@@ -369,6 +385,55 @@ body.resizing-active {
   border-bottom-left-radius: 4px;
   box-shadow: var(--shadow-sm);
 }
+
+/* ── Blockquote (Quoted Text) Styling ── */
+.message-bubble blockquote {
+  margin: 0 0 14px 0;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 0.85em;
+  line-height: 1.6;
+  background: rgba(0, 0, 0, 0.05);
+  border-left: 4px solid var(--accent);
+  position: relative;
+  color: var(--ink-soft);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.message-bubble.user blockquote {
+  background: rgba(255, 255, 255, 0.15);
+  border-left-color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.message-bubble blockquote::before {
+  content: "SELECTED TEXT";
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  opacity: 0.5;
+  color: inherit;
+}
+
+.message-bubble blockquote p {
+  margin: 0 !important;
+  display: flex;
+  gap: 10px;
+}
+
+.message-bubble blockquote p::before {
+  content: "↳";
+  font-family: inherit;
+  font-weight: 900;
+  opacity: 0.8;
+  flex-shrink: 0;
+  transform: scale(1.2);
+}
+
 
 /* ── Chat Input ── */
 .chat-input-row {
@@ -433,7 +498,8 @@ body.resizing-active {
 }
 
 .history-sidebar-inline .chat-sidebar {
-  width: 280px; /* match parent width for internal consistency */
+  width: 280px;
+  /* match parent width for internal consistency */
   height: 100%;
 }
 
@@ -452,12 +518,24 @@ body.resizing-active {
   animation: typing 1s infinite ease-in-out;
 }
 
-.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
 
 @keyframes typing {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 /* Markdown Overrides for Bubbles */
@@ -465,7 +543,7 @@ body.resizing-active {
   margin: 0;
 }
 
-.bubble-content p + p {
+.bubble-content p+p {
   margin-top: 10px;
 }
 
@@ -476,7 +554,7 @@ body.resizing-active {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(4px);
   z-index: 9999;
   opacity: 0;
@@ -653,8 +731,15 @@ body.quiz-active-lock .history-sidebar-inline {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 1024px) {
@@ -667,25 +752,101 @@ body.quiz-active-lock .history-sidebar-inline {
   .topic-view-page {
     height: auto;
   }
+
   .topic-workspace {
     flex-direction: column;
     height: auto;
   }
+
   .workspace-panel {
     width: 100% !important;
     height: auto !important;
     min-height: 400px;
   }
+
   .panel-content-area {
-    height: 500px; /* fallback height on mobile */
+    height: 500px;
+    /* fallback height on mobile */
   }
+
   .workspace-resizer {
     display: none;
   }
+
   .quiz-overlay {
     padding: 15px;
   }
+
   .quiz-overlay-card {
     padding: 24px;
   }
+}
+
+/* ── Selection Quote Preview ── */
+.chat-selection-quote {
+  background: white;
+  border-top: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  padding: 12px 20px;
+  margin: 0 30px;
+  border-radius: 8px 8px 0 0;
+  font-size: 13px;
+  position: relative;
+  animation: slideUpQuote 0.3s ease-out;
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.quote-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quote-content {
+  color: var(--ink-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.quote-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.quote-close-btn:hover {
+  background: var(--sepia-100);
+}
+
+@keyframes slideUpQuote {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-input-row.has-quote {
+  padding-top: 10px;
 }

@@ -1,4 +1,5 @@
 import uuid
+import operator
 from typing import TypedDict, Annotated, List, Optional
 from langgraph.graph import StateGraph, START, END
 from langchain_openai import ChatOpenAI
@@ -46,7 +47,7 @@ class CourseState(TypedDict):
     # Hierarchical Syllabus (Chapters -> Topics)
     hierarchical_syllabus: Optional[List[dict]]
     # Temporary storage for chat history or internal thoughts
-    messages: Annotated[list, "add"]
+    messages: Annotated[list, operator.add]
 
 # 2. Node Implementations (Skeleton)
 
@@ -54,56 +55,58 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 # ... existing imports and definitions ...
 
-ONBOARDING_QUESTIONS = [
-    {
-        "id": "goal",
-        "question": "Why do you want to learn {topic}? (e.g., career change, hobby, academic requirement)",
-        "options": ["Career Change", "Hobby / Personal Interest", "Academic Requirement", "Upskilling"]
-    },
-    {
-        "id": "time",
-        "question": "How much time can you dedicate per day?",
-        "options": ["15-30 mins", "1 hour", "2 hours", "4+ hours"]
-    },
-    {
-        "id": "timeframe",
-        "question": "In what timeframe do you want to complete it?",
-        "options": ["1 week (Crash Course)", "2 weeks", "1 month", "Self-paced"]
-    },
-    {
-        "id": "knowledge",
-        "question": "What is your current knowledge level on this topic?",
-        "options": ["Absolute Beginner", "Novice (Know basics)", "Intermediate", "Advanced"]
-    },
-    {
-        "id": "style",
-        "question": "What is your preferred learning style?",
-        "options": ["Reading & Text", "Video Tutorials", "Interactive Quizzes", "Hands-on Projects"]
-    }
-]
+ONBOARDING_SYSTEM_PROMPT = """
+You are a professional educational consultant and tutor. Your goal is to interview the student to build a highly personalized course on the topic: "{topic}".
+
+You need to gather information for these 5 key areas to build their "Learner Profile":
+1. Goal: Why are they learning this? (e.g., career change, hobby, academic requirement)
+2. Availability: How much time can they dedicate per day?
+3. Timeframe: In what timeframe do they want to complete it? (e.g., 1 week crash course, 1 month, self-paced)
+4. Knowledge Level: What is their current level? (Beginner, Intermediate, etc.)
+5. Learning Style: What is their preferred style? (Reading, Projects, Quizzes, etc.)
+
+INSTRUCTIONS:
+- Be encouraging, friendly, and professional.
+- Ask ONLY ONE question at a time.
+- DO NOT repeat questions you have already asked. Review the history to see what you have already covered.
+- If the user provides multiple details in one answer, acknowledge them and skip the redundant questions.
+- Keep the conversation concise but high-quality.
+- Once you have gathered enough information for ALL 5 areas, you MUST start your message with the exact token [[COMPLETE]].
+- You can provide suggestions for the user to click by adding [[OPTIONS: Option 1, Option 2, ...]] at the very end of your message.
+"""
 
 async def onboarding_agent(state: CourseState) -> CourseState:
     print(f"Executing: onboarding_agent for session {state.get('session_id')}")
     topic = state.get("topic", "this topic")
-    step = state.get("onboarding_step", 0)
     messages = state.get("messages", [])
-
-    if step < len(ONBOARDING_QUESTIONS):
-        q_data = ONBOARDING_QUESTIONS[step]
-        question_text = q_data["question"].format(topic=topic)
-        options = q_data.get("options", [])
-        
-        # Append options in a parseable format for the frontend
-        formatted_message = f"{question_text}"
-        if options:
-            formatted_message += f" [[OPTIONS: {', '.join(options)}]]"
-            
-        print(f"Onboarding step {step}: sending question with options -> {formatted_message}")
-        if not messages or (messages and messages[-1].type != "ai"):
-            return {"messages": [AIMessage(content=formatted_message)]}
     
-    print("Onboarding questions exhausted.")
-    return {"messages": [AIMessage(content="Perfect! I have all the details I need. I'm building your personalized syllabus now...")]}
+    # Filter and reconstruct messages for the prompt
+    history = [SystemMessage(content=ONBOARDING_SYSTEM_PROMPT.format(topic=topic))]
+    
+    for m in messages:
+        # Handle both LangChain objects and dicts from checkpointer
+        m_type = getattr(m, 'type', None) or (m.get('type') if isinstance(m, dict) else None)
+        # Use explicit None check to avoid 'or' operator swallowing empty strings/lists
+        m_content = getattr(m, 'content', None)
+        if m_content is None and isinstance(m, dict):
+            m_content = m.get('content')
+            
+        if m_content is not None:
+            if m_type == "human":
+                history.append(HumanMessage(content=m_content))
+            elif m_type == "ai":
+                history.append(AIMessage(content=m_content))
+            
+    print(f"Debug: Onboarding history has {len(history)} messages.")
+    
+    # If we already have a syllabus or profile, don't interview again
+    if state.get("syllabus") or state.get("learner_profile"):
+        return {"messages": [AIMessage(content="Your course is ready! Redirecting to the syllabus... [[COMPLETE]]")]}
+
+    response = await llm.ainvoke(history)
+    print(f"Onboarding Agent Response: {response.content[:50]}...")
+    
+    return {"messages": [response]}
 
 import json
 
@@ -112,20 +115,27 @@ async def profile_builder(state: CourseState) -> CourseState:
     messages = state.get("messages", [])
     topic = state.get("topic", "")
     
-    # Extract only the user answers
-    answers = [msg.content for msg in messages if msg.type == "human"]
+    # Extract the conversation history as a string
+    conversation_text = ""
+    for msg in messages:
+        sender = "Student" if msg.type == "human" else "Tutor"
+        # Skip the internal token for profiling
+        content = msg.content.replace("[[COMPLETE]]", "").split("[[OPTIONS:")[0].strip()
+        conversation_text += f"{sender}: {content}\n"
     
     prompt = f"""
-You are an expert educational profiler. Based on the following answers from a student who wants to learn "{topic}", construct a structured LearnerProfile JSON.
-Answers:
-{answers}
+You are an expert educational profiler. Below is a conversation between a Tutor and a Student who wants to learn "{topic}".
+Based on this dialogue, construct a structured LearnerProfile JSON.
+
+Conversation:
+{conversation_text}
 
 Return ONLY a valid JSON object with these exact keys:
-- "goal"
-- "time_per_day"
-- "timeframe"
-- "knowledge_level"
-- "learning_style"
+- "goal" (string)
+- "time_per_day" (string)
+- "timeframe" (string)
+- "knowledge_level" (string)
+- "learning_style" (string)
 """
     response = await llm.ainvoke([SystemMessage(content=prompt)])
     content = response.content
@@ -260,8 +270,8 @@ Return ONLY a valid JSON array of objects, where each object has:
             return text[start_idx:end_idx+1]
         return text.strip()
 
-    json_str = extract_json(response.content)
-    print(f"Syllabus Reviser raw content snippet: {response.content[:100]}...")
+    json_str = extract_json(response.content or "")
+    print(f"Syllabus Reviser raw content snippet: {(response.content or '')[:100]}...")
     
     try:
         raw_syllabus = json.loads(json_str)
@@ -318,7 +328,7 @@ async def content_generator(state: CourseState) -> CourseState:
     module = syl[idx]
     content = await generate_lesson_content(topic, module, profile, syl)
     
-    return {"messages": [AIMessage(content=content)]}
+    return {"messages": [AIMessage(content=content or "")]}
 
 async def generate_quiz_content(module_title: str) -> list:
     prompt = f"""
@@ -369,7 +379,7 @@ async def quiz_node(state: CourseState) -> CourseState:
         return state
         
     quiz_content = await generate_quiz_content(syl[idx].get('title'))
-    return {"messages": [AIMessage(content=quiz_content)]}
+    return {"messages": [AIMessage(content=quiz_content or [])]}
 
 async def pace_adapter(state: CourseState) -> CourseState:
     print(f"Executing: pace_adapter")
@@ -391,16 +401,21 @@ async def state_store(state: CourseState) -> CourseState:
 
 # 3. Routing Functions
 def route_after_onboarding(state: CourseState):
-    # If all questions answered -> pause the graph to flush transition message to UX, 
-    # then frontend will trigger the profile building separately.
-    step = state.get("onboarding_step", 0)
-    if step >= len(ONBOARDING_QUESTIONS):
-        return END
+    # Check if ANY AI message in the recent history indicates completion
+    messages = state.get("messages", [])
+    for msg in reversed(messages):
+        # Handle both objects and dicts
+        m_type = getattr(msg, 'type', None) or (msg.get('type') if isinstance(msg, dict) else None)
+        m_content = getattr(msg, 'content', None) or (msg.get('content') if isinstance(msg, dict) else "")
+        
+        if m_type == "ai" and "[[COMPLETE]]" in m_content:
+            return "profile_builder"
+    
     return "onboarding_agent" # Pause and wait for next user input
 
 def route_after_checkpoint(state: CourseState):
     feedback = state.get("revision_feedback")
-    if feedback:
+    if feedback and feedback.strip():
         return "syllabus_reviser"
     return "content_generator"
 
@@ -419,9 +434,7 @@ workflow.add_node("pace_adapter", pace_adapter)
 workflow.add_node("state_store", state_store)
 
 def route_from_start(state: CourseState):
-    step = state.get("onboarding_step", 0)
-    if step >= len(ONBOARDING_QUESTIONS):
-        return "profile_builder"
+    # If we have messages, we are already in the flow
     return "onboarding_agent"
 
 # Edges
